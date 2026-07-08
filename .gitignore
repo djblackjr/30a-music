@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+data/events.db
+exports/
+logs/
+images/processed/
+images/failed/
+.pytest_cache/
+images/inbox/
+schedules/Instagram_files/
