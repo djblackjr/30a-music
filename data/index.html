@@ -338,7 +338,7 @@ function setFilter(f){
   df=f;
   document.querySelectorAll('.btn').forEach(function(b){b.classList.remove('active');});
   var btn=document.getElementById('btn-'+f);
-  if(btn)btn.classList.add('active');
+  if(btn){btn.classList.add('active');}
   go();
 }
 
