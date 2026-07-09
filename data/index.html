@@ -321,17 +321,30 @@ var sk='date',sd=1,df='up';
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
 function buildDropdowns(){
+  var weekEnd=getWeekEnd();
+  var monthEnd=getMonthEnd();
+  var curV=document.getElementById('vf').value;
+  var curA=document.getElementById('af').value;
   var vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){
     var dt=r.getAttribute('data-date')||'';
     var v=r.getAttribute('data-venue')||'';
     var a=r.getAttribute('data-performer')||'';
-    if(dt>=TODAY){if(v)vv[v]=1;if(a)aa[a]=1;}
+    var include=false;
+    if(df==='today'&&dt===TODAY)include=true;
+    else if(df==='up'&&dt>=TODAY)include=true;
+    else if(df==='week'&&dt>=TODAY&&dt<=weekEnd)include=true;
+    else if(df==='month'&&dt>=TODAY&&dt<=monthEnd)include=true;
+    else if(df==='all')include=true;
+    else if(df==='past'&&dt<TODAY)include=true;
+    if(include){if(v)vv[v]=1;if(a)aa[a]=1;}
   });
   var vs=document.getElementById('vf');
-  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;vs.appendChild(o);});
+  vs.innerHTML='<option value="">All Venues</option>';
+  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===curV)o.selected=true;vs.appendChild(o);});
   var as=document.getElementById('af');
-  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;as.appendChild(o);});
+  as.innerHTML='<option value="">All Artists</option>';
+  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
 }
 
 function getWeekEnd(){var d=new Date();d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
@@ -342,6 +355,7 @@ function setFilter(f){
   document.querySelectorAll('.btn').forEach(function(b){b.classList.remove('active');});
   var btn=document.getElementById('btn-'+f);
   if(btn)btn.classList.add('active');
+  buildDropdowns();
   go();
 }
 
