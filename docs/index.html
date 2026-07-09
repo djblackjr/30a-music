@@ -1,12 +1,45 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>30A Music Intelligence</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;background:#F5F0E8;font-size:16px;}header{background:#1F3864;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}header h1{font-size:1.2rem;margin:0;}header p{font-size:.7rem;opacity:.6;}.stats{display:flex;background:#fff;border-bottom:2px solid #e9ecef;}.stat{padding:10px 16px;border-right:1px solid #e9ecef;text-align:center;min-width:70px;}.stat .n{font-size:1.4rem;font-weight:700;color:#1F3864;}.stat .l{font-size:.58rem;color:#adb5bd;text-transform:uppercase;}.tn{background:#1F3864;color:#fff;padding:14px 16px;margin:12px;border-radius:8px;}.tn h2{font-size:.85rem;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}.sc{background:rgba(255,255,255,.1);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}.leg{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e9ecef;font-size:.75rem;}.ld{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;}.fil{padding:10px 12px;background:#fff;border-bottom:1px solid #e9ecef;display:flex;flex-direction:column;gap:8px;}input{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.9rem;width:100%;outline:none;}.dr{display:flex;gap:6px;}select{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.85rem;background:#fff;cursor:pointer;flex:1;outline:none;}.br{display:flex;gap:6px;flex-wrap:wrap;}.btn{padding:7px 12px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;font-size:.82rem;white-space:nowrap;}.btn:hover{background:#f0f0f0;}.btn.on{background:#1F3864;color:#fff;border-color:#1F3864;}.cnt{font-size:.8rem;color:#6c757d;margin-left:auto;align-self:center;}.wrap{padding:12px;}table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}th{background:#1F3864;color:#fff;padding:10px 12px;text-align:left;font-size:.8rem;cursor:pointer;}th:hover{background:#1B7A8A;}td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:.88rem;vertical-align:middle;}tr:last-child td{border-bottom:none;}tr:hover td{background:#f5faff;}tr.up td{background:rgba(27,122,138,.04);}tr.up td:first-child{border-left:3px solid #1B7A8A;}tr.now td{background:rgba(31,56,100,.12);}tr.now td:first-child{border-left:4px solid #1F3864;}.vt{padding:3px 10px;border-radius:8px;font-size:.82rem;font-weight:500;display:inline-block;color:#fff;}.vt-rft{background:#c0392b;}.vt-ps{background:#d35400;}.vt-sbb{background:#8e44ad;}.vt-nbs{background:#16a085;}.vt-sbs{background:#27ae60;}.vt-aj{background:#2980b9;}.vt-pav{background:#e67e22;}.vt-chi{background:#e91e8c;}.vt-30a{background:#1565c0;}.vt-mcg{background:#4a235a;}.vt-def{background:#555;}a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}td,th{padding:7px 8px;font-size:.8rem;}}</style></head><body><header><div><h1>🎵 30A Music Intelligence</h1><p>Emerald Coast Live Music</p></div><span id="upd" style="font-size:.65rem;opacity:.45"></span></header><div class="stats"><div class="stat"><div class="n">229</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div><div style="padding:12px 12px 0;" id="map-wrap">
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>30A Music Intelligence</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,sans-serif;background:#F5F0E8;font-size:16px;}
+header{background:#1F3864;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+header h1{font-size:1.2rem;margin:0;}header p{font-size:.7rem;opacity:.6;}
+.stats{display:flex;background:#fff;border-bottom:2px solid #e9ecef;}
+.stat{padding:10px 16px;border-right:1px solid #e9ecef;text-align:center;min-width:70px;}
+.stat .n{font-size:1.4rem;font-weight:700;color:#1F3864;}.stat .l{font-size:.58rem;color:#adb5bd;text-transform:uppercase;}
+.tn{background:#1F3864;color:#fff;padding:14px 16px;margin:12px;}
+.tn h2{font-size:.85rem;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.sc{background:rgba(255,255,255,.1);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.leg{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e9ecef;font-size:.75rem;}
+.ld{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;}
+.fil{padding:10px 12px;background:#fff;border-bottom:1px solid #e9ecef;display:flex;flex-direction:column;gap:8px;}
+input{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.9rem;width:100%;outline:none;}
+.dr{display:flex;gap:6px;}select{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.85rem;background:#fff;cursor:pointer;flex:1;outline:none;}
+.br{display:flex;gap:6px;flex-wrap:wrap;}
+.btn{padding:7px 12px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;font-size:.82rem;white-space:nowrap;}
+.btn:hover{background:#f0f0f0;}.btn.on{background:#1F3864;color:#fff;border-color:#1F3864;}
+.cnt{font-size:.8rem;color:#6c757d;margin-left:auto;align-self:center;}
+.wrap{padding:12px;}table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
+th{background:#1F3864;color:#fff;padding:10px 12px;text-align:left;font-size:.8rem;cursor:pointer;}th:hover{background:#1B7A8A;}
+td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:.88rem;vertical-align:middle;}tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f5faff;}tr.up td{background:rgba(27,122,138,.04);}tr.up td:first-child{border-left:3px solid #1B7A8A;}
+tr.now td{background:rgba(31,56,100,.12);}tr.now td:first-child{border-left:4px solid #1F3864;}
+.vt{padding:3px 10px;border-radius:8px;font-size:.82rem;font-weight:500;display:inline-block;color:#fff;}
+.vt-rft{background:#c0392b;}.vt-ps{background:#d35400;}.vt-sbb{background:#8e44ad;}.vt-nbs{background:#16a085;}
+.vt-sbs{background:#27ae60;}.vt-aj{background:#2980b9;}.vt-pav{background:#e67e22;}
+.vt-chi{background:#e91e8c;}.vt-30a{background:#1565c0;}.vt-mcg{background:#4a235a;}.vt-def{background:#555;}
+a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}td,th{padding:7px 8px;font-size:.8rem;}}</style></head><body>
+<header><div><h1>🎵 30A Music Intelligence</h1><p>Emerald Coast Live Music</p></div><span id="upd" style="font-size:.65rem;opacity:.45"></span></header>
+<div class="stats"><div class="stat"><div class="n">262</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
+<div style="padding:12px 12px 0;">
 <svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
 <rect width="820" height="300" fill="#eef6f0" rx="12"/>
 <rect x="0" y="0" width="820" height="70" fill="#c8e8f5"/>
 <path d="M0,55 Q200,70 400,60 Q600,50 820,65 L820,0 L0,0 Z" fill="#b0d8ee"/>
-<text x="410" y="38" text-anchor="middle" fill="#5a9ab5" font-size="11" font-family="-apple-system,sans-serif" opacity="0.9">Choctawhatchee Bay</text>
+<text x="410" y="38" text-anchor="middle" fill="#5a9ab5" font-size="11" font-family="-apple-system,sans-serif">Choctawhatchee Bay</text>
 <rect x="0" y="235" width="820" height="65" fill="#7ec8e3"/>
 <path d="M0,235 Q200,225 400,232 Q600,238 820,228 L820,235 Z" fill="#a8d8ea"/>
-<text x="410" y="270" text-anchor="middle" fill="#1e6e8e" font-size="12" font-family="-apple-system,sans-serif" opacity="0.8">Gulf of Mexico</text>
+<text x="410" y="270" text-anchor="middle" fill="#1e6e8e" font-size="12" font-family="-apple-system,sans-serif">Gulf of Mexico</text>
 <path d="M0,218 Q200,210 400,216 Q600,222 820,214 L820,235 Q600,238 400,232 Q200,226 0,235 Z" fill="#e8d5a3" opacity="0.8"/>
 <path d="M20,188 Q200,180 410,184 Q620,188 800,182" stroke="#f59e0b" stroke-width="5" fill="none" stroke-linecap="round"/>
 <rect x="22" y="168" width="28" height="16" rx="3" fill="#f59e0b"/>
@@ -25,15 +58,15 @@
 <line x1="315" y1="183" x2="315" y2="218" stroke="#c0392b" stroke-width="2"/>
 <circle cx="315" cy="183" r="9" fill="#c0392b" stroke="white" stroke-width="2"/>
 <text x="315" y="231" text-anchor="middle" fill="#7f1d1d" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Red Fish Taco</text>
-<line x1="400" y1="182" x2="400" y2="145" stroke="#2980b9" stroke-width="2"/>
-<circle cx="400" cy="182" r="9" fill="#2980b9" stroke="white" stroke-width="2"/>
-<text x="400" y="127" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">AJ's Grayton</text>
-<line x1="485" y1="183" x2="485" y2="218" stroke="#e91e8c" stroke-width="2"/>
-<circle cx="485" cy="183" r="9" fill="#e91e8c" stroke="white" stroke-width="2"/>
-<text x="485" y="232" text-anchor="middle" fill="#831843" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Chiringo</text>
-<line x1="570" y1="182" x2="570" y2="145" stroke="#16a085" stroke-width="2"/>
-<circle cx="570" cy="182" r="9" fill="#16a085" stroke="white" stroke-width="2"/>
-<text x="570" y="127" text-anchor="middle" fill="#064e3b" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">North Beach Social</text>
+<line x1="400" y1="182" x2="400" y2="145" stroke="#16a085" stroke-width="2"/>
+<circle cx="400" cy="182" r="9" fill="#16a085" stroke="white" stroke-width="2"/>
+<text x="400" y="127" text-anchor="middle" fill="#064e3b" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">North Beach Social</text>
+<line x1="485" y1="183" x2="485" y2="218" stroke="#2980b9" stroke-width="2"/>
+<circle cx="485" cy="183" r="9" fill="#2980b9" stroke="white" stroke-width="2"/>
+<text x="485" y="232" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">AJ's Grayton</text>
+<line x1="570" y1="182" x2="570" y2="145" stroke="#e91e8c" stroke-width="2"/>
+<circle cx="570" cy="182" r="9" fill="#e91e8c" stroke="white" stroke-width="2"/>
+<text x="570" y="132" text-anchor="middle" fill="#831843" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Chiringo</text>
 <line x1="655" y1="183" x2="655" y2="218" stroke="#e67e22" stroke-width="2"/>
 <circle cx="655" cy="183" r="9" fill="#e67e22" stroke="white" stroke-width="2"/>
 <text x="655" y="232" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Watersound</text>
@@ -44,18 +77,21 @@
 <text x="102" y="25" text-anchor="middle" fill="#1F3864" font-size="12" font-family="-apple-system,sans-serif" font-weight="600">30A Music Venues</text>
 </svg></div>
 <div style="text-align:center;padding:4px 0 8px;">
-  <button onclick="expandMap()" style="font-size:.75rem;color:#1B7A8A;background:none;border:none;cursor:pointer;text-decoration:underline;">Click to expand map</button>
+<button onclick="expandMap()" style="font-size:.75rem;color:#1B7A8A;background:none;border:none;cursor:pointer;text-decoration:underline;">Click to expand map</button>
 </div>
 <div id="map-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;" onclick="closeMap()">
-  <div style="background:white;border-radius:12px;padding:16px;max-width:95vw;width:900px;" onclick="event.stopPropagation()">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <strong style="color:#1F3864;font-size:1rem;">30A Music Venues</strong>
-      <button onclick="closeMap()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#666;line-height:1;">✕</button>
-    </div>
-    <div id="map-modal-content"></div>
-  </div>
+<div style="background:white;border-radius:12px;padding:16px;max-width:95vw;width:900px;" onclick="event.stopPropagation()">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+<strong style="color:#1F3864;font-size:1rem;">30A Music Venues</strong>
+<button onclick="closeMap()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#666;line-height:1;">✕</button>
 </div>
-<div class="tn"><h2>Tonight — Thursday, July 09</h2><div class="sc"><div><b>Jim Couch</b><br><small>4:00 - 8:00 PM</small></div><span class="vt vt-aj">AJ's Grayton</span></div><div class="sc"><div><b>Gage Cowart</b><br><small>6-9PM</small></div><span class="vt vt-rft">Red Fish Taco</span></div><div class="sc"><div><b>Reid Fisher</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-sbb">Shelby's Beach Bar</span></div><div class="sc"><div><b>Stevie Monce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-ps">Papa Surf</span></div><div class="sc"><div><b>About to Sweat</b><br><small>6:00 PM - 9:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Voices of Valor</b><br><small>6pm</small></div><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></div><div class="sc"><div><b>Outro</b><br><small>7-10PM</small></div><span class="vt vt-sbs">Stinky's Bait Shack</span></div><div class="sc"><div><b>Karaoke</b><br><small>9:00 PM - 12:00 AM</small></div><span class="vt vt-aj">AJ's Grayton</span></div></div><span class="vt vt-rft">Red Fish Taco</span></div><div class="sc"><div><b>Reid Fisher</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-sbb">Shelby's Beach Bar</span></div><div class="sc"><div><b>Stevie Monce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-ps">Papa Surf</span></div><div class="sc"><div><b>About to Sweat</b><br><small>6:00 PM - 9:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Voices of Valor</b><br><small>6pm</small></div><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></div><div class="sc"><div><b>Outro</b><br><small>7-10PM</small></div><span class="vt vt-sbs">Stinky's Bait Shack</span></div></div><div class="leg"><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div><div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div><div class="wrap"><table><thead><tr><th>Artist</th><th>Date</th><th class="hm">Time</th><th>Venue</th><th class="hm">Link</th></tr></thead><tbody id="tb"><tr data-date="2026-06-04" data-venue="The Pavilion at Watersound Town Center" data-performer="Kids Fair & Music"><td><b>Kids Fair & Music</b></td><td>Thu Jun 04</td><td>6pm</td><td><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></td><td><a href="https://instagram.com/kidsfair&music" target="_blank">view</a></td></tr>
+<div id="map-modal-content"></div>
+</div>
+</div>
+<div class="tn"><h2>Tonight — Thursday, July 09</h2><div class="sc"><div><b>Jim Couch</b><br><small>4:00 - 8:00 PM</small></div><span class="vt vt-aj">AJ's Grayton</span></div><div class="sc"><div><b>Gage Cowart</b><br><small>6-9PM</small></div><span class="vt vt-rft">Red Fish Taco</span></div><div class="sc"><div><b>Reid Fisher</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-sbb">Shelby's Beach Bar</span></div><div class="sc"><div><b>Stevie Monce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-ps">Papa Surf</span></div><div class="sc"><div><b>About to Sweat</b><br><small>6:00 PM - 9:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Voices of Valor</b><br><small>6pm</small></div><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></div><div class="sc"><div><b>Outro</b><br><small>7-10PM</small></div><span class="vt vt-sbs">Stinky's Bait Shack</span></div><div class="sc"><div><b>Karaoke</b><br><small>9:00 PM - 12:00 AM</small></div><span class="vt vt-aj">AJ's Grayton</span></div></div>
+<div class="leg"><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div>
+<div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div>
+<div class="wrap"><table><thead><tr><th>Artist</th><th>Date</th><th class="hm">Time</th><th>Venue</th><th class="hm">Link</th></tr></thead><tbody id="tb"><tr data-date="2026-06-04" data-venue="The Pavilion at Watersound Town Center" data-performer="Kids Fair & Music"><td><b>Kids Fair & Music</b></td><td>Thu Jun 04</td><td>6pm</td><td><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></td><td><a href="https://instagram.com/kidsfair&music" target="_blank">view</a></td></tr>
 <tr data-date="2026-06-18" data-venue="The Pavilion at Watersound Town Center" data-performer="Paul McDonald & The Mourning Doves"><td><b>Paul McDonald & The Mourning Doves</b></td><td>Thu Jun 18</td><td>6pm</td><td><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></td><td><a href="https://instagram.com/paulmcdonald&themourningdoves" target="_blank">view</a></td></tr>
 <tr data-date="2026-06-25" data-venue="Red Fish Taco" data-performer="Grayton Locals Market"><td><b>Grayton Locals Market</b></td><td>Thu Jun 25</td><td>9:00 am</td><td><span class="vt vt-rft">Red Fish Taco</span></td><td><a href="https://www.sowal.com/event/grayton-locals-market-40" target="_blank">view</a></td></tr>
 <tr data-date="2026-06-25" data-venue="Crackings" data-performer="Live Music"><td><b>Live Music</b></td><td>Thu Jun 25</td><td>9:00 am</td><td><span class="vt vt-def">Crackings</span></td><td><a href="https://www.sowal.com/event/live-music-crackings-527" target="_blank">view</a></td></tr>
@@ -317,14 +353,13 @@
 <tr data-date="2026-07-31" data-venue="AJ's Grayton" data-performer="Stranger Boy"><td><b>Stranger Boy</b></td><td>Fri Jul 31</td><td>9:00 PM - 1:00 AM</td><td><span class="vt vt-aj">AJ's Grayton</span></td><td><a href="https://ajsgrayton.com/santa-rosa-beach-grayton-beach-aj-s-grayton-beach-events-and-music" target="_blank">view</a></td></tr>
 <tr data-date="2026-08-01" data-venue="AJ's Grayton" data-performer="Stranger Boy"><td><b>Stranger Boy</b></td><td>Sat Aug 01</td><td>9:00 PM - 1:00 AM</td><td><span class="vt vt-aj">AJ's Grayton</span></td><td><a href="https://ajsgrayton.com/santa-rosa-beach-grayton-beach-aj-s-grayton-beach-events-and-music" target="_blank">view</a></td></tr>
 <tr data-date="2026-08-13" data-venue="The Pavilion at Watersound Town Center" data-performer="Mindy Smith"><td><b>Mindy Smith</b></td><td>Thu Aug 13</td><td>6pm</td><td><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></td><td><a href="https://instagram.com/mindysmith" target="_blank">view</a></td></tr>
-</tbody></table></div><script>
+</tbody></table></div>
+<script>
 var T=new Date().toISOString().slice(0,10);
 var df='up';
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-
 function we(){var d=new Date();d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return d.toISOString().slice(0,10);}
-
 function bd(){
   var w=we(),m=me(),vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){
@@ -345,11 +380,10 @@ function bd(){
   vs.innerHTML='<option value="">All Venues</option>';
   Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===cv)o.selected=true;vs.appendChild(o);});
   var as=document.getElementById('af');
-  var ca2=as.value;
+  var ca=as.value;
   as.innerHTML='<option value="">All Artists</option>';
-  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===ca2)o.selected=true;as.appendChild(o);});
+  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===ca)o.selected=true;as.appendChild(o);});
 }
-
 function sf(f){
   df=f;
   document.querySelectorAll('.btn').forEach(function(b){b.classList.remove('on');});
@@ -357,7 +391,6 @@ function sf(f){
   if(b)b.classList.add('on');
   bd();go();
 }
-
 function go(){
   var q=document.getElementById('q').value.toLowerCase();
   var vf=document.getElementById('vf').value;
@@ -386,23 +419,18 @@ function go(){
   document.getElementById('sa').textContent=Object.keys(aa).length;
   document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
-
 function ca(){
   document.getElementById('q').value='';
   document.getElementById('vf').value='';
   document.getElementById('af').value='';
   sf('up');
 }
-
-sf('up');
-
 function expandMap(){
-  var wrap = document.getElementById('map-wrap');
-  var svg = wrap.querySelector('svg');
-  var modal = document.getElementById('map-modal');
-  var mc = document.getElementById('map-modal-content');
-  mc.innerHTML = svg.outerHTML;
-  mc.querySelector('svg').style.width='100%';
+  var wrap=document.getElementById('map-wrap');
+  var svg=wrap ? wrap.querySelector('svg') : document.querySelector('svg');
+  var modal=document.getElementById('map-modal');
+  var mc=document.getElementById('map-modal-content');
+  if(svg){mc.innerHTML=svg.outerHTML;mc.querySelector('svg').style.width='100%';}
   modal.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -411,4 +439,5 @@ function closeMap(){
   document.body.style.overflow='';
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();});
+sf('up');
 </script></body></html>
