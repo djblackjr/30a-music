@@ -5,7 +5,7 @@ on:
     paths:
       - 'images/inbox/**'
   schedule:
-    - cron: '0 12 * * 1'  # Every Monday at noon UTC
+    - cron: '0 12 * * 5'  # Every Friday at noon UTC
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
