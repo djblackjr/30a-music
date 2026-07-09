@@ -40,6 +40,13 @@ tr.istoday td:first-child{border-left:4px solid #1F3864;}
 .lk{color:#1B7A8A;text-decoration:none;font-size:.82rem;}
 .lk:hover{text-decoration:underline;}
 .empty{text-align:center;padding:40px;color:#adb5bd;}
+.tonight{background:#1F3864;color:#fff;padding:14px 16px;margin:12px 12px 0;}
+.tonight h2{font-size:1rem;margin:0 0 10px;opacity:.8;letter-spacing:.5px;text-transform:uppercase;}
+.tonight-empty{opacity:.5;font-size:.9rem;padding:4px 0;}
+.show-card{background:rgba(255,255,255,.1);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;}
+.show-card .artist{font-weight:700;font-size:1rem;}
+.show-card .details{font-size:.82rem;opacity:.75;}
+.show-card .venue-pill{background:rgba(255,255,255,.15);padding:2px 10px;border-radius:10px;font-size:.78rem;}
 @media(max-width:600px){
   .hide-mobile{display:none;}
   td,th{padding:7px 8px;font-size:.8rem;}
@@ -55,6 +62,7 @@ tr.istoday td:first-child{border-left:4px solid #1F3864;}
   <div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div>
   <div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div>
 </div>
+<div class="tonight" id="tonight-card"></div>
 <div class="filters">
   <div class="search-row">
     <input type="search" id="q" placeholder="Search artists, venues..." oninput="go()">
@@ -320,6 +328,29 @@ var sk='date',sd=1,df='up';
 
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
+function buildTonight(){
+  var card=document.getElementById('tonight-card');
+  var shows=[];
+  document.querySelectorAll('#tb tr').forEach(function(r){
+    if(r.getAttribute('data-date')===TODAY){
+      shows.push({
+        artist:r.getAttribute('data-name')||'',
+        venue:r.getAttribute('data-venue')||'',
+        time:r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent:''
+      });
+    }
+  });
+  if(shows.length===0){
+    card.innerHTML='<h2>Tonight</h2><div class="tonight-empty">No shows scheduled tonight — check This Week</div>';
+  } else {
+    var html='<h2>🎵 Tonight — '+new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})+'</h2>';
+    shows.forEach(function(s){
+      html+='<div class="show-card"><div><div class="artist">'+s.artist+'</div><div class="details">'+s.time+'</div></div><div class="venue-pill">'+s.venue+'</div></div>';
+    });
+    card.innerHTML=html;
+  }
+}
+
 function buildDropdowns(){
   var weekEnd=getWeekEnd();
   var monthEnd=getMonthEnd();
@@ -408,7 +439,8 @@ function clearAll(){
   document.getElementById('q').value='';
   document.getElementById('vf').value='';
   document.getElementById('af').value='';
-  setFilter('up');
+  buildTonight();
+setFilter('up');
 }
 
 setFilter('up');
