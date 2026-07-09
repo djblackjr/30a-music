@@ -1,0 +1,39 @@
+name: Update Music Events
+
+on:
+  push:
+    paths:
+      - 'images/inbox/**'
+  schedule:
+    - cron: '0 12 * * 1'  # Every Monday at noon UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Process inbox images
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          cd $GITHUB_WORKSPACE
+          python3 process_inbox.py
+
+      - name: Commit and push updated dashboard
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/index.html data/events.db images/processed/ images/inbox/
+          git diff --staged --quiet || git commit -m "Auto-update events $(date +'%Y-%m-%d')"
+          git push

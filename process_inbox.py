@@ -92,7 +92,7 @@ def normalize_names(db):
         if not t or 'AM' in t.upper() or 'PM' in t.upper(): continue
         rm = re.match(r'(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})', t)
         if rm:
-            def fmt(h,m): return f"{h%12 or 12}:{m} {'AM' if int(h)<12 else 'PM'}"
+            def fmt(h,m): h=int(h); return f"{h%12 or 12}:{m} {'AM' if h<12 else 'PM'}"
             db.execute("UPDATE events SET time_start=? WHERE id=?", (fmt(rm.group(1),rm.group(2))+' - '+fmt(rm.group(3),rm.group(4)), row_id))
         else:
             sm = re.match(r'(\d{1,2}):(\d{2})$', t)
