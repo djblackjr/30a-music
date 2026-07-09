@@ -355,11 +355,11 @@ tr.istoday td:first-child{border-left:4px solid #1F3864;}
 <script>
 var TODAY=new Date().toISOString().slice(0,10);
 var sk='date',sd=1,df='up';
-var FAVS=JSON.parse(localStorage.getItem('30a-favs')||'{}');
+var FAVS={};
 
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-function saveFavs(){localStorage.setItem('30a-favs',JSON.stringify(FAVS));}
+function saveFavs(){}
 
 function toggleFav(artist){
   if(FAVS[artist]){delete FAVS[artist];}else{FAVS[artist]=1;}
