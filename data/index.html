@@ -439,8 +439,8 @@ function clearAll(){
   document.getElementById('q').value='';
   document.getElementById('vf').value='';
   document.getElementById('af').value='';
-  buildTonight();
-setFilter('up');
+  setFilter('up');
+setTimeout(buildTonight, 100);
 }
 
 setFilter('up');
