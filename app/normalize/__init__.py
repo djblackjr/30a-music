@@ -37,7 +37,7 @@ def normalize_events(events: list[dict]) -> list[dict]:
       - merged field values (from its highest-confidence observation)
       - an aggregate `confidence` + `confidence_reason`
       - `source_count`, `verification_count`, `conflict_flag`, `conflict_reason`
-      - an `observations` list (persisted to the event_sources table)
+      - an `observations` list (persisted to the event_observations table)
     """
     out = normalize_and_group(events)
     logger.info("Normalised %d raw -> %d canonical events", len(events), len(out))

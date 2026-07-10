@@ -202,7 +202,8 @@ later slice.
 
 ### Phase 3C — Source provenance
 One event = many observations. `normalize_events` now GROUPS sightings by identity instead
-of dropping duplicates. Adds the `event_sources` table (v3) and provenance columns on
+of dropping duplicates. Adds the `event_observations` table (v3, renamed from
+`event_sources` in v4) and provenance columns on
 `events` (`source_count`, `verification_count`, `conflict_flag`, `conflict_reason`).
 
 Confidence is two-dimensional per observation (`source_confidence`, `extraction_confidence`)

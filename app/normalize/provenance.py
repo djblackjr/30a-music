@@ -77,7 +77,7 @@ def _identity(ev: dict) -> str:
 
 
 def _observation_record(o: dict) -> dict:
-    """The subset of an observation persisted to the event_sources table."""
+    """The subset of an observation persisted to the event_observations table."""
     return {
         "source":                o.get("source"),
         "url":                   o.get("url"),

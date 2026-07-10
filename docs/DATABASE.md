@@ -2,11 +2,11 @@
 
 The 30A Music Intelligence database is a single SQLite file at **`data/events.db`**,
 managed exclusively through `app/database/db.py`. This document describes the schema as
-of **schema version 3**.
+of **schema version 4**.
 
 - Access layer: `app/database/db.py`
 - Connection: `sqlite3` with `row_factory = sqlite3.Row`
-- Current schema version: **3** (`PRAGMA user_version`)
+- Current schema version: **4** (`PRAGMA user_version`)
 
 > **Invariant:** all schema changes are **additive** and **auto-applied**. Opening an older
 > database migrates it up in place (`ALTER ... ADD COLUMN`, `NULL`-guarded backfills) — no
@@ -21,7 +21,7 @@ The database has two application tables plus SQLite's internal bookkeeping table
 | Table            | Purpose                                                    |
 |------------------|------------------------------------------------------------|
 | `events`         | Canonical events captured, across all runs (append-only)   |
-| `event_sources`  | Observations — one row per source that sighted an event    |
+| `event_observations` | Observations — one row per sighting of an event (a source can produce many) |
 | `runs`           | One row per pipeline run (run tracking / reconciliation)   |
 | `sqlite_sequence`| Internal — AUTOINCREMENT counters (managed by SQLite)      |
 
@@ -66,9 +66,10 @@ relies on ISO 8601 sorting lexicographically (`date >= today`).
 | `started_at`   | TEXT    | ISO 8601 timestamp (`datetime.now().isoformat()`) |
 | `events_saved` | INTEGER | Count of events persisted in that run (default 0) |
 
-### `event_sources` (v3)
+### `event_observations` (v3; renamed from `event_sources` in v4)
 
-One row per **observation** — a single source's sighting of an event.
+One row per **observation** — a single sighting of an event. One source (e.g. a venue
+website) produces many observations over time, so the row is an observation, not a source.
 
 | Column                  | Type    | Notes                                              |
 |-------------------------|---------|----------------------------------------------------|
@@ -101,7 +102,7 @@ primary key — see [Event identity](#event-identity).
 | Index                    | Table  | Columns    | Origin                          |
 |--------------------------|--------|------------|---------------------------------|
 | `sqlite_autoindex_runs_1`| `runs` | `run_id`   | Auto-created by the `UNIQUE` constraint |
-| `idx_event_sources_event_id` | `event_sources` | `event_id` | Explicit — observations are looked up per event (v3) |
+| `idx_event_observations_event_id` | `event_observations` | `event_id` | Explicit — observations are looked up per event (v3/v4) |
 
 There are currently **no user-defined indexes**. `events` is queried by `run_id` (in
 `load_events`) and ordered by `date, time_start`; if the table grows large, a candidate
@@ -158,7 +159,7 @@ Identity is implemented by `_event_key(ev)` (the identity key) and change detect
 **Two dimensions per observation, aggregated per event** (`app/normalize/confidence.py`,
 `app/normalize/provenance.py`).
 
-Each observation (row in `event_sources`) carries:
+Each observation (row in `event_observations`) carries:
 - `source_confidence` — trust in the source itself
 - `extraction_confidence` — how well it was read (completeness + model-reported confidence)
 - `confidence` — effective per-observation score = `source_confidence × extraction_confidence`
@@ -221,6 +222,7 @@ fresh DB). All migration logic lives in `app/database/db.py`.
 | 1       | `_migration_1` | Baseline: `events` + `runs` tables, plus `stage`/`source`/`run_id`|
 | 2       | `_migration_2` | Add `confidence REAL` + `confidence_reason TEXT`; backfill confidence from source trust and `run_id='legacy'` for pre-run-tracking rows |
 | 3       | `_migration_3` | Source provenance: add `source_count`/`verification_count`/`conflict_flag`/`conflict_reason` to `events`; create `event_sources` table + index |
+| 4       | `_migration_4` | Rename `event_sources` → `event_observations` (in-place `ALTER TABLE`, data preserved); reindex |
 
 Helper: `get_schema_version(path)` returns the current `user_version` without running any
 migration.

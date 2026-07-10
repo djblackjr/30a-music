@@ -31,7 +31,7 @@ DB_PATH = Path("data/events.db")
 # with the next version number. Never edit a released migration in place.
 # ---------------------------------------------------------------------------
 
-SCHEMA_VERSION = 3  # latest version defined below in MIGRATIONS
+SCHEMA_VERSION = 4  # latest version defined below in MIGRATIONS
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -181,11 +181,35 @@ def _migration_3(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_4(conn: sqlite3.Connection) -> None:
+    """
+    v3 -> v4: rename event_sources -> event_observations.
+
+    A row is an observation, not a source (one source produces many observations).
+    Done before the name becomes public API. In-place rename via ALTER TABLE —
+    all data is preserved, nothing is rebuilt or deleted. Defensive: only renames
+    if the old table still exists and the new one does not.
+    """
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    )}
+    if "event_sources" in tables and "event_observations" not in tables:
+        conn.execute("ALTER TABLE event_sources RENAME TO event_observations")
+
+    # Point the index at the new name (index names don't auto-rename).
+    conn.execute("DROP INDEX IF EXISTS idx_event_sources_event_id")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_event_observations_event_id "
+        "ON event_observations(event_id)"
+    )
+
+
 # Ordered list of (target_version, migration_fn). Append new migrations here.
 MIGRATIONS: list[tuple[int, "callable"]] = [
     (1, _migration_1),
     (2, _migration_2),
     (3, _migration_3),
+    (4, _migration_4),
 ]
 
 
@@ -268,7 +292,7 @@ def load_all_events(path: Path = DB_PATH) -> list[dict]:
 
 def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
     """
-    Insert canonical events for this run, plus one event_sources row per
+    Insert canonical events for this run, plus one event_observations row per
     observation. Does NOT delete old events so history is kept. Returns count saved.
     """
     if not events:
@@ -306,7 +330,7 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
             event_id = cur.lastrowid
             for obs in ev.get("observations") or []:
                 conn.execute(
-                    """INSERT INTO event_sources
+                    """INSERT INTO event_observations
                        (event_id, source, url, source_confidence, extraction_confidence,
                         confidence, observed_at, checksum)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -329,11 +353,11 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
     return saved
 
 
-def load_event_sources(event_id: int, path: Path = DB_PATH) -> list[dict]:
-    """Load the observations (event_sources rows) for a canonical event."""
+def load_event_observations(event_id: int, path: Path = DB_PATH) -> list[dict]:
+    """Load the observations (event_observations rows) for a canonical event."""
     conn = get_connection(path)
     rows = conn.execute(
-        "SELECT * FROM event_sources WHERE event_id = ? ORDER BY confidence DESC",
+        "SELECT * FROM event_observations WHERE event_id = ? ORDER BY confidence DESC",
         (event_id,),
     ).fetchall()
     conn.close()
