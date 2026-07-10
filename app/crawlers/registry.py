@@ -116,6 +116,8 @@ ALL_CRAWLERS: list[BaseCrawler] = [
 # is unnecessary load on SoWal, and total crawl time must stay reasonable as
 # more sources (Facebook, venue sites, artist pages, Bandsintown) are added.
 # The crawler itself stays unopinionated; strategy is injected here.
+# TODO (future): select Development / Production / Deep Scan by run context via a
+# scheduler — see the TODO in app/crawlers/policy.py. Not implemented yet.
 try:
     from app.crawlers.policy import CrawlPolicy
 
