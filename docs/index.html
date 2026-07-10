@@ -78,7 +78,7 @@ a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}
 </svg></div>
 
 
-<div class="tn" id="tonight-card"></div>
+<div class="tn" data-built="2026-07-10"><h2>Tonight — Friday, July 10</h2><div class="sc"><div><b>The New Cahoots</b><br><small>1:00 - 4:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Scratch 2020</b><br><small>4:00 - 6:00 PM</small></div><span class="vt vt-aj">AJ's Grayton</span></div><div class="sc"><div><b>Bryan Bludworth</b><br><small>4:00 - 8:00 PM</small></div><span class="vt vt-aj">AJ's Grayton</span></div><div class="sc"><div><b>Martin Lane</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-sbb">Shelby's Beach Bar</span></div><div class="sc"><div><b>Stevie Monce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-rft">Red Fish Taco</span></div><div class="sc"><div><b>Cade Pierce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-ps">Papa Surf</span></div><div class="sc"><div><b>Salt Rock Revival</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Rhino Jockeys + Matt Miller</b><br><small>7:00 - 10:00 PM</small></div><span class="vt vt-sbs">Stinky's Bait Shack</span></div></div>
 <div class="leg"><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div>
 <div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div>
 <div class="wrap"><table><thead><tr><th>Artist</th><th>Date</th><th class="hm">Time</th><th>Venue</th><th class="hm">Link</th></tr></thead><tbody id="tb"><tr data-date="2026-06-04" data-venue="The Pavilion at Watersound Town Center" data-performer="Kids Fair & Music"><td><b>Kids Fair & Music</b></td><td>Thu Jun 04</td><td>6:00 PM</td><td><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></td><td><a href="https://instagram.com/kidsfair&music" target="_blank">view</a></td></tr>
@@ -445,6 +445,33 @@ function buildTonightCard(){
   }
 }
 buildTonightCard();
+
+// Auto-rebuild tonight card if date has changed since last build
+(function(){
+  var T=new Date().toISOString().slice(0,10);
+  var card=document.querySelector('.tn');
+  if(!card||card.getAttribute('data-built')===T)return;
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var d=new Date();
+  var label=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
+  var shows=[];
+  document.querySelectorAll('#tb tr').forEach(function(r){
+    if(r.getAttribute('data-date')===T){
+      var tds=r.querySelectorAll('td');
+      var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
+      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls});
+    }
+  });
+  if(shows.length===0){
+    card.innerHTML='<h2>Tonight — '+label+'</h2><p style="opacity:.6">No shows tonight — check This Week</p>';
+  } else {
+    var html='<h2>Tonight — '+label+'</h2>';
+    shows.forEach(function(s){html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+s.time+'</small></div><span class="'+s.vcls+'">'+s.venue+'</span></div>';});
+    card.innerHTML=html;
+  }
+  card.setAttribute('data-built',T);
+})();
 sf('up');
 }
 
