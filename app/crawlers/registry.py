@@ -111,6 +111,16 @@ ALL_CRAWLERS: list[BaseCrawler] = [
     ShunkGulleyCrawler(),
 ]
 
+# SoWal is imported defensively: it depends on requests/bs4/lxml, so a missing
+# scraping dependency logs a warning and skips the crawler rather than breaking
+# the whole pipeline (which imports this module).
+try:
+    from app.crawlers.sowal import SoWalCrawler
+    ALL_CRAWLERS.append(SoWalCrawler())
+    logger.info("[registry] SoWal crawler registered")
+except Exception as exc:  # ImportError or any init failure
+    logger.warning("[registry] SoWal crawler unavailable: %s", exc)
+
 
 def run_all_crawlers() -> list[dict]:
     """Run every registered crawler and return the combined event list."""
