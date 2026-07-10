@@ -111,13 +111,29 @@ ALL_CRAWLERS: list[BaseCrawler] = [
     ShunkGulleyCrawler(),
 ]
 
+# Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose:
+# 100 events far exceeds a ~14-day horizon, a 500+ request run every execution
+# is unnecessary load on SoWal, and total crawl time must stay reasonable as
+# more sources (Facebook, venue sites, artist pages, Bandsintown) are added.
+# The crawler itself stays unopinionated; strategy is injected here.
+try:
+    from app.crawlers.policy import CrawlPolicy
+
+    SOWAL_POLICY = CrawlPolicy(
+        max_events=100,
+        request_delay=0.75,
+    )
+except Exception as exc:  # pragma: no cover — policy import should not fail
+    logger.warning("[registry] CrawlPolicy unavailable: %s", exc)
+    SOWAL_POLICY = None
+
 # SoWal is imported defensively: it depends on requests/bs4/lxml, so a missing
 # scraping dependency logs a warning and skips the crawler rather than breaking
 # the whole pipeline (which imports this module).
 try:
     from app.crawlers.sowal import SoWalCrawler
-    ALL_CRAWLERS.append(SoWalCrawler())
-    logger.info("[registry] SoWal crawler registered")
+    ALL_CRAWLERS.append(SoWalCrawler(policy=SOWAL_POLICY))
+    logger.info("[registry] SoWal crawler registered with production policy")
 except Exception as exc:  # ImportError or any init failure
     logger.warning("[registry] SoWal crawler unavailable: %s", exc)
 

@@ -80,6 +80,12 @@ def test_sowal_is_registered():
     assert "sowal" in names
 
 
+def test_sowal_registered_with_production_policy():
+    sowal = next(c for c in ALL_CRAWLERS if c.name == "sowal")
+    assert sowal.policy.max_events == 100
+    assert sowal.policy.request_delay == 0.75
+
+
 # --- normalisation of SoWal output -----------------------------------------
 
 def _sowal_event(performer, venue, date, time_start="5:00 pm"):
