@@ -57,6 +57,41 @@ def test_compare_removed():
     assert result["summary"]["removed"] == 1
 
 
+# --- identity model: performer + venue + date -----------------------------
+
+def test_time_change_is_changed_not_remove_new():
+    old = _ev("Artist A", "Venue X", "2026-07-04", time_start="6PM")
+    new = _ev("Artist A", "Venue X", "2026-07-04", time_start="8PM")
+    result = compare_runs([new], [old])
+    assert result["summary"]["changed"] == 1
+    assert result["summary"]["new"] == 0
+    assert result["summary"]["removed"] == 0
+
+
+def test_venue_change_is_new_and_removed():
+    old = _ev("Artist A", "Venue X", "2026-07-04")
+    new = _ev("Artist A", "Venue Y", "2026-07-04")  # different venue = different event
+    result = compare_runs([new], [old])
+    assert result["summary"]["new"] == 1
+    assert result["summary"]["removed"] == 1
+    assert result["summary"]["changed"] == 0
+
+
+def test_same_artist_two_venues_same_day_are_distinct():
+    a = _ev("Artist A", "Venue X", "2026-07-04")
+    b = _ev("Artist A", "Venue Y", "2026-07-04")
+    result = compare_runs([a, b], [])
+    assert result["summary"]["new"] == 2
+
+
+def test_confidence_change_alone_is_not_changed():
+    old = _ev("Artist A", "Venue X", "2026-07-04", confidence=0.5)
+    new = _ev("Artist A", "Venue X", "2026-07-04", confidence=0.9)
+    result = compare_runs([new], [old])
+    assert result["summary"]["unchanged"] == 1
+    assert result["summary"]["changed"] == 0
+
+
 def test_no_duplicate_keys():
     ev1 = _ev("Artist A", "Venue X", "2026-07-04")
     ev2 = _ev("Artist A", "Venue X", "2026-07-04")  # duplicate
@@ -100,21 +135,21 @@ def test_db_save_and_load():
 # ---------------------------------------------------------------------------
 
 def test_normalise_deduplication():
-    from app.monitor import _normalise_events
+    from app.normalize import normalize_events as _normalise_events
     ev = _ev("Artist A", "Venue X", "2026-07-04")
     result = _normalise_events([ev, ev])
     assert len(result) == 1
 
 
 def test_normalise_fills_name():
-    from app.monitor import _normalise_events
+    from app.normalize import normalize_events as _normalise_events
     ev = {"performer": "Artist B", "venue": "Venue Y", "date": "2026-07-05", "time_start": "7PM"}
     result = _normalise_events([ev])
     assert result[0]["name"] == "Artist B at Venue Y"
 
 
 def test_normalise_drops_empty_performer():
-    from app.monitor import _normalise_events
+    from app.normalize import normalize_events as _normalise_events
     ev = {"performer": "", "venue": "Venue Z", "date": "2026-07-06", "time_start": "8PM"}
     result = _normalise_events([ev])
     assert len(result) == 0

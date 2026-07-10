@@ -17,36 +17,10 @@ from app.database.db import (
 )
 from app.excel.exporter import generate_report
 from app.images.importer import INBOX_DIR, SUPPORTED_EXTS, process_inbox
+from app.normalize import normalize_events
 from app.reconcile.changes import compare_runs
 
 logger = logging.getLogger(__name__)
-
-
-def _normalise_events(events: list[dict]) -> list[dict]:
-    """
-    Light normalisation pass — deduplicate and fill missing name field.
-    """
-    seen = set()
-    out  = []
-    for ev in events:
-        performer = (ev.get("performer") or "").strip()
-        venue     = (ev.get("venue") or "").strip()
-        date      = (ev.get("date") or "").strip()
-        time      = (ev.get("time_start") or "").strip().upper()
-
-        if not performer:
-            continue
-
-        key = f"{performer.lower()}|{venue.lower()}|{date}|{time}"
-        if key in seen:
-            continue
-        seen.add(key)
-
-        if not ev.get("name"):
-            ev["name"] = f"{performer} at {venue}" if venue else performer
-
-        out.append(ev)
-    return out
 
 
 def run_pipeline() -> dict:
@@ -79,7 +53,7 @@ def run_pipeline() -> dict:
     # 4. Combine + normalise
     logger.info("Step 3/6 — Normalising events")
     all_raw    = crawler_events + image_events
-    normalised = _normalise_events(all_raw)
+    normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
     # 5. Load previous run for comparison
@@ -90,8 +64,7 @@ def run_pipeline() -> dict:
 
     # 6. Save to DB
     logger.info("Step 5/6 — Saving events to SQLite")
-    for ev in normalised:
-        ev["source"] = ev.get("source") or "crawler"
+    # source defaulting is handled in normalize_events
     saved = save_events(normalised, run_id=run_id)
     record_run(run_id=run_id, events_saved=saved)
 
