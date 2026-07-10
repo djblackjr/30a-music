@@ -31,7 +31,7 @@ DB_PATH = Path("data/events.db")
 # with the next version number. Never edit a released migration in place.
 # ---------------------------------------------------------------------------
 
-SCHEMA_VERSION = 1  # latest version defined below in MIGRATIONS
+SCHEMA_VERSION = 2  # latest version defined below in MIGRATIONS
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -95,9 +95,58 @@ def _migration_1(conn: sqlite3.Connection) -> None:
         _add_column_if_missing(conn, "events", col, coltype)
 
 
+# Source-trust defaults used ONLY to backfill pre-existing rows during the v2
+# migration. The authoritative live scorer is app/normalize/confidence.py (Phase 2);
+# this is a conservative one-time default so no legacy row is left unscored.
+_BACKFILL_SOURCE_TRUST = {
+    "sowal":   0.9,
+    "crawler": 0.9,
+    "seed":    0.6,
+}
+
+
+def _migration_2(conn: sqlite3.Connection) -> None:
+    """
+    v1 -> v2: confidence fields + legacy data backfill.
+
+    Purely additive:
+      - adds events.confidence (REAL) and events.confidence_reason (TEXT)
+      - backfills confidence for existing rows from source trust (NULLs only)
+      - backfills run_id = 'legacy' for rows that predate run tracking
+
+    No rows are deleted and no existing values are overwritten — every UPDATE is
+    guarded by an `IS NULL` / empty check, so re-running is a no-op.
+    """
+    _add_column_if_missing(conn, "events", "confidence", "REAL")
+    _add_column_if_missing(conn, "events", "confidence_reason", "TEXT")
+
+    # Backfill confidence from source trust, image:* and ocr* handled by prefix.
+    conn.execute(
+        """
+        UPDATE events
+           SET confidence = CASE
+                   WHEN source LIKE 'image:%' THEN 0.8
+                   WHEN source LIKE 'ocr%'    THEN 0.5
+                   WHEN source = 'sowal'      THEN 0.9
+                   WHEN source = 'crawler'    THEN 0.9
+                   WHEN source = 'seed'       THEN 0.6
+                   ELSE 0.5
+               END,
+               confidence_reason = 'backfilled at v2 migration from source trust'
+         WHERE confidence IS NULL
+        """
+    )
+
+    # Guard rows that predate run tracking so every event belongs to a run.
+    conn.execute(
+        "UPDATE events SET run_id = 'legacy' WHERE run_id IS NULL OR run_id = ''"
+    )
+
+
 # Ordered list of (target_version, migration_fn). Append new migrations here.
 MIGRATIONS: list[tuple[int, "callable"]] = [
     (1, _migration_1),
+    (2, _migration_2),
 ]
 
 
@@ -191,8 +240,9 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
         try:
             conn.execute(
                 """INSERT INTO events
-                   (name, date, time_start, time_end, venue, performer, url, stage, source, run_id)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (name, date, time_start, time_end, venue, performer, url, stage, source, run_id,
+                    confidence, confidence_reason)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     ev.get("name"),
                     ev.get("date"),
@@ -204,6 +254,8 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
                     ev.get("stage"),
                     ev.get("source", "unknown"),
                     run_id,
+                    ev.get("confidence"),
+                    ev.get("confidence_reason"),
                 ),
             )
             saved += 1

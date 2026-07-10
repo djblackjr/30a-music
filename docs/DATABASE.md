@@ -2,11 +2,15 @@
 
 The 30A Music Intelligence database is a single SQLite file at **`data/events.db`**,
 managed exclusively through `app/database/db.py`. This document describes the schema as
-of **schema version 1** and the planned version 2.
+of **schema version 2**.
 
 - Access layer: `app/database/db.py`
 - Connection: `sqlite3` with `row_factory = sqlite3.Row`
-- Current schema version: **1** (`PRAGMA user_version`)
+- Current schema version: **2** (`PRAGMA user_version`)
+
+> **Invariant:** all schema changes are **additive** and **auto-applied**. Opening an older
+> database migrates it up in place (`ALTER ... ADD COLUMN`, `NULL`-guarded backfills) — no
+> rebuild, no deletion, no data loss. This is verified for the v0 (pre-versioning) path.
 
 ---
 
@@ -41,7 +45,9 @@ with that run's `run_id`. Old rows are never deleted, so the table is a full his
 | `url`        | TEXT    | Source or artist link                                        |
 | `stage`      | TEXT    | Stage within a venue, e.g. `"Main Stage"`; often NULL        |
 | `source`     | TEXT    | Provenance, e.g. `seed`, `crawler`, `sowal`, `image:<file>`  |
-| `run_id`     | TEXT    | The run that produced this row (FK-by-convention to `runs`)  |
+| `run_id`     | TEXT    | The run that produced this row (FK-by-convention to `runs`); `'legacy'` for pre-run-tracking rows |
+| `confidence` | REAL    | Extraction confidence `[0.0, 1.0]` (v2)                     |
+| `confidence_reason` | TEXT | How the score was derived (v2)                         |
 
 All columns except `id` are nullable. Dates and times are stored as text; date comparison
 relies on ISO 8601 sorting lexicographically (`date >= today`).
@@ -127,9 +133,12 @@ Identity is implemented by `_event_key(ev)` (the identity key) and change detect
 
 ## Confidence fields
 
-**Status: planned for schema version 2 (not yet present in v1).**
+**Status: columns present as of schema version 2.** The authoritative live scorer
+(`app/normalize/confidence.py`) is delivered in Phase 2; until then, the v2 migration
+backfills existing rows from source trust (see below), and `save_events` persists any
+`confidence` / `confidence_reason` supplied on the event dict.
 
-Every event will carry a confidence score describing how much to trust the extraction.
+Every event carries a confidence score describing how much to trust the extraction.
 
 | Column             | Type | Notes                                                       |
 |--------------------|------|-------------------------------------------------------------|
@@ -186,7 +195,7 @@ fresh DB). All migration logic lives in `app/database/db.py`.
 | Version | Migration      | Change                                                            |
 |---------|----------------|-------------------------------------------------------------------|
 | 1       | `_migration_1` | Baseline: `events` + `runs` tables, plus `stage`/`source`/`run_id`|
-| 2       | *(planned)*    | Add `confidence REAL` + `confidence_reason TEXT`; backfill legacy rows |
+| 2       | `_migration_2` | Add `confidence REAL` + `confidence_reason TEXT`; backfill confidence from source trust and `run_id='legacy'` for pre-run-tracking rows |
 
 Helper: `get_schema_version(path)` returns the current `user_version` without running any
 migration.
