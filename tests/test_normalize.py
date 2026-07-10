@@ -39,6 +39,15 @@ def test_dion_jones_and_band_stay_distinct():
     assert canonicalize("DION JONES & THE NEON TEARS") == "Dion Jones & The Neon Tears"
 
 
+def test_venue_alias_dion_jones_at_stinkys():
+    # Per the SoWal calendar: "Dion Jones" at Stinky's is the full band;
+    # elsewhere it stays the solo act.
+    stinkys = normalize_events([_raw("Dion Jones", "Stinky's Bait Shack")])
+    assert stinkys[0]["performer"] == "Dion Jones & The Neon Tears"
+    nbs = normalize_events([_raw("Dion Jones", "North Beach Social")])
+    assert nbs[0]["performer"] == "Dion Jones"
+
+
 def test_canonicalize_none_and_empty():
     assert canonicalize(None) is None
     assert canonicalize("") == ""

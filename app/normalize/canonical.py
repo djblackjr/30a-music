@@ -68,3 +68,20 @@ def canonicalize(value: str | None) -> str | None:
         return value
     trimmed = value.strip()
     return _VARIANT_TO_CANONICAL.get(trimmed.lower(), trimmed)
+
+
+# Venue-aware performer aliases: the same short name refers to a different act
+# depending on the venue. Verified against the SoWal events calendar — e.g. at
+# Stinky's the residency is billed as the full band, at North Beach Social it is
+# the solo act. Keyed on (performer_lower, venue_lower) -> canonical performer.
+VENUE_PERFORMER_ALIASES: dict[tuple[str, str], str] = {
+    ("dion jones", "stinky's bait shack"): "Dion Jones & The Neon Tears",
+}
+
+
+def apply_venue_alias(performer: str | None, venue: str | None) -> str | None:
+    """Resolve a venue-specific performer alias, else return the performer unchanged."""
+    if not performer:
+        return performer
+    key = (performer.strip().lower(), (venue or "").strip().lower())
+    return VENUE_PERFORMER_ALIASES.get(key, performer)

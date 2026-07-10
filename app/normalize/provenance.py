@@ -10,7 +10,7 @@ CONFLICT, not two events.
 """
 import hashlib
 
-from app.normalize.canonical import canonicalize
+from app.normalize.canonical import apply_venue_alias, canonicalize
 from app.normalize.confidence import (
     ConfidenceAggregator,
     extraction_confidence,
@@ -65,10 +65,13 @@ def build_observation(raw: dict) -> dict | None:
     performer = canonicalize((ev.get("performer") or "").strip())
     if not performer:
         return None
-    ev["performer"] = performer
 
     venue = canonicalize((ev.get("venue") or "").strip()) or None
     ev["venue"] = venue
+
+    # venue-aware alias (e.g. "Dion Jones" @ Stinky's -> the full band)
+    performer = apply_venue_alias(performer, venue)
+    ev["performer"] = performer
 
     ev["source"] = ev.get("source") or "crawler"
     ev["observation_type"] = ev.get("observation_type") or infer_observation_type(ev["source"])
