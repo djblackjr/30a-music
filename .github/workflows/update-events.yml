@@ -1,9 +1,47 @@
+name: Update Music Events
+
+on:
+  push:
+    paths:
+      - 'images/inbox/**'
+  schedule:
+    - cron: '0 12 * * 5'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Process inbox images
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python process_inbox.py
+
       - name: Commit and push updated dashboard
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          cp data/index.html docs/index.html
+          if [ -f data/index.html ]; then
+            cp data/index.html docs/index.html
+          fi
 
           git add -A
 
