@@ -1,3 +1,4 @@
+from app.crawlers.sowal import SoWalCrawler
 """
 app/crawlers/registry.py
 Crawler registry — add new crawlers here and they auto-run in the pipeline.
