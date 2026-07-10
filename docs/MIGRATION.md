@@ -217,11 +217,19 @@ pipeline persists everything renderable (observations, aggregate confidence, con
 flag/reason); the dashboard NEVER computes confidence, reconciliation, venue defaults, or
 canonical names — it only renders.
 
-### Phase 4 — Dashboard convergence
-Build `app/dashboard/` by templatizing the existing rich `docs/index.html`; generate from
-the DB; wire into `run_pipeline()`. Surface confidence (badges, sort/filter by band).
-**Verify the generated `docs/index.html` matches the current live dashboard visually**
-(Tonight card, map, search/sort/filter) before proceeding.
+### Phase 4 — Dashboard convergence ✅ DONE
+Built `app/dashboard/` (dumb generator). Approach:
+- One-time `legacy_import.py` migrated the 262 curated rows into the DB as observations
+  (`source=dashboard_legacy`, `observation_type=manual`); legacy HTML archived under
+  `archive/` and no longer the system of record.
+- `build_template.py` derived `app/dashboard/template.html` from the pristine page,
+  preserving the shell exactly and adding only Sources/Conf columns, health cells,
+  expand rows (+ a guard so filtering skips detail rows).
+- `render.py` renders **current knowledge** — `load_current_events()` unions across runs,
+  latest-wins per identity — so a new run adds/updates without dropping the legacy set.
+- Wired into `run_pipeline()` (Step 7/7). Verified: generated `docs/index.html` reproduces
+  the legacy page **262/262** rows (positions + times), Tonight/venues/map/filters preserved,
+  plus the intelligence layer. Enhancement, not redesign.
 
 ### Phase 5 — Delete redundancies
 With every capability proven in `app/`, remove `process_inbox.py`, `ocr_and_rebuild.py`,

@@ -11,7 +11,13 @@ import logging
 from datetime import date, datetime
 from pathlib import Path
 
-from app.database.db import DB_PATH, get_connection, load_event_observations, load_events
+from app.database.db import (
+    DB_PATH,
+    get_connection,
+    load_current_events,
+    load_event_observations,
+    load_events,
+)
 from app.normalize.confidence import confidence_band
 
 logger = logging.getLogger(__name__)
@@ -47,13 +53,6 @@ def _fmt_date(iso: str | None) -> str:
         return datetime.strptime(iso, "%Y-%m-%d").strftime("%a %b %d")
     except (TypeError, ValueError):
         return iso or ""
-
-
-def _latest_run_id(path: Path) -> str | None:
-    conn = get_connection(path)
-    row = conn.execute("SELECT run_id FROM runs ORDER BY id DESC LIMIT 1").fetchone()
-    conn.close()
-    return row["run_id"] if row else None
 
 
 def _obs_row_html(o: dict) -> str:
@@ -127,32 +126,32 @@ def _tonight_html(events: list[dict], today: str) -> str:
     return "".join(parts)
 
 
-def _health(events: list[dict], path: Path, run_id: str | None) -> dict:
+def _health(events: list[dict], path: Path) -> dict:
     confs = [e["confidence"] for e in events if isinstance(e.get("confidence"), (int, float))]
     avg = round(sum(confs) / len(confs), 2) if confs else 0
     conflicts = sum(1 for e in events if e.get("conflict_flag"))
-    conn = get_connection(path)
-    # distinct sources feeding THIS run's events (not the whole history)
-    n_sources = conn.execute(
-        "SELECT COUNT(DISTINCT o.source) FROM event_observations o "
-        "JOIN events e ON e.id = o.event_id WHERE e.run_id = ?",
-        (run_id,),
-    ).fetchone()[0]
-    conn.close()
+    ids = [e["id"] for e in events if e.get("id")]
+    n_sources = 0
+    if ids:
+        conn = get_connection(path)
+        q = "SELECT COUNT(DISTINCT source) FROM event_observations WHERE event_id IN (%s)" % ",".join("?" * len(ids))
+        n_sources = conn.execute(q, ids).fetchone()[0]
+        conn.close()
     return {"total": len(events), "avgconf": f"{avg:.2f}", "conflicts": conflicts, "sources": n_sources}
 
 
 def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None, path: Path = DB_PATH) -> Path:
     """Render the dashboard for a run (default: latest) into out_path."""
     template = TEMPLATE.read_text(encoding="utf-8")
-    run_id = run_id or _latest_run_id(path)
-    events = load_events(run_id=run_id, path=path)
+    # Default: current knowledge across all runs (latest-wins per identity). A
+    # specific run_id can be passed for reproduction/testing.
+    events = load_events(run_id=run_id, path=path) if run_id else load_current_events(path=path)
     # date ascending, then insertion order (id) — reproduces the curated layout;
     # within-day ordering follows how events were added, as the original did.
     events.sort(key=lambda e: ((e.get("date") or ""), e.get("id") or 0))
 
     today = date.today().isoformat()
-    health = _health(events, path, run_id)
+    health = _health(events, path)
 
     html_out = (
         template
@@ -164,10 +163,10 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None, path: Path
         .replace("{{SOURCES}}", str(health["sources"]))
     )
     out_path.write_text(html_out, encoding="utf-8")
-    logger.info("Dashboard rendered to %s (%d events, run %s)", out_path, len(events), run_id)
+    logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))
     return out_path
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    generate(out_path=Path("docs/index.generated.html"))
+    generate()

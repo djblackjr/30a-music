@@ -72,9 +72,18 @@ def run_pipeline() -> dict:
     changes = compare_runs(normalised, previous_events)
 
     # 8. Generate Excel
-    logger.info("Step 6/6 — Generating Excel report")
+    logger.info("Step 6/7 — Generating Excel report")
     all_events  = load_events()          # full history for the report
     report_path = generate_report(normalised, changes, run_id)
+
+    # 9. Generate the dashboard from current knowledge (union across runs)
+    logger.info("Step 7/7 — Generating dashboard")
+    try:
+        from app.dashboard.render import generate as generate_dashboard
+        dashboard_path = generate_dashboard()
+    except Exception as exc:
+        logger.warning("Dashboard generation failed: %s", exc)
+        dashboard_path = None
 
     result = {
         "run_id":          run_id,
@@ -84,6 +93,7 @@ def run_pipeline() -> dict:
         "events_saved":    saved,
         "new_or_changed":  changes["summary"]["total_delta"],
         "report_path":     str(report_path),
+        "dashboard_path":  str(dashboard_path) if dashboard_path else None,
         "changes":         changes,
     }
 

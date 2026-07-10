@@ -310,6 +310,27 @@ def load_all_events(path: Path = DB_PATH) -> list[dict]:
     return load_events(path=path)
 
 
+def load_current_events(path: Path = DB_PATH) -> list[dict]:
+    """
+    The current picture of known events: the union across all runs, keeping the
+    most recent version of each identity (performer + venue + date). This lets a
+    new pipeline run add/update events without dropping events it didn't re-observe
+    (e.g. the migrated legacy set persists until superseded).
+    """
+    best: dict[tuple, dict] = {}
+    for e in load_events(path=path):
+        key = (
+            (e.get("performer") or "").strip().lower(),
+            (e.get("venue") or "").strip().lower(),
+            (e.get("date") or "").strip(),
+        )
+        cur = best.get(key)
+        rank = (e.get("run_id") or "", e.get("id") or 0)
+        if cur is None or rank > (cur.get("run_id") or "", cur.get("id") or 0):
+            best[key] = e
+    return list(best.values())
+
+
 # ---------------------------------------------------------------------------
 # Events — write
 # ---------------------------------------------------------------------------
