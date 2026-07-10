@@ -104,8 +104,11 @@ class ShunkGulleyCrawler(BaseCrawler):
 # Registry — add every crawler you want to run here
 # ---------------------------------------------------------------------------
 
-ALL_CRAWLERS: list[BaseCrawler] = [
+from app.crawlers.sowal import SoWalCrawler
+
+ALL_CRAWLERS = [
     SeedCrawler(),
+    SoWalCrawler(),
     AJsGraytonCrawler(),
     ChiringoCrawler(),
     ShunkGulleyCrawler(),
