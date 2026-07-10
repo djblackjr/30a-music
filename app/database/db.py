@@ -18,7 +18,22 @@ DB_PATH = Path("data/events.db")
 # Schema
 # ---------------------------------------------------------------------------
 
-SCHEMA = """
+# ---------------------------------------------------------------------------
+# Schema versioning
+#
+# The database version is tracked with SQLite's native `PRAGMA user_version`
+# (a 0 integer on a fresh DB). init_db() runs every pending migration in order
+# and bumps the version, so upgrades are ordered, tracked, and idempotent —
+# safe to call repeatedly and safe on a pre-existing DB created before
+# versioning existed (it will be detected as v0 and migrated up to current).
+#
+# To evolve the schema: add a migration function and append it to MIGRATIONS
+# with the next version number. Never edit a released migration in place.
+# ---------------------------------------------------------------------------
+
+SCHEMA_VERSION = 1  # latest version defined below in MIGRATIONS
+
+BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT,
@@ -49,20 +64,68 @@ def get_connection(path: Path = DB_PATH) -> sqlite3.Connection:
     return conn
 
 
-def init_db(path: Path = DB_PATH) -> None:
-    """Create tables if they don't exist. Safe to call on an existing DB."""
+def get_schema_version(path: Path = DB_PATH) -> int:
+    """Return the database's current schema version (0 on a fresh/unversioned DB)."""
     conn = get_connection(path)
-    conn.executescript(SCHEMA)
-    # Add new columns to existing tables gracefully
+    try:
+        return conn.execute("PRAGMA user_version").fetchone()[0]
+    finally:
+        conn.close()
+
+
+def _add_column_if_missing(conn: sqlite3.Connection, table: str, col: str, coltype: str) -> None:
+    """Additively add a column, ignoring the error if it already exists."""
+    try:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}")
+        logger.info("Added column '%s.%s'", table, col)
+    except sqlite3.OperationalError:
+        pass  # column already exists
+
+
+def _migration_1(conn: sqlite3.Connection) -> None:
+    """
+    v0 -> v1: baseline schema.
+
+    Creates the events + runs tables and ensures the events table has the
+    stage/source/run_id columns. Written to also upgrade a pre-versioning DB
+    that already has some of these — every statement is idempotent.
+    """
+    conn.executescript(BASE_SCHEMA)
     for col, coltype in [("stage", "TEXT"), ("source", "TEXT"), ("run_id", "TEXT")]:
-        try:
-            conn.execute(f"ALTER TABLE events ADD COLUMN {col} {coltype}")
-            conn.commit()
-            logger.info("Added column '%s' to events table", col)
-        except sqlite3.OperationalError:
-            pass  # column already exists
-    conn.commit()
-    conn.close()
+        _add_column_if_missing(conn, "events", col, coltype)
+
+
+# Ordered list of (target_version, migration_fn). Append new migrations here.
+MIGRATIONS: list[tuple[int, "callable"]] = [
+    (1, _migration_1),
+]
+
+
+def init_db(path: Path = DB_PATH) -> None:
+    """
+    Bring the database up to SCHEMA_VERSION by running any pending migrations.
+    Safe to call repeatedly and safe on a pre-versioning DB (detected as v0).
+    """
+    conn = get_connection(path)
+    try:
+        current = conn.execute("PRAGMA user_version").fetchone()[0]
+        for target, migrate in MIGRATIONS:
+            if current < target:
+                logger.info("Applying schema migration v%d -> v%d", current, target)
+                migrate(conn)
+                # PRAGMA cannot be parameterised; target is a trusted int constant.
+                conn.execute(f"PRAGMA user_version = {int(target)}")
+                conn.commit()
+                current = target
+        if current != SCHEMA_VERSION:
+            logger.warning(
+                "DB version %d does not match SCHEMA_VERSION %d after migration",
+                current, SCHEMA_VERSION,
+            )
+        else:
+            logger.info("DB schema at version %d", current)
+    finally:
+        conn.close()
 
 
 # ---------------------------------------------------------------------------
