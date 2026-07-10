@@ -1,13 +1,8 @@
 """
-SoWal event crawler.
+SoWal crawler.
 
-Responsible only for discovering live music events from SoWal.
-
-Returns normalized event dictionaries.
-
-Does not write databases.
-Does not generate HTML.
-Does not reconcile events.
+Currently a scaffold. It integrates with the crawler framework
+but intentionally returns no events until the parser is implemented.
 """
 
 import logging
@@ -18,20 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class SoWalCrawler(BaseCrawler):
-    """Crawler for public SoWal event listings."""
-
     name = "sowal"
 
-    BASE_URL = "https://sowal.com/events"
-
-    def crawl(self):
-        """
-        Crawl SoWal and return normalized event dictionaries.
-
-        Version 1 intentionally returns no events until
-        the crawler is implemented.
-        """
-
-        logger.info("SoWal crawler starting")
-
+    def fetch(self):
+        logger.info("[SoWalCrawler] scaffold - no events yet")
         return []
