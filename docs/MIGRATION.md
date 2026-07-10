@@ -195,6 +195,27 @@ ingestion end-to-end with a sample screenshot.
 
 *After this phase, new crawler work (including activating `sowal.py`) may resume.*
 
+Delivered in slices: **3A** (OpenAI Vision screenshot importer + provider convergence),
+**3B** (SoWal activated, normalized, reconciliation verified), plus the CrawlPolicy
+strategy split and production policy. Apple Vision OCR (`app/images/ocr.py`) remains a
+later slice.
+
+### Phase 3C — Source provenance
+One event = many observations. `normalize_events` now GROUPS sightings by identity instead
+of dropping duplicates. Adds the `event_sources` table (v3) and provenance columns on
+`events` (`source_count`, `verification_count`, `conflict_flag`, `conflict_reason`).
+
+Confidence is two-dimensional per observation (`source_confidence`, `extraction_confidence`)
+and aggregated per event by a dedicated **`ConfidenceAggregator`** (hybrid: start from the
+best observation, add diminishing-returns corroboration for agreeing independent sources,
+apply a conflict penalty, cap at 0.99). Conflicts on a mutable field (time/stage) set
+`conflict_flag` + `conflict_reason`.
+
+**Architectural invariant (enforced from Phase 4 on):** the dashboard is *dumb*. The
+pipeline persists everything renderable (observations, aggregate confidence, conflict
+flag/reason); the dashboard NEVER computes confidence, reconciliation, venue defaults, or
+canonical names — it only renders.
+
 ### Phase 4 — Dashboard convergence
 Build `app/dashboard/` by templatizing the existing rich `docs/index.html`; generate from
 the DB; wire into `run_pipeline()`. Surface confidence (badges, sort/filter by band).

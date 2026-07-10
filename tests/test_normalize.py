@@ -8,10 +8,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.normalize import normalize_events
+from app.normalize import normalize_events, ConfidenceAggregator
 from app.normalize.canonical import canonicalize
 from app.normalize.times import apply_venue_default_time, normalize_time
-from app.normalize.confidence import confidence_band, score_event
+from app.normalize.confidence import (
+    confidence_band,
+    extraction_confidence,
+    observation_confidence,
+    score_event,
+    source_confidence,
+)
 
 
 # --- canonicalisation ------------------------------------------------------
@@ -73,12 +79,15 @@ def test_normalize_dedup_exact_duplicates():
     assert len(out) == 1
 
 
-def test_normalize_keeps_different_times():
+def test_normalize_different_times_same_identity_is_one_event_with_conflict():
+    # Same performer+venue+date, different times -> ONE event, time conflict.
     out = normalize_events([
-        _raw("Artist A", "Venue X", time_start="6PM"),
-        _raw("Artist A", "Venue X", time_start="9PM"),
+        _raw("Artist A", "Venue X", time_start="6PM", source="sowal"),
+        _raw("Artist A", "Venue X", time_start="9PM", source="crawler"),
     ])
-    assert len(out) == 2
+    assert len(out) == 1
+    assert out[0]["conflict_flag"] == 1
+    assert "Time mismatch" in out[0]["conflict_reason"]
 
 
 def test_normalize_attaches_confidence():
@@ -87,30 +96,65 @@ def test_normalize_attaches_confidence():
     assert out[0]["confidence_reason"]
 
 
+def test_normalize_single_source_provenance():
+    out = normalize_events([_raw("Artist A", "Venue X", source="sowal")])
+    ev = out[0]
+    assert ev["source_count"] == 1
+    assert ev["verification_count"] == 1
+    assert ev["conflict_flag"] == 0
+    assert len(ev["observations"]) == 1
+
+
+def test_normalize_corroborating_sources_boost_confidence():
+    single = normalize_events([_raw("Artist A", "Venue X", source="sowal")])[0]
+    both = normalize_events([
+        _raw("Artist A", "Venue X", source="sowal"),
+        _raw("Artist A", "Venue X", source="venue"),
+    ])[0]
+    assert both["source_count"] == 2
+    assert both["verification_count"] == 2
+    assert both["conflict_flag"] == 0
+    assert both["confidence"] > single["confidence"]
+    assert len(both["observations"]) == 2
+
+
 def test_normalize_canonicalises_in_pass():
     out = normalize_events([_raw("STEVIE MONCE", "Venue X")])
     assert out[0]["performer"] == "Stevie Monce"
 
 
-# --- confidence scoring ----------------------------------------------------
+# --- confidence: two dimensions + effective score --------------------------
 
-def test_score_complete_crawler_beats_sparse_seed():
-    full, _ = score_event(_raw("A", "V", source="crawler"))
-    sparse, _ = score_event({"performer": "A", "source": "seed"})
+def test_source_confidence_by_source():
+    assert source_confidence("sowal") == 0.90
+    assert source_confidence("seed") == 0.60
+    assert source_confidence("image:flyer.png") == 0.80
+    assert source_confidence("unknown-thing") == 0.50
+
+
+def test_extraction_confidence_rises_with_completeness():
+    full = extraction_confidence(_raw("A", "V", date="2026-07-04", time_start="6PM"))
+    sparse = extraction_confidence({"performer": "A"})
     assert full > sparse
 
 
-def test_score_bounds_and_reason():
+def test_extraction_confidence_blends_model_when_headroom():
+    sparse = {"performer": "A", "venue": "V"}  # no date/time -> completeness < 1
+    with_model = extraction_confidence({**sparse, "model_confidence": 1.0})
+    without = extraction_confidence(sparse)
+    assert with_model > without
+
+
+def test_observation_confidence_is_product():
+    ev = _raw("A", "V", source="sowal", date="2026-07-04", time_start="6PM")
+    assert observation_confidence(ev) == round(
+        source_confidence("sowal") * extraction_confidence(ev), 3)
+
+
+def test_score_event_bounds_and_reason():
     score, reason = score_event(_raw("A", "V", source="image:flyer.png"))
     assert 0.0 <= score <= 1.0
     assert "source=" in reason
-
-
-def test_score_blends_model_confidence():
-    with_model, reason = score_event(_raw("A", "V", source="seed", model_confidence=1.0))
-    without, _ = score_event(_raw("A", "V", source="seed"))
-    assert with_model > without
-    assert "model" in reason
 
 
 def test_confidence_bands():
@@ -118,3 +162,53 @@ def test_confidence_bands():
     assert confidence_band(0.6) == "medium"
     assert confidence_band(0.2) == "low"
     assert confidence_band(None) == "unknown"
+
+
+# --- ConfidenceAggregator (hybrid model) -----------------------------------
+
+def _obs(source, confidence):
+    return {"source": source, "confidence": confidence}
+
+
+def test_aggregator_single_source():
+    agg = ConfidenceAggregator()
+    assert agg.aggregate([_obs("venue", 0.96)]) == 0.96
+
+
+def test_aggregator_two_agreeing_sources_boost():
+    agg = ConfidenceAggregator()
+    score = agg.aggregate([_obs("venue", 0.96), _obs("sowal", 0.90)])
+    assert 0.96 < score <= 0.99  # corroboration raises above the best single
+
+
+def test_aggregator_three_agreeing_near_ceiling():
+    agg = ConfidenceAggregator()
+    score = agg.aggregate([_obs("venue", 0.96), _obs("artist", 0.9), _obs("sowal", 0.9)])
+    assert score >= 0.98
+    assert score <= 0.99
+
+
+def test_aggregator_caps_at_ceiling():
+    agg = ConfidenceAggregator()
+    score = agg.aggregate([_obs(f"s{i}", 0.99) for i in range(10)])
+    assert score <= 0.99
+
+
+def test_aggregator_independence_same_source_no_double_count():
+    agg = ConfidenceAggregator()
+    # two sightings from the SAME source must not corroborate
+    assert agg.aggregate([_obs("venue", 0.96), _obs("venue", 0.96)]) == 0.96
+
+
+def test_aggregator_conflict_reduces_confidence():
+    agg = ConfidenceAggregator()
+    clean = agg.aggregate([_obs("venue", 0.96)], has_conflict=False)
+    conflicted = agg.aggregate([_obs("venue", 0.96)], has_conflict=True)
+    assert conflicted < clean
+
+
+def test_aggregator_low_quality_agreeing_never_reduces():
+    agg = ConfidenceAggregator()
+    base = agg.aggregate([_obs("venue", 0.96)])
+    plus_weak = agg.aggregate([_obs("venue", 0.96), _obs("weak", 0.30)])
+    assert plus_weak >= base

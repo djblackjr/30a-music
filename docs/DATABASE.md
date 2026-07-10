@@ -2,11 +2,11 @@
 
 The 30A Music Intelligence database is a single SQLite file at **`data/events.db`**,
 managed exclusively through `app/database/db.py`. This document describes the schema as
-of **schema version 2**.
+of **schema version 3**.
 
 - Access layer: `app/database/db.py`
 - Connection: `sqlite3` with `row_factory = sqlite3.Row`
-- Current schema version: **2** (`PRAGMA user_version`)
+- Current schema version: **3** (`PRAGMA user_version`)
 
 > **Invariant:** all schema changes are **additive** and **auto-applied**. Opening an older
 > database migrates it up in place (`ALTER ... ADD COLUMN`, `NULL`-guarded backfills) — no
@@ -20,7 +20,8 @@ The database has two application tables plus SQLite's internal bookkeeping table
 
 | Table            | Purpose                                                    |
 |------------------|------------------------------------------------------------|
-| `events`         | Every event captured, across all runs (append-only history)|
+| `events`         | Canonical events captured, across all runs (append-only)   |
+| `event_sources`  | Observations — one row per source that sighted an event    |
 | `runs`           | One row per pipeline run (run tracking / reconciliation)   |
 | `sqlite_sequence`| Internal — AUTOINCREMENT counters (managed by SQLite)      |
 
@@ -46,8 +47,12 @@ with that run's `run_id`. Old rows are never deleted, so the table is a full his
 | `stage`      | TEXT    | Stage within a venue, e.g. `"Main Stage"`; often NULL        |
 | `source`     | TEXT    | Provenance, e.g. `seed`, `crawler`, `sowal`, `image:<file>`  |
 | `run_id`     | TEXT    | The run that produced this row (FK-by-convention to `runs`); `'legacy'` for pre-run-tracking rows |
-| `confidence` | REAL    | Extraction confidence `[0.0, 1.0]` (v2)                     |
-| `confidence_reason` | TEXT | How the score was derived (v2)                         |
+| `confidence` | REAL    | Aggregate event confidence `[0.0, 0.99]` (v2; aggregated across observations in v3) |
+| `confidence_reason` | TEXT | Human-readable summary of how the score was derived (v2) |
+| `source_count` | INTEGER | Number of distinct sources that observed this event (v3) |
+| `verification_count` | INTEGER | Number of distinct sources agreeing with consensus (v3) |
+| `conflict_flag` | INTEGER | 1 if observations disagree on a mutable field, else 0 (v3) |
+| `conflict_reason` | TEXT | Description of the conflict, e.g. "Time mismatch: 6PM vs 7PM" (v3) |
 
 All columns except `id` are nullable. Dates and times are stored as text; date comparison
 relies on ISO 8601 sorting lexicographically (`date >= today`).
@@ -60,6 +65,22 @@ relies on ISO 8601 sorting lexicographically (`date >= today`).
 | `run_id`       | TEXT    | UNIQUE — timestamp string `YYYYMMDD_HHMMSS`       |
 | `started_at`   | TEXT    | ISO 8601 timestamp (`datetime.now().isoformat()`) |
 | `events_saved` | INTEGER | Count of events persisted in that run (default 0) |
+
+### `event_sources` (v3)
+
+One row per **observation** — a single source's sighting of an event.
+
+| Column                  | Type    | Notes                                              |
+|-------------------------|---------|----------------------------------------------------|
+| `id`                    | INTEGER | Primary key, AUTOINCREMENT                         |
+| `event_id`              | INTEGER | FK-by-convention to `events.id`                    |
+| `source`                | TEXT    | e.g. `sowal`, `venue`, `image:<file>`, `seed`      |
+| `url`                   | TEXT    | Source link for this observation                   |
+| `source_confidence`     | REAL    | Trust in the source itself                         |
+| `extraction_confidence` | REAL    | How well this observation was read (completeness + model) |
+| `confidence`            | REAL    | Effective per-observation score (source × extraction) |
+| `observed_at`           | TEXT    | ISO timestamp when the observation was retrieved   |
+| `checksum`              | TEXT    | Content hash of the observation (incremental-crawl hook) |
 
 ---
 
@@ -80,6 +101,7 @@ primary key — see [Event identity](#event-identity).
 | Index                    | Table  | Columns    | Origin                          |
 |--------------------------|--------|------------|---------------------------------|
 | `sqlite_autoindex_runs_1`| `runs` | `run_id`   | Auto-created by the `UNIQUE` constraint |
+| `idx_event_sources_event_id` | `event_sources` | `event_id` | Explicit — observations are looked up per event (v3) |
 
 There are currently **no user-defined indexes**. `events` is queried by `run_id` (in
 `load_events`) and ordered by `date, time_start`; if the table grows large, a candidate
@@ -131,34 +153,36 @@ Identity is implemented by `_event_key(ev)` (the identity key) and change detect
 
 ---
 
-## Confidence fields
+## Confidence & provenance
 
-**Status: columns present as of schema version 2.** The authoritative live scorer
-(`app/normalize/confidence.py`) is delivered in Phase 2; until then, the v2 migration
-backfills existing rows from source trust (see below), and `save_events` persists any
-`confidence` / `confidence_reason` supplied on the event dict.
+**Two dimensions per observation, aggregated per event** (`app/normalize/confidence.py`,
+`app/normalize/provenance.py`).
 
-Every event carries a confidence score describing how much to trust the extraction.
+Each observation (row in `event_sources`) carries:
+- `source_confidence` — trust in the source itself
+- `extraction_confidence` — how well it was read (completeness + model-reported confidence)
+- `confidence` — effective per-observation score = `source_confidence × extraction_confidence`
 
-| Column             | Type | Notes                                                       |
-|--------------------|------|-------------------------------------------------------------|
-| `confidence`       | REAL | Score in `[0.0, 1.0]`                                        |
-| `confidence_reason`| TEXT | Human-readable explanation of how the score was derived     |
+Each canonical event (row in `events`) aggregates its observations via the
+`ConfidenceAggregator` into a single `confidence`:
+1. start from the highest-confidence independent observation,
+2. each additional **agreeing** independent source raises it toward 1 with diminishing returns,
+3. a **conflict** applies a multiplicative penalty (and sets `conflict_flag`),
+4. capped at **0.99** (never 1.00),
+5. extra agreeing sources only add — a low-quality source never *reduces* a high-confidence
+   event; only a direct conflict does.
 
-Scoring (computed in `app/normalize/confidence.py`, applied in the normalization pass):
+The algorithm is encapsulated in `ConfidenceAggregator` so it can evolve without any
+schema change. `source_count` / `verification_count` / `conflict_flag` / `conflict_reason`
+record the provenance summary.
 
-- **Source trust (base weight):** structured crawler ≈ 0.9 · GPT-4o vision ≈ 0.8 ·
-  Apple Vision OCR ≈ 0.5 · seed ≈ 0.6.
-- **Field completeness:** valid ISO `date`, `time_start`, `venue`, `performer` each
-  contribute; missing/unparseable fields subtract.
-- **Model-reported confidence:** the GPT-4o importer returns a per-event confidence that is
-  blended into the score.
+**Rendering rule:** the dashboard is "dumb" — it renders these precomputed values and never
+recalculates confidence, reconciliation, venue defaults, or canonical names.
 
 Bands used by the dashboard and Excel report: **high ≥ 0.80 · medium 0.50–0.79 · low < 0.50**.
 
-`confidence` and `confidence_reason` are **excluded from the change signature**, so a score
-change alone does not mark an event as Changed. Legacy rows will be backfilled with a
-computed default when the v2 migration runs.
+`confidence`, provenance columns, `source`, and `url` are **excluded from the reconciliation
+change signature**, so a score/provenance change alone does not mark an event as Changed.
 
 ---
 
@@ -196,6 +220,7 @@ fresh DB). All migration logic lives in `app/database/db.py`.
 |---------|----------------|-------------------------------------------------------------------|
 | 1       | `_migration_1` | Baseline: `events` + `runs` tables, plus `stage`/`source`/`run_id`|
 | 2       | `_migration_2` | Add `confidence REAL` + `confidence_reason TEXT`; backfill confidence from source trust and `run_id='legacy'` for pre-run-tracking rows |
+| 3       | `_migration_3` | Source provenance: add `source_count`/`verification_count`/`conflict_flag`/`conflict_reason` to `events`; create `event_sources` table + index |
 
 Helper: `get_schema_version(path)` returns the current `user_version` without running any
 migration.

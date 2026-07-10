@@ -57,9 +57,11 @@ def test_normalise_missing_confidence_is_none():
 
 # --- integration: importer output flows through the scorer -----------------
 
-def test_model_confidence_blended_by_scorer():
+def test_model_confidence_feeds_extraction_confidence():
     ev = _normalise([{"artist": "X", "venue": "V", "date": "2026-07-10", "time_start": "6PM", "confidence": 1.0}], IMG)
     scored = normalize_events(ev)
-    # image base 0.8, full fields -> 0.8, blended 50/50 with model 1.0 -> 0.9
-    assert scored[0]["confidence"] == 0.9
-    assert "model" in scored[0]["confidence_reason"]
+    # image source_confidence 0.8, full fields + model 1.0 -> extraction 1.0
+    # single observation -> event confidence = 0.8 * 1.0 = 0.8
+    assert scored[0]["confidence"] == 0.8
+    assert scored[0]["source_count"] == 1
+    assert scored[0]["observations"][0]["extraction_confidence"] == 1.0

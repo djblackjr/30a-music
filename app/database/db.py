@@ -31,7 +31,7 @@ DB_PATH = Path("data/events.db")
 # with the next version number. Never edit a released migration in place.
 # ---------------------------------------------------------------------------
 
-SCHEMA_VERSION = 2  # latest version defined below in MIGRATIONS
+SCHEMA_VERSION = 3  # latest version defined below in MIGRATIONS
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -143,10 +143,49 @@ def _migration_2(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_3(conn: sqlite3.Connection) -> None:
+    """
+    v2 -> v3: source provenance.
+
+    Purely additive:
+      - adds provenance summary columns to events
+        (source_count, verification_count, conflict_flag, conflict_reason)
+      - creates the event_sources table (one row per observation)
+
+    No rows are deleted; existing events simply have NULL provenance columns
+    until the next run re-computes them.
+    """
+    for col, coltype in [
+        ("source_count", "INTEGER"),
+        ("verification_count", "INTEGER"),
+        ("conflict_flag", "INTEGER"),
+        ("conflict_reason", "TEXT"),
+    ]:
+        _add_column_if_missing(conn, "events", col, coltype)
+
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS event_sources (
+            id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id              INTEGER,
+            source                TEXT,
+            url                   TEXT,
+            source_confidence     REAL,
+            extraction_confidence REAL,
+            confidence            REAL,
+            observed_at           TEXT,
+            checksum              TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_event_sources_event_id ON event_sources(event_id);
+        """
+    )
+
+
 # Ordered list of (target_version, migration_fn). Append new migrations here.
 MIGRATIONS: list[tuple[int, "callable"]] = [
     (1, _migration_1),
     (2, _migration_2),
+    (3, _migration_3),
 ]
 
 
@@ -229,20 +268,22 @@ def load_all_events(path: Path = DB_PATH) -> list[dict]:
 
 def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
     """
-    Insert events for this run. Does NOT delete old events so history is kept.
-    Returns count saved.
+    Insert canonical events for this run, plus one event_sources row per
+    observation. Does NOT delete old events so history is kept. Returns count saved.
     """
     if not events:
         return 0
     conn = get_connection(path)
+    observed_at = datetime.now().isoformat()
     saved = 0
     for ev in events:
         try:
-            conn.execute(
+            cur = conn.execute(
                 """INSERT INTO events
                    (name, date, time_start, time_end, venue, performer, url, stage, source, run_id,
-                    confidence, confidence_reason)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    confidence, confidence_reason,
+                    source_count, verification_count, conflict_flag, conflict_reason)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     ev.get("name"),
                     ev.get("date"),
@@ -256,11 +297,44 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
                     run_id,
                     ev.get("confidence"),
                     ev.get("confidence_reason"),
+                    ev.get("source_count"),
+                    ev.get("verification_count"),
+                    ev.get("conflict_flag"),
+                    ev.get("conflict_reason"),
                 ),
             )
+            event_id = cur.lastrowid
+            for obs in ev.get("observations") or []:
+                conn.execute(
+                    """INSERT INTO event_sources
+                       (event_id, source, url, source_confidence, extraction_confidence,
+                        confidence, observed_at, checksum)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        event_id,
+                        obs.get("source"),
+                        obs.get("url"),
+                        obs.get("source_confidence"),
+                        obs.get("extraction_confidence"),
+                        obs.get("confidence"),
+                        obs.get("observed_at") or observed_at,
+                        obs.get("checksum"),
+                    ),
+                )
             saved += 1
         except Exception as exc:
             logger.warning("Failed to save event %s: %s", ev.get("name"), exc)
     conn.commit()
     conn.close()
     return saved
+
+
+def load_event_sources(event_id: int, path: Path = DB_PATH) -> list[dict]:
+    """Load the observations (event_sources rows) for a canonical event."""
+    conn = get_connection(path)
+    rows = conn.execute(
+        "SELECT * FROM event_sources WHERE event_id = ? ORDER BY confidence DESC",
+        (event_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
