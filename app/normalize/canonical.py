@@ -18,8 +18,10 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Brett Stafford", "BRETT STAFFORD"),
     ("Brett Stafford", "Brett Stafford Smith"),
     ("Cadillac Willy", "CADILLAC WILLY"),
-    ("Dion Jones", "DION JONES & THE NEON TEARS"),
-    ("Dion Jones", "Dion Jones & The Neon Tears"),
+    # "Dion Jones" (solo) and "Dion Jones & The Neon Tears" (band) are DISTINCT
+    # artists — do not collapse the band into the solo act. Normalise the
+    # all-caps variant up to the full band name (choose the Neon Tears version).
+    ("Dion Jones & The Neon Tears", "DION JONES & THE NEON TEARS"),
     ("Gage Cowart", "GAGE COWART"),
     ("Sunshine Wranglers", "SUNSHINE WRANLGERS"),
     ("Sunshine Wranglers", "The Sunshine Wranglers"),

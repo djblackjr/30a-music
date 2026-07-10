@@ -31,6 +31,14 @@ def test_canonicalize_unknown_passthrough():
     assert canonicalize("Some New Artist") == "Some New Artist"
 
 
+def test_dion_jones_and_band_stay_distinct():
+    # solo and band are distinct acts; the band is never collapsed to the solo
+    assert canonicalize("Dion Jones") == "Dion Jones"
+    assert canonicalize("Dion Jones & The Neon Tears") == "Dion Jones & The Neon Tears"
+    # all-caps variant normalises up to the full band name (Neon Tears version)
+    assert canonicalize("DION JONES & THE NEON TEARS") == "Dion Jones & The Neon Tears"
+
+
 def test_canonicalize_none_and_empty():
     assert canonicalize(None) is None
     assert canonicalize("") == ""
