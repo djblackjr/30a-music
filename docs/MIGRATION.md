@@ -127,9 +127,36 @@ Inputs:
 Bands: **high ≥ 0.80 · medium 0.50–0.79 · low < 0.50** — consumed by the dashboard
 (badge + filter/sort) and Excel (column + shading).
 
-**Reconciliation rule:** `confidence` is excluded from `_event_signature`, so a score change
-alone does not register as a "changed" event (avoids noise in the Changes sheet).
-*(Recommended default — revisit if you want score drift surfaced.)*
+**Reconciliation rule:** `confidence` (and `confidence_reason`) are excluded from
+`_event_signature`, so a score change alone does not register as a "changed" event
+(avoids noise in the Changes sheet). This is consistent with the identity model below,
+which classes `confidence` as a mutable attribute.
+
+---
+
+## Event identity & change model (confirmed)
+
+Confirmed during Phase 0.
+
+- **Identity key = `performer + venue + date`.** Two events with the same artist, venue,
+  and date are the same event; anything else is a distinct event.
+- **Mutable attributes** (not part of identity): `time_start`, `time_end`, `stage`, `url`,
+  `source`, `confidence`, `confidence_reason`.
+- **Change semantics:**
+  - A **time change** at the same artist/venue/date → **Changed** (not remove+new).
+  - The same artist playing **two different venues** on one day → two distinct events, both preserved.
+  - **`confidence` / `source` / `url`** changes alone → **not** classed as Changed
+    (excluded from `_event_signature`).
+
+**Code impact (implemented in Phase 2):** add `venue` to `_event_key` in
+`app/reconcile/changes.py`. `_event_signature` already includes `time_start`/`time_end`/`stage`
+and already excludes `url`/`source`/`confidence`, so no signature change is required beyond
+keeping `confidence` out.
+
+**Baseline note:** `tests/test_pipeline.py::test_compare_changed` currently **fails** (8/9 pass)
+because the present key omits `venue` and *includes* `time`, so a time change reads as
+remove+new. The Phase 2 key change resolves this and turns the baseline green. Recorded here
+as a known, decided baseline failure rather than fixed in Phase 0 (which is non-mutating to source).
 
 ---
 
@@ -155,6 +182,10 @@ verify tests + a dry pipeline run.
 Create `app/normalize/`, port the canonicalization/time/venue-default logic, fold in
 existing dedup, and add `confidence.py`. Wire into `monitor`. Add a `Confidence` column
 to the Excel exporter. Unit-test normalization and the scorer. Nothing deleted yet.
+
+Also implement the confirmed **event-identity model**: add `venue` to `_event_key` in
+`app/reconcile/changes.py` (identity = performer + venue + date). This turns the known
+baseline failure (`test_compare_changed`) green.
 
 ### Phase 3 — Ingestion & provider convergence (OpenAI)
 Make `app/images/importer.py` the single vision importer on GPT-4o; extend its prompt to
