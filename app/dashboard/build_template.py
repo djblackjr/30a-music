@@ -15,7 +15,8 @@ Run once:  python -m app.dashboard.build_template
 """
 from pathlib import Path
 
-SRC = Path("docs/index.html")
+# Pristine, hand-built source. Archived once docs/index.html became generated.
+SRC = Path("archive/legacy-dashboard-2026-07-10.html")
 OUT = Path("app/dashboard/template.html")
 
 EXTRA_CSS = (
@@ -25,6 +26,7 @@ EXTRA_CSS = (
     ".src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;}"
     ".cfl{color:#dc2626;font-weight:700;margin-left:4px;}"
     ".xp{cursor:pointer;color:#1B7A8A;font-weight:700;user-select:none;margin-left:6px;}"
+    "tr.exp{display:none;}"
     "tr.exp td{background:#f8fbff;font-size:.8rem;color:#334155;padding:8px 14px;}"
     "tr.exp .ob{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted #e2e8f0;}"
     "tr.exp .cflr{color:#b91c1c;font-weight:600;margin-top:6px;}"
