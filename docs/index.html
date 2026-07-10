@@ -413,8 +413,8 @@ function ca(){
   document.getElementById('q').value='';
   document.getElementById('vf').value='';
   document.getElementById('af').value='';
-  // Build tonight card dynamically
-(function(){
+  // Build tonight card dynamically - runs after page loads
+function buildTonightCard(){
   var T=new Date().toISOString().slice(0,10);
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -443,7 +443,8 @@ function ca(){
     });
     card.innerHTML=html;
   }
-})();
+}
+buildTonightCard();
 sf('up');
 }
 
