@@ -32,7 +32,7 @@ a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}
 <header><div><h1><span style="color:#1B7A8A;">♪</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p></div><span id="upd" style="font-size:.65rem;opacity:.45"></span></header>
 <div class="stats"><div class="stat"><div class="n">262</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
 <div style="width:100%;overflow:hidden;">
-<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:220px;display:block;">
 <rect width="820" height="300" fill="#eef6f0" rx="12"/>
 <rect x="0" y="0" width="820" height="70" fill="#c8e8f5"/>
 <path d="M0,55 Q200,70 400,60 Q600,50 820,65 L820,0 L0,0 Z" fill="#b0d8ee"/>
@@ -76,18 +76,8 @@ a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}
 <rect x="10" y="8" width="185" height="26" rx="5" fill="white" opacity="0.9"/>
 <text x="102" y="25" text-anchor="middle" fill="#1F3864" font-size="12" font-family="-apple-system,sans-serif" font-weight="600">30A Music Venues</text>
 </svg></div>
-<div style="text-align:center;padding:4px 0 8px;">
-<button onclick="expandMap()" style="font-size:.75rem;color:#1B7A8A;background:none;border:none;cursor:pointer;text-decoration:underline;">Click to expand map</button>
-</div>
-<div id="map-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;" onclick="closeMap()">
-<div style="background:white;border-radius:12px;padding:16px;max-width:95vw;width:900px;" onclick="event.stopPropagation()">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-<strong style="color:#1F3864;font-size:1rem;">30A Music Venues</strong>
-<button onclick="closeMap()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#666;line-height:1;">✕</button>
-</div>
-<div id="map-modal-content"></div>
-</div>
-</div>
+
+
 <div class="tn"><h2>Tonight — Thursday, July 09</h2><div class="sc"><div><b>Jim Couch</b><br><small>4:00 - 8:00 PM</small></div><span class="vt vt-aj">AJ's Grayton</span></div><div class="sc"><div><b>Reid Fisher</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-sbb">Shelby's Beach Bar</span></div><div class="sc"><div><b>Gage Cowart</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-rft">Red Fish Taco</span></div><div class="sc"><div><b>Stevie Monce</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-ps">Papa Surf</span></div><div class="sc"><div><b>About to Sweat</b><br><small>6:00 - 9:00 PM</small></div><span class="vt vt-nbs">North Beach Social</span></div><div class="sc"><div><b>Voices of Valor</b><br><small>6:00 PM</small></div><span class="vt vt-pav">The Pavilion at Watersound Town Center</span></div><div class="sc"><div><b>Outro</b><br><small>7:00 - 10:00 PM</small></div><span class="vt vt-sbs">Stinky's Bait Shack</span></div><div class="sc"><div><b>Karaoke</b><br><small>9:00 - 12:00 AM</small></div><span class="vt vt-aj">AJ's Grayton</span></div></div>
 <div class="leg"><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div>
 <div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div>
@@ -425,19 +415,7 @@ function ca(){
   document.getElementById('af').value='';
   sf('up');
 }
-function expandMap(){
-  var wrap=document.getElementById('map-wrap');
-  var svg=wrap ? wrap.querySelector('svg') : document.querySelector('svg');
-  var modal=document.getElementById('map-modal');
-  var mc=document.getElementById('map-modal-content');
-  if(svg){mc.innerHTML=svg.outerHTML;mc.querySelector('svg').style.width='100%';}
-  modal.style.display='flex';
-  document.body.style.overflow='hidden';
-}
-function closeMap(){
-  document.getElementById('map-modal').style.display='none';
-  document.body.style.overflow='';
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();});
+
+
 sf('up');
 </script></body></html>
