@@ -162,13 +162,14 @@ class SoWalCrawler:
         time_start, time_end = parse_time(text)
 
         return {
-            "name":       title or performer,
-            "performer":  performer,
-            "venue":      venue,
-            "date":       date,
-            "time_start": time_start,
-            "time_end":   time_end,
-            "url":        url,
-            "stage":      None,
-            "source":     "sowal",
+            "name":             title or performer,
+            "performer":        performer,
+            "venue":            venue,
+            "date":             date,
+            "time_start":       time_start,
+            "time_end":         time_end,
+            "url":              url,
+            "stage":            None,
+            "source":           "sowal",
+            "observation_type": "website",
         }

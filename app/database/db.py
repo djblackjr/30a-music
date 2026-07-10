@@ -31,7 +31,7 @@ DB_PATH = Path("data/events.db")
 # with the next version number. Never edit a released migration in place.
 # ---------------------------------------------------------------------------
 
-SCHEMA_VERSION = 4  # latest version defined below in MIGRATIONS
+SCHEMA_VERSION = 5  # latest version defined below in MIGRATIONS
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -204,12 +204,36 @@ def _migration_4(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_5(conn: sqlite3.Connection) -> None:
+    """
+    v4 -> v5: add event_observations.observation_type.
+
+    How the observation was obtained — website / image / ocr / api / manual /
+    social / calendar — distinct from `source` (who/where). Additive; existing
+    rows are backfilled from their source.
+    """
+    _add_column_if_missing(conn, "event_observations", "observation_type", "TEXT")
+    conn.execute(
+        """
+        UPDATE event_observations SET observation_type = CASE
+                WHEN source LIKE 'image:%'            THEN 'image'
+                WHEN source LIKE 'ocr%'               THEN 'ocr'
+                WHEN source IN ('instagram','facebook') THEN 'social'
+                WHEN source = 'seed'                  THEN 'manual'
+                ELSE 'website'
+            END
+         WHERE observation_type IS NULL
+        """
+    )
+
+
 # Ordered list of (target_version, migration_fn). Append new migrations here.
 MIGRATIONS: list[tuple[int, "callable"]] = [
     (1, _migration_1),
     (2, _migration_2),
     (3, _migration_3),
     (4, _migration_4),
+    (5, _migration_5),
 ]
 
 
@@ -331,12 +355,13 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
             for obs in ev.get("observations") or []:
                 conn.execute(
                     """INSERT INTO event_observations
-                       (event_id, source, url, source_confidence, extraction_confidence,
-                        confidence, observed_at, checksum)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                       (event_id, source, observation_type, url, source_confidence,
+                        extraction_confidence, confidence, observed_at, checksum)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         event_id,
                         obs.get("source"),
+                        obs.get("observation_type"),
                         obs.get("url"),
                         obs.get("source_confidence"),
                         obs.get("extraction_confidence"),

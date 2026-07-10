@@ -2,11 +2,11 @@
 
 The 30A Music Intelligence database is a single SQLite file at **`data/events.db`**,
 managed exclusively through `app/database/db.py`. This document describes the schema as
-of **schema version 4**.
+of **schema version 5**.
 
 - Access layer: `app/database/db.py`
 - Connection: `sqlite3` with `row_factory = sqlite3.Row`
-- Current schema version: **4** (`PRAGMA user_version`)
+- Current schema version: **5** (`PRAGMA user_version`)
 
 > **Invariant:** all schema changes are **additive** and **auto-applied**. Opening an older
 > database migrates it up in place (`ALTER ... ADD COLUMN`, `NULL`-guarded backfills) — no
@@ -75,7 +75,8 @@ website) produces many observations over time, so the row is an observation, not
 |-------------------------|---------|----------------------------------------------------|
 | `id`                    | INTEGER | Primary key, AUTOINCREMENT                         |
 | `event_id`              | INTEGER | FK-by-convention to `events.id`                    |
-| `source`                | TEXT    | e.g. `sowal`, `venue`, `image:<file>`, `seed`      |
+| `source`                | TEXT    | who/where: e.g. `sowal`, `venue`, `image:<file>`, `seed` |
+| `observation_type`      | TEXT    | how it was obtained: website / image / ocr / api / manual / social / calendar (v5) |
 | `url`                   | TEXT    | Source link for this observation                   |
 | `source_confidence`     | REAL    | Trust in the source itself                         |
 | `extraction_confidence` | REAL    | How well this observation was read (completeness + model) |
@@ -223,6 +224,7 @@ fresh DB). All migration logic lives in `app/database/db.py`.
 | 2       | `_migration_2` | Add `confidence REAL` + `confidence_reason TEXT`; backfill confidence from source trust and `run_id='legacy'` for pre-run-tracking rows |
 | 3       | `_migration_3` | Source provenance: add `source_count`/`verification_count`/`conflict_flag`/`conflict_reason` to `events`; create `event_sources` table + index |
 | 4       | `_migration_4` | Rename `event_sources` → `event_observations` (in-place `ALTER TABLE`, data preserved); reindex |
+| 5       | `_migration_5` | Add `event_observations.observation_type`; backfill existing rows from source |
 
 Helper: `get_schema_version(path)` returns the current `user_version` without running any
 migration.

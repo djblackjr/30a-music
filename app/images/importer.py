@@ -201,6 +201,7 @@ def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
             "stage":            stage,
             "url":              None,
             "source":           f"image:{image_path.name}",
+            "observation_type": "image",
             "model_confidence": _coerce_confidence(ev.get("confidence")),
         })
 

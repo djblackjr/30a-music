@@ -96,6 +96,20 @@ def test_normalize_attaches_confidence():
     assert out[0]["confidence_reason"]
 
 
+def test_observation_type_inferred_from_source():
+    def otype(src):
+        return normalize_events([_raw("A", "V", source=src)])[0]["observations"][0]["observation_type"]
+    assert otype("sowal") == "website"
+    assert otype("image:flyer.png") == "image"
+    assert otype("seed") == "manual"
+    assert otype("instagram") == "social"
+
+
+def test_observation_type_explicit_wins():
+    out = normalize_events([_raw("A", "V", source="bandsintown", observation_type="api")])
+    assert out[0]["observations"][0]["observation_type"] == "api"
+
+
 def test_normalize_single_source_provenance():
     out = normalize_events([_raw("Artist A", "Venue X", source="sowal")])
     ev = out[0]

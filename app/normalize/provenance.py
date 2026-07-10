@@ -22,6 +22,24 @@ from app.normalize.times import apply_venue_default_time, normalize_time
 _AGG = ConfidenceAggregator()
 
 
+def infer_observation_type(source: str | None) -> str:
+    """
+    Infer how an observation was obtained from its source, when the producer did
+    not declare an `observation_type` explicitly.
+    One of: website / image / ocr / api / manual / social / calendar.
+    """
+    s = (source or "").strip().lower()
+    if s.startswith("image:"):
+        return "image"
+    if s.startswith("ocr"):
+        return "ocr"
+    if s in ("instagram", "facebook"):
+        return "social"
+    if s == "seed":
+        return "manual"
+    return "website"
+
+
 def _checksum(ev: dict) -> str:
     """Stable content hash of a normalized observation (hook for incremental crawl)."""
     parts = [
@@ -53,6 +71,7 @@ def build_observation(raw: dict) -> dict | None:
     ev["venue"] = venue
 
     ev["source"] = ev.get("source") or "crawler"
+    ev["observation_type"] = ev.get("observation_type") or infer_observation_type(ev["source"])
 
     time_val = normalize_time(ev.get("time_start") or ev.get("time"))
     time_val = apply_venue_default_time(venue, time_val)
@@ -80,6 +99,7 @@ def _observation_record(o: dict) -> dict:
     """The subset of an observation persisted to the event_observations table."""
     return {
         "source":                o.get("source"),
+        "observation_type":      o.get("observation_type"),
         "url":                   o.get("url"),
         "source_confidence":     o.get("source_confidence"),
         "extraction_confidence": o.get("extraction_confidence"),
@@ -137,7 +157,8 @@ def merge_group(observations: list[dict]) -> dict:
         event["confidence_reason"] = f"single source ({primary.get('source')})"
 
     # Drop per-observation-only fields from the canonical event.
-    for k in ("source_confidence", "extraction_confidence", "checksum", "model_confidence"):
+    for k in ("source_confidence", "extraction_confidence", "checksum",
+              "model_confidence", "observation_type"):
         event.pop(k, None)
 
     return event
