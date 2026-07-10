@@ -9,10 +9,38 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.crawlers.sowal import parse_time, parse_when, split_title
+from app.crawlers.sowal import SoWalCrawler, parse_time, parse_when, split_title
+from app.crawlers.policy import CrawlPolicy
 from app.crawlers.registry import ALL_CRAWLERS
 from app.normalize import normalize_events
 from app.reconcile.changes import compare_runs
+
+
+# --- crawl policy (strategy separated from implementation) -----------------
+
+def test_crawl_policy_defaults():
+    p = CrawlPolicy()
+    assert p.max_events is None
+    assert p.max_pages is None
+    assert p.request_delay == 1.0
+
+
+def test_crawl_policy_limit_unbounded_by_default():
+    assert CrawlPolicy().limit([1, 2, 3, 4, 5]) == [1, 2, 3, 4, 5]
+
+
+def test_crawl_policy_limit_caps_events():
+    assert CrawlPolicy(max_events=2).limit([1, 2, 3, 4, 5]) == [1, 2]
+
+
+def test_sowal_uses_default_policy_when_none():
+    assert SoWalCrawler().policy.max_events is None
+
+
+def test_sowal_accepts_injected_policy():
+    c = SoWalCrawler(policy=CrawlPolicy(max_events=3, request_delay=0))
+    assert c.policy.max_events == 3
+    assert c.policy.request_delay == 0
 
 
 # --- parsing helpers -------------------------------------------------------

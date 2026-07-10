@@ -15,12 +15,14 @@ Duck-typed to the crawler protocol (has `name` and `fetch()`); registered in
 app/crawlers/registry.py. Emitted events flow through app/normalize before save.
 """
 import logging
-import os
 import re
+import time
 from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
+
+from app.crawlers.policy import CrawlPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -79,16 +81,16 @@ class SoWalCrawler:
 
     START_URL = "https://sowal.com/events"
 
-    # Politeness / performance cap: the listing page yields ~1000 links, so we
-    # bound how many event pages we visit per run. Override with SOWAL_MAX_EVENTS.
-    MAX_EVENTS = int(os.getenv("SOWAL_MAX_EVENTS", "25"))
-
     HEADERS = {
         "User-Agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137 Safari/537.36"
         )
     }
+
+    def __init__(self, policy: CrawlPolicy | None = None):
+        # Strategy is injected; default is exhaustive and polite (see CrawlPolicy).
+        self.policy = policy or CrawlPolicy()
 
     def fetch(self) -> list[dict]:
         logger.info("[SoWalCrawler] Crawling %s", self.START_URL)
@@ -112,17 +114,16 @@ class SoWalCrawler:
                     event_links.append(href)
 
         total = len(event_links)
-        if total > self.MAX_EVENTS:
-            logger.info(
-                "[SoWalCrawler] Found %d event pages; capping at %d (SOWAL_MAX_EVENTS)",
-                total, self.MAX_EVENTS,
-            )
-            event_links = event_links[: self.MAX_EVENTS]
-        else:
-            logger.info("[SoWalCrawler] Found %d event pages", total)
+        event_links = self.policy.limit(event_links)
+        logger.info(
+            "[SoWalCrawler] Found %d event pages; crawling %d per policy",
+            total, len(event_links),
+        )
 
         events = []
-        for url in event_links:
+        for i, url in enumerate(event_links):
+            if i and self.policy.request_delay:
+                time.sleep(self.policy.request_delay)
             event = self.parse_event(url)
             if event:
                 events.append(event)
