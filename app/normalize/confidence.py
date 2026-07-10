@@ -17,10 +17,11 @@ from datetime import datetime
 
 # Trust in a source. image:* and ocr* matched by prefix in source_confidence().
 SOURCE_TRUST: dict[str, float] = {
-    "venue":   0.95,   # official venue websites (future)
-    "sowal":   0.90,
-    "crawler": 0.90,
-    "seed":    0.60,
+    "venue":            0.95,   # official venue websites (future)
+    "sowal":            0.90,
+    "crawler":          0.90,
+    "dashboard_legacy": 0.85,   # hand-curated events migrated from the old dashboard
+    "seed":             0.60,
 }
 _DEFAULT_TRUST = 0.5
 

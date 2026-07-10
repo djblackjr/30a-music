@@ -1,0 +1,219 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>30A Live Music</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,sans-serif;background:#F5F0E8;font-size:16px;}
+header{background:#1F3864;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+header h1{font-size:1.74rem;margin:0;}header p{font-size:1.015rem;opacity:.6;}
+.stats{display:flex;background:#fff;border-bottom:2px solid #e9ecef;}
+.stat{padding:10px 16px;border-right:1px solid #e9ecef;text-align:center;min-width:70px;}
+.stat .n{font-size:1.4rem;font-weight:700;color:#1F3864;}.stat .l{font-size:.58rem;color:#adb5bd;text-transform:uppercase;}
+.tn{background:#1F3864;color:#fff;padding:14px 16px;margin:12px;}
+.tn h2{font-size:.85rem;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.sc{background:rgba(255,255,255,.1);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.leg{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e9ecef;font-size:.75rem;}
+.ld{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;}
+.fil{padding:10px 12px;background:#fff;border-bottom:1px solid #e9ecef;display:flex;flex-direction:column;gap:8px;}
+input{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.9rem;width:100%;outline:none;}
+.dr{display:flex;gap:6px;}select{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.85rem;background:#fff;cursor:pointer;flex:1;outline:none;}
+.br{display:flex;gap:6px;flex-wrap:wrap;}
+.btn{padding:7px 12px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;font-size:.82rem;white-space:nowrap;}
+.btn:hover{background:#f0f0f0;}.btn.on{background:#1F3864;color:#fff;border-color:#1F3864;}
+.cnt{font-size:.8rem;color:#6c757d;margin-left:auto;align-self:center;}
+.wrap{padding:12px;}table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
+th{background:#1F3864;color:#fff;padding:10px 12px;text-align:left;font-size:.8rem;cursor:pointer;}th:hover{background:#1B7A8A;}
+td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:.88rem;vertical-align:middle;}tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f5faff;}tr.up td{background:rgba(27,122,138,.04);}tr.up td:first-child{border-left:3px solid #1B7A8A;}
+tr.now td{background:rgba(31,56,100,.12);}tr.now td:first-child{border-left:4px solid #1F3864;}
+.vt{padding:3px 10px;border-radius:8px;font-size:.82rem;font-weight:500;display:inline-block;color:#fff;}
+.vt-rft{background:#c0392b;}.vt-ps{background:#d35400;}.vt-sbb{background:#8e44ad;}.vt-nbs{background:#16a085;}
+.vt-sbs{background:#27ae60;}.vt-aj{background:#2980b9;}.vt-pav{background:#e67e22;}
+.vt-chi{background:#e91e8c;}.vt-30a{background:#1565c0;}.vt-mcg{background:#4a235a;}.vt-def{background:#555;}
+a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}td,th{padding:7px 8px;font-size:.8rem;}}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.xp{cursor:pointer;color:#1B7A8A;font-weight:700;user-select:none;margin-left:6px;}tr.exp td{background:#f8fbff;font-size:.8rem;color:#334155;padding:8px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted #e2e8f0;}tr.exp .cflr{color:#b91c1c;font-weight:600;margin-top:6px;}</style></head><body>
+<header><div><h1><span style="color:#f59e0b;">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p id="upd" style="font-size:.65rem;opacity:.45;margin-top:4px;"></p></div></header>
+<div class="stats"><div class="stat"><div class="n">{{TOTAL}}</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div><div class="stat"><div class="n">{{AVGCONF}}</div><div class="l">Avg Conf</div></div><div class="stat"><div class="n">{{CONFLICTS}}</div><div class="l">Conflicts</div></div><div class="stat"><div class="n">{{SOURCES}}</div><div class="l">Sources</div></div></div>
+<div style="width:100%;overflow:hidden;">
+<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+<rect width="820" height="300" fill="#eef6f0" rx="12"/>
+<rect x="0" y="0" width="820" height="70" fill="#c8e8f5"/>
+<path d="M0,55 Q200,70 400,60 Q600,50 820,65 L820,0 L0,0 Z" fill="#b0d8ee"/>
+<text x="410" y="38" text-anchor="middle" fill="#5a9ab5" font-size="11" font-family="-apple-system,sans-serif">Choctawhatchee Bay</text>
+<rect x="0" y="235" width="820" height="65" fill="#7ec8e3"/>
+<path d="M0,235 Q200,225 400,232 Q600,238 820,228 L820,235 Z" fill="#a8d8ea"/>
+<text x="410" y="270" text-anchor="middle" fill="#1e6e8e" font-size="12" font-family="-apple-system,sans-serif">Gulf of Mexico</text>
+<path d="M0,218 Q200,210 400,216 Q600,222 820,214 L820,235 Q600,238 400,232 Q200,226 0,235 Z" fill="#e8d5a3" opacity="0.8"/>
+<path d="M20,188 Q200,180 410,184 Q620,188 800,182" stroke="#f59e0b" stroke-width="5" fill="none" stroke-linecap="round"/>
+<rect x="22" y="168" width="28" height="16" rx="3" fill="#f59e0b"/>
+<text x="36" y="180" text-anchor="middle" fill="white" font-size="10" font-family="-apple-system,sans-serif" font-weight="700">30A</text>
+<text x="18" y="205" fill="#64748b" font-size="10" font-family="-apple-system,sans-serif">← Destin</text>
+<text x="720" y="205" fill="#64748b" font-size="10" font-family="-apple-system,sans-serif">Panama City →</text>
+<line x1="60" y1="184" x2="60" y2="145" stroke="#27ae60" stroke-width="2"/>
+<circle cx="60" cy="184" r="9" fill="#27ae60" stroke="white" stroke-width="2"/>
+<text x="60" y="132" text-anchor="middle" fill="#14532d" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Stinky's</text>
+<line x1="145" y1="183" x2="145" y2="218" stroke="#8e44ad" stroke-width="2"/>
+<circle cx="145" cy="183" r="9" fill="#8e44ad" stroke="white" stroke-width="2"/>
+<text x="145" y="232" text-anchor="middle" fill="#581c87" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Shelby's</text>
+<line x1="230" y1="182" x2="230" y2="145" stroke="#d35400" stroke-width="2"/>
+<circle cx="230" cy="182" r="9" fill="#d35400" stroke="white" stroke-width="2"/>
+<text x="230" y="132" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Papa Surf</text>
+<line x1="315" y1="183" x2="315" y2="218" stroke="#c0392b" stroke-width="2"/>
+<circle cx="315" cy="183" r="9" fill="#c0392b" stroke="white" stroke-width="2"/>
+<text x="315" y="231" text-anchor="middle" fill="#7f1d1d" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Red Fish Taco</text>
+<line x1="400" y1="182" x2="400" y2="145" stroke="#16a085" stroke-width="2"/>
+<circle cx="400" cy="182" r="9" fill="#16a085" stroke="white" stroke-width="2"/>
+<text x="400" y="127" text-anchor="middle" fill="#064e3b" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">North Beach Social</text>
+<line x1="485" y1="183" x2="485" y2="218" stroke="#2980b9" stroke-width="2"/>
+<circle cx="485" cy="183" r="9" fill="#2980b9" stroke="white" stroke-width="2"/>
+<text x="485" y="232" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">AJ's Grayton</text>
+<line x1="570" y1="182" x2="570" y2="145" stroke="#e91e8c" stroke-width="2"/>
+<circle cx="570" cy="182" r="9" fill="#e91e8c" stroke="white" stroke-width="2"/>
+<text x="570" y="132" text-anchor="middle" fill="#831843" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Chiringo</text>
+<line x1="655" y1="183" x2="655" y2="218" stroke="#e67e22" stroke-width="2"/>
+<circle cx="655" cy="183" r="9" fill="#e67e22" stroke="white" stroke-width="2"/>
+<text x="655" y="232" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Watersound</text>
+<line x1="740" y1="182" x2="740" y2="145" stroke="#1565c0" stroke-width="2"/>
+<circle cx="740" cy="182" r="9" fill="#1565c0" stroke="white" stroke-width="2"/>
+<text x="740" y="132" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">30Avenue</text>
+<rect x="10" y="8" width="185" height="26" rx="5" fill="white" opacity="0.9"/>
+<text x="102" y="25" text-anchor="middle" fill="#1F3864" font-size="12" font-family="-apple-system,sans-serif" font-weight="600">30A Music Venues</text>
+</svg></div>
+
+
+{{TONIGHT}}
+<div class="leg"><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div>
+<div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div>
+<div class="wrap"><table><thead><tr><th>Artist</th><th>Date</th><th class="hm">Time</th><th>Venue</th><th class="hm">Link</th><th class="hm">Sources</th><th>Conf</th></tr></thead><tbody id="tb">{{TBODY}}</tbody></table></div>
+<script>
+var T=new Date().toISOString().slice(0,10);
+var df='up';
+document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+function we(){var d=new Date();d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
+function me(){var d=new Date();d.setMonth(d.getMonth()+1);return d.toISOString().slice(0,10);}
+function bd(){
+  var w=we(),m=me(),vv={},aa={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date')||'';
+    var v=r.getAttribute('data-venue')||'';
+    var a=r.getAttribute('data-performer')||'';
+    var ok=false;
+    if(df==='today'&&dt===T)ok=true;
+    else if(df==='up'&&dt>=T)ok=true;
+    else if(df==='week'&&dt>=T&&dt<=w)ok=true;
+    else if(df==='month'&&dt>=T&&dt<=m)ok=true;
+    else if(df==='all')ok=true;
+    else if(df==='past'&&dt<T)ok=true;
+    if(ok){if(v)vv[v]=1;if(a)aa[a]=1;}
+  });
+  var vs=document.getElementById('vf');
+  var cv=vs.value;
+  vs.innerHTML='<option value="">All Venues</option>';
+  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===cv)o.selected=true;vs.appendChild(o);});
+  var as=document.getElementById('af');
+  var ca=as.value;
+  as.innerHTML='<option value="">All Artists</option>';
+  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===ca)o.selected=true;as.appendChild(o);});
+}
+function sf(f){
+  df=f;
+  document.querySelectorAll('.btn').forEach(function(b){b.classList.remove('on');});
+  var b=document.getElementById('b-'+f);
+  if(b)b.classList.add('on');
+  bd();go();
+}
+function go(){
+  var q=document.getElementById('q').value.toLowerCase();
+  var vf=document.getElementById('vf').value;
+  var af=document.getElementById('af').value;
+  var w=we(),m=me();
+  var n=0,vv={},aa={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date')||'';
+    var v=r.getAttribute('data-venue')||'';
+    var a=r.getAttribute('data-performer')||'';
+    var s=true;
+    if(df==='today'&&dt!==T)s=false;
+    if(df==='up'&&dt<T)s=false;
+    if(df==='week'&&(dt<T||dt>w))s=false;
+    if(df==='month'&&(dt<T||dt>m))s=false;
+    if(df==='past'&&dt>=T)s=false;
+    if(vf&&v!==vf)s=false;
+    if(af&&a!==af)s=false;
+    if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)s=false;
+    r.style.display=s?'':'none';
+    r.className=dt===T?'now':dt>T?'up':'';
+    if(s){n++;if(v)vv[v]=1;if(a)aa[a]=1;}
+  });
+  document.getElementById('ss').textContent=n;
+  document.getElementById('sv').textContent=Object.keys(vv).length;
+  document.getElementById('sa').textContent=Object.keys(aa).length;
+  document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
+}
+function ca(){
+  document.getElementById('q').value='';
+  document.getElementById('vf').value='';
+  document.getElementById('af').value='';
+  // Build tonight card dynamically - runs after page loads
+function buildTonightCard(){
+  var T=new Date().toISOString().slice(0,10);
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var d=new Date();
+  var label=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
+  var shows=[];
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    if(r.getAttribute('data-date')===T){
+      var tds=r.querySelectorAll('td');
+      shows.push({
+        artist:tds[0]?tds[0].textContent.trim():'',
+        time:tds[2]?tds[2].textContent.trim():'',
+        venue:r.getAttribute('data-venue')||'',
+        vcls:tds[3]?tds[3].querySelector('span')?tds[3].querySelector('span').className:'':''
+      });
+    }
+  });
+  var card=document.getElementById('tonight-card');
+  if(!card)return;
+  if(shows.length===0){
+    card.innerHTML='<h2>Tonight — '+label+'</h2><p style="opacity:.6">No shows tonight — check This Week</p>';
+  } else {
+    var html='<h2>Tonight — '+label+'</h2>';
+    shows.forEach(function(s){
+      html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+s.time+'</small></div><span class="'+s.vcls+'">'+s.venue+'</span></div>';
+    });
+    card.innerHTML=html;
+  }
+}
+buildTonightCard();
+
+// Auto-rebuild tonight card if date has changed since last build
+(function(){
+  var T=new Date().toISOString().slice(0,10);
+  var card=document.querySelector('.tn');
+  if(!card||card.getAttribute('data-built')===T)return;
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var d=new Date();
+  var label=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
+  var shows=[];
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    if(r.getAttribute('data-date')===T){
+      var tds=r.querySelectorAll('td');
+      var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
+      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls});
+    }
+  });
+  if(shows.length===0){
+    card.innerHTML='<h2>Tonight — '+label+'</h2><p style="opacity:.6">No shows tonight — check This Week</p>';
+  } else {
+    var html='<h2>Tonight — '+label+'</h2>';
+    shows.forEach(function(s){html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+s.time+'</small></div><span class="'+s.vcls+'">'+s.venue+'</span></div>';});
+    card.innerHTML=html;
+  }
+  card.setAttribute('data-built',T);
+})();
+sf('up');
+}
+
+
+sf('up');
+function tog(e){var tr=e.target.closest('tr');var d=tr.nextElementSibling;if(d&&d.classList.contains('exp')){d.style.display=(d.style.display==='table-row')?'none':'table-row';}}
+</script></body></html>
