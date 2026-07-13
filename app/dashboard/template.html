@@ -131,7 +131,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmbox{max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;}
   .mmfr{flex:1;height:auto;}
 }
-.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}.xp{cursor:pointer;color:var(--teal);font-weight:800;user-select:none;margin-left:8px;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
+.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p></div></header>
 <main class="page">
 <div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div><div class="stat"><div class="n">AVGCONF_PLACEHOLDER</div><div class="l">Avg Confidence</div></div><div class="stat"><div class="n">VERIFIED_PLACEHOLDER</div><div class="l">Verified</div></div><div class="stat"><div class="n">CONFLICTS_PLACEHOLDER</div><div class="l">Conflicts</div></div><div class="stat"><div class="n">SOURCES_PLACEHOLDER</div><div class="l">Sources</div></div></div>
@@ -230,7 +230,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <th scope="col" data-sort="date" tabindex="0" role="button" aria-sort="ascending" onclick="srt('date',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('date',this);}">Date</th>
 <th scope="col">Time</th>
 <th scope="col" data-sort="venue" tabindex="0" role="button" aria-sort="none" onclick="srt('venue',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('venue',this);}">Directions</th>
-<th scope="col">Link</th><th scope="col">Sources</th><th scope="col">Confidence</th>
+<th scope="col">Link</th>
 </tr></thead><tbody id="tb">TBODY_PLACEHOLDER</tbody></table></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
@@ -413,6 +413,12 @@ document.addEventListener('click',function(e){
   var t=e.target.closest('.maplink');
   if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}
 });
-function tog(e){var tr=e.target.closest('tr');var d=tr.nextElementSibling;if(d&&d.classList.contains('exp'))d.classList.toggle('open');}
+document.addEventListener('click',function(e){
+  if(e.target.closest('a')||e.target.closest('.maplink'))return;
+  var tr=e.target.closest('#tb tr');
+  if(!tr||tr.classList.contains('exp'))return;
+  var d=tr.nextElementSibling;
+  if(d&&d.classList.contains('exp'))d.classList.toggle('open');
+});
 sf('up');
 </script></body></html>

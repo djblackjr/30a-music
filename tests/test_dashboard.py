@@ -27,16 +27,19 @@ def _render_to_temp(raw_events):
     return html, events
 
 
-def test_render_produces_rows_and_intelligence():
+def test_report_table_is_clean_and_provenance_is_in_the_detail_row():
     html, events = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "venue"},
     ])
     assert len(events) == 1                       # two sources -> one event
-    assert 'class="cf' in html                    # confidence badge
-    assert 'class="src"' in html                  # sources chip
-    assert 'class="exp"' in html                  # expand/detail row
-    assert "✓✓ (2)" in html                        # two-source chip
+    # the report itself carries no Sources/Confidence columns
+    assert "<th scope=\"col\">Sources</th>" not in html
+    assert "<th scope=\"col\">Confidence</th>" not in html
+    # provenance lives in the expandable detail row instead
+    assert 'class="exp"' in html
+    assert "sowal" in html and "venue" in html
+    assert 'class="cf' in html                    # confidence shown in the detail
 
 
 def test_render_shows_conflict():

@@ -130,20 +130,8 @@ def _rows_html(events: list[dict], path: Path) -> str:
             if embed else badge
         )
 
-        conf = ev.get("confidence")
-        conf_s = f"{conf:.2f}" if isinstance(conf, (int, float)) else "—"
-        sc = ev.get("source_count") or 1
-        vc = ev.get("verification_count") or 0
-        conflict = ev.get("conflict_flag")
-        cfl = (
-            f'<span class="cfl" title="{html.escape(ev.get("conflict_reason") or "")}">⚠</span>'
-            if conflict else ""
-        )
-        src_cell = (
-            f'<span class="src" title="{vc} verifying of {sc} sources">'
-            f'{"✓" * min(sc, 5)} ({sc})</span>{cfl}'
-        )
-
+        # The report stays clean: no Sources/Confidence columns. Provenance is
+        # one click away — clicking a row reveals its observations.
         out.append(
             f'<tr data-date="{date}" data-venue="{venue_e}" data-performer="{performer}" '
             f'data-embed="{embed_a}" data-ext="{ext_a}">'
@@ -152,18 +140,22 @@ def _rows_html(events: list[dict], path: Path) -> str:
             f"<td>{time_s}</td>"
             f"<td>{venue_cell}</td>"
             f'<td><a href="{url}" target="_blank" rel="noopener" '
-            f'aria-label="View original listing for {performer}">View listing ↗</a></td>'
-            f"<td>{src_cell}</td>"
-            f'<td><span class="cf {_band_class(conf)}"><span class="d"></span>{conf_s}</span>'
-            f'<span class="xp" onclick="tog(event)" role="button" tabindex="0" '
-            f'aria-label="Show sources for {performer}">▸</span></td></tr>'
+            f'aria-label="View original listing for {performer}">View listing ↗</a></td></tr>'
         )
 
+        conf = ev.get("confidence")
+        conf_s = f"{conf:.2f}" if isinstance(conf, (int, float)) else "—"
+        sc = ev.get("source_count") or 1
         obs = load_event_observations(ev["id"], path) if ev.get("id") else []
-        detail = "".join(_obs_html(o) for o in obs)
-        if conflict and ev.get("conflict_reason"):
+        detail = (
+            f'<div class="ob"><span><b>Sources</b></span>'
+            f'<span><span class="cf {_band_class(conf)}"><span class="d"></span>'
+            f"confidence {conf_s}</span></span></div>"
+        )
+        detail += "".join(_obs_html(o) for o in obs)
+        if ev.get("conflict_flag") and ev.get("conflict_reason"):
             detail += f'<div class="cflr">⚠ {html.escape(ev["conflict_reason"])}</div>'
-        out.append(f'<tr class="exp"><td colspan="7">{detail}</td></tr>')
+        out.append(f'<tr class="exp"><td colspan="5">{detail}</td></tr>')
     return "\n".join(out)
 
 
