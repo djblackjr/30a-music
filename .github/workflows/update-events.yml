@@ -21,20 +21,22 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install anthropic
+        run: pip install -r requirements.txt
 
-      - name: Process inbox images
+      # Runs the single pipeline: crawlers -> image inbox (GPT-4o Vision) ->
+      # normalise + confidence + provenance -> SQLite -> reconcile -> Excel ->
+      # dashboard. run_monitor.py regenerates docs/index.html itself, so there
+      # is no copy step (the old `cp data/index.html docs/index.html` clobbered
+      # the real dashboard).
+      - name: Run pipeline
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python3 process_inbox.py
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python run_monitor.py
 
-      - name: Commit and push updated dashboard
+      - name: Commit updated dashboard + database
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          cp data/index.html docs/index.html
-          git add data/index.html data/events.db docs/index.html images/processed/ images/inbox/
+          git add data/events.db docs/index.html
           git diff --staged --quiet || git commit -m "Auto-update events $(date +'%Y-%m-%d')"
           git push

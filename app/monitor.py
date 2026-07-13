@@ -9,16 +9,14 @@ from pathlib import Path
 
 from app.crawlers.registry import run_all_crawlers
 from app.database.db import (
-    get_last_run_id,
     init_db,
     load_events,
     record_run,
-    save_events,
+    upsert_events,
 )
 from app.excel.exporter import generate_report
 from app.images.importer import INBOX_DIR, SUPPORTED_EXTS, process_inbox
 from app.normalize import normalize_events
-from app.reconcile.changes import compare_runs
 
 logger = logging.getLogger(__name__)
 
@@ -56,25 +54,36 @@ def run_pipeline() -> dict:
     normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
-    # 5. Load previous run for comparison
-    logger.info("Step 4/6 — Loading previous run for comparison")
-    prev_run_id    = get_last_run_id()
-    previous_events = load_events(run_id=prev_run_id) if prev_run_id else []
-    logger.info("Previous run '%s' had %d events", prev_run_id, len(previous_events))
-
-    # 6. Save to DB
-    logger.info("Step 5/6 — Saving events to SQLite")
-    # source defaulting is handled in normalize_events
-    saved = save_events(normalised, run_id=run_id)
+    # 5. Upsert by identity — observations accumulate onto existing events, so a
+    #    second source corroborates rather than creating a duplicate.
+    logger.info("Step 4/6 — Upserting events (accumulating observations)")
+    result = upsert_events(normalised, run_id=run_id)
+    saved  = result["saved"]
     record_run(run_id=run_id, events_saved=saved)
 
-    # 7. Compare runs
-    changes = compare_runs(normalised, previous_events)
+    # 6. Changes come from the upsert itself.
+    #    NOTE: a run is a PARTIAL view (one crawl), not a full snapshot of reality,
+    #    so a source simply not re-observing an event does NOT mean it was removed.
+    #    Removal is therefore never inferred here.
+    logger.info("Step 5/6 — Reconciling")
+    changes = {
+        "new":       result["new"],
+        "changed":   result["changed"],
+        "removed":   [],
+        "unchanged": result["unchanged"],
+        "summary": {
+            "new":         len(result["new"]),
+            "changed":     len(result["changed"]),
+            "removed":     0,
+            "unchanged":   len(result["unchanged"]),
+            "total_delta": len(result["new"]) + len(result["changed"]),
+        },
+    }
 
-    # 8. Generate Excel
-    logger.info("Step 6/7 — Generating Excel report")
-    all_events  = load_events()          # full history for the report
-    report_path = generate_report(normalised, changes, run_id)
+    # 7. Generate Excel
+    logger.info("Step 6/6 — Generating Excel report")
+    all_events  = load_events()          # canonical events (one row per identity)
+    report_path = generate_report(all_events, changes, run_id)
 
     # 9. Generate the dashboard from current knowledge (union across runs)
     logger.info("Step 7/7 — Generating dashboard")

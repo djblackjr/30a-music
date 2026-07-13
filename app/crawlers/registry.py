@@ -104,8 +104,10 @@ class ShunkGulleyCrawler(BaseCrawler):
 # Registry — add every crawler you want to run here
 # ---------------------------------------------------------------------------
 
+# NOTE: SeedCrawler is intentionally NOT registered. It returns hard-coded demo
+# events, which would publish fabricated shows to the live dashboard. The class
+# is kept for local experimentation only.
 ALL_CRAWLERS: list[BaseCrawler] = [
-    SeedCrawler(),
     AJsGraytonCrawler(),
     ChiringoCrawler(),
     ShunkGulleyCrawler(),

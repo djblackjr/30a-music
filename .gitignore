@@ -3,7 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
-data/events.db
+# data/events.db is TRACKED: it is the system of record the dashboard is
+# generated from, and CI needs it to regenerate docs/index.html.
 exports/
 logs/
 images/processed/
