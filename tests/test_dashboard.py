@@ -53,9 +53,22 @@ def test_render_preserves_shell():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # baseline UX preserved: map SVG, search box, date filters, filter JS
+    # the hand-built design is preserved: corridor map, search, date filters,
+    # filter/sort JS, Today card container, and the Google Maps modal
     assert "<svg" in html
     assert 'id="q"' in html
     assert 'id="b-today"' in html
     assert "function go()" in html
-    assert "buildTonightCard" in html
+    assert "function srt(" in html
+    assert 'class="tn"' in html
+    assert 'id="mm"' in html          # directions modal
+    assert "no unfilled placeholders", "PLACEHOLDER" not in html
+
+
+def test_render_venue_links_to_google_maps():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
+    ])
+    assert 'class="maplink"' in html
+    assert "google.com/maps" in html
+    assert "Get directions to Chiringo" in html

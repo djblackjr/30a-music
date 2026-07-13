@@ -5,11 +5,17 @@ Dumb dashboard renderer.
 Reads canonical events + their observations from the database and fills
 app/dashboard/template.html. It ONLY renders precomputed values — it never
 computes confidence, reconciliation, venue defaults, or canonical names.
+
+The template is the hand-built design (corridor map, Today card, Google Maps
+directions modal, sortable/responsive table); this module adds the intelligence
+columns (Sources, Confidence), the expandable observation detail, and the health
+metrics — nothing else.
 """
 import html
 import logging
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from app.database.db import (
     DB_PATH,
@@ -25,27 +31,59 @@ logger = logging.getLogger(__name__)
 TEMPLATE = Path("app/dashboard/template.html")
 DEFAULT_OUT = Path("docs/index.html")
 
-# Venue -> colour-chip class, matching the hand-built dashboard exactly.
+# Venues with a dedicated colour in the template's .vt-* classes and map legend.
+# Keyed by every spelling variant seen across sources; anything else is vt-def.
 VENUE_CLASS = {
-    "The Pavilion at Watersound Town Center": "vt-pav",
-    "Red Fish Taco": "vt-rft",
-    "AJ's Grayton": "vt-aj",
-    "North Beach Social": "vt-nbs",
-    "Stinky's Bait Shack": "vt-sbs",
-    "Shelby's Beach Bar": "vt-sbb",
-    "Papa Surf": "vt-ps",
-    "30Avenue": "vt-30a",
-    "McGuire's Destin": "vt-mcg",
-    "Chiringo": "vt-chi",
+    "red fish taco": "vt-rft",
+    "papa surf": "vt-ps",
+    "papa surf burger bar": "vt-ps",
+    "shelby's beach bar and gill": "vt-sbb",
+    "shelby's beach bar": "vt-sbb",
+    "shelby's": "vt-sbb",
+    "north beach social": "vt-nbs",
+    "stinky's bait shack": "vt-sbs",
+    "stinky’s bait shack": "vt-sbs",
+    "aj's grayton": "vt-aj",
+    "aj's grayton beach": "vt-aj",
+    "the pavilion at watersound town center": "vt-pav",
+    "chiringo": "vt-chi",
+    "30avenue": "vt-30a",
+    "mcguire's destin": "vt-mcg",
+    "mcguire’s destin": "vt-mcg",
+}
+
+# Venues whose plain name is ambiguous or shares a name with a business
+# elsewhere; anything not listed falls back to searching the venue name as-is.
+VENUE_MAPS_QUERY = {
+    "aj's grayton": "AJ's Grayton Beach, FL",
+    "aj's grayton beach": "AJ's Grayton Beach, FL",
+    "the pavilion at watersound town center": "The Pavilion at Watersound Town Center, FL",
+    "mcguire's destin": "McGuire's Irish Pub, Destin, FL",
+    "mcguire’s destin": "McGuire's Irish Pub, Destin, FL",
 }
 
 
 def _venue_class(venue: str | None) -> str:
-    return VENUE_CLASS.get(venue or "", "vt-def")
+    return VENUE_CLASS.get((venue or "").strip().lower(), "vt-def")
+
+
+def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
+    """(embed_url, external_url) for the venue's Google Maps modal. No API key needed."""
+    v = (venue or "").strip()
+    if not v:
+        return None, None
+    query = VENUE_MAPS_QUERY.get(v.lower(), v)
+    encoded = quote_plus(query)
+    return (
+        f"https://www.google.com/maps?q={encoded}&output=embed",
+        f"https://www.google.com/maps/search/?api=1&query={encoded}",
+    )
 
 
 def _band_class(score) -> str:
-    return {"high": "cf-hi", "medium": "cf-md", "low": "cf-lo"}.get(confidence_band(score), "cf-md")
+    return {"high": "cf-hi", "medium": "cf-md", "low": "cf-lo"}.get(
+        confidence_band(score), "cf-md"
+    )
 
 
 def _fmt_date(iso: str | None) -> str:
@@ -55,114 +93,121 @@ def _fmt_date(iso: str | None) -> str:
         return iso or ""
 
 
-def _obs_row_html(o: dict) -> str:
+def _obs_html(o: dict) -> str:
     src = html.escape(o.get("source") or "")
     otype = html.escape(o.get("observation_type") or "")
     conf = o.get("confidence")
     conf_s = f"{conf:.2f}" if isinstance(conf, (int, float)) else "—"
     seen = (o.get("observed_at") or "")[:10]
-    label = f"✓ {src} <small>({otype})</small>"
+    asserted = html.escape(o.get("time_start") or "")
+    label = f"{src} <small>({otype})</small>"
     if o.get("url"):
-        label = f'✓ <a href="{html.escape(o["url"])}" target="_blank">{src}</a> <small>({otype})</small>'
-    return f'<div class="ob"><span>{label}</span><span>{conf_s}</span><span>{seen}</span></div>'
+        label = f'<a href="{html.escape(o["url"])}" target="_blank" rel="noopener">{src}</a> <small>({otype})</small>'
+    return (
+        f'<div class="ob"><span>✓ {label}</span>'
+        f"<span>{asserted}</span><span>{conf_s}</span><span>{seen}</span></div>"
+    )
 
 
-def _event_rows_html(events: list[dict], path: Path) -> str:
+def _rows_html(events: list[dict], path: Path) -> str:
     out = []
     for ev in events:
-        performer = html.escape(ev.get("performer") or "")
+        performer = html.escape(ev.get("performer") or ev.get("name") or "")
         venue = ev.get("venue") or ""
         venue_e = html.escape(venue)
-        vclass = _venue_class(venue)
         time_s = html.escape(ev.get("time_start") or "")
-        url = ev.get("url") or "#"
+        url = html.escape(ev.get("url") or "#")
+        date = ev.get("date") or ""
+
+        embed, ext = _venue_maps_urls(venue)
+        embed_a = (embed or "").replace("&", "&amp;")
+        ext_a = (ext or "").replace("&", "&amp;")
+
+        badge = f'<span class="vt {_venue_class(venue)}">{venue_e}</span>'
+        venue_cell = (
+            f'<a href="#" class="maplink" data-embed="{embed_a}" data-ext="{ext_a}" '
+            f'data-vname="{venue_e}" aria-label="Get directions to {venue_e}">{badge}</a>'
+            if embed else badge
+        )
+
         conf = ev.get("confidence")
         conf_s = f"{conf:.2f}" if isinstance(conf, (int, float)) else "—"
-        band = _band_class(conf)
-
         sc = ev.get("source_count") or 1
-        vc = ev.get("verification_count") or sc
-        checks = "✓" * min(sc, 5)
+        vc = ev.get("verification_count") or 0
         conflict = ev.get("conflict_flag")
-        cfl = f'<span class="cfl" title="{html.escape(ev.get("conflict_reason") or "")}">⚠</span>' if conflict else ""
-        src_cell = f'<span class="src" title="{vc} verify / {sc} sources">{checks} ({sc})</span>{cfl}'
+        cfl = (
+            f'<span class="cfl" title="{html.escape(ev.get("conflict_reason") or "")}">⚠</span>'
+            if conflict else ""
+        )
+        src_cell = (
+            f'<span class="src" title="{vc} verifying of {sc} sources">'
+            f'{"✓" * min(sc, 5)} ({sc})</span>{cfl}'
+        )
 
         out.append(
-            f'<tr data-date="{ev.get("date") or ""}" data-venue="{venue_e}" data-performer="{performer}">'
+            f'<tr data-date="{date}" data-venue="{venue_e}" data-performer="{performer}" '
+            f'data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
-            f"<td>{_fmt_date(ev.get('date'))}</td>"
+            f"<td>{_fmt_date(date)}</td>"
             f"<td>{time_s}</td>"
-            f'<td><span class="vt {vclass}">{venue_e}</span></td>'
-            f'<td><a href="{html.escape(url)}" target="_blank">view</a></td>'
+            f"<td>{venue_cell}</td>"
+            f'<td><a href="{url}" target="_blank" rel="noopener" '
+            f'aria-label="View original listing for {performer}">View listing ↗</a></td>'
             f"<td>{src_cell}</td>"
-            f'<td><span class="cf {band}"><span class="d"></span>{conf_s}</span>'
-            f'<span class="xp" onclick="tog(this)">▸</span></td></tr>'
+            f'<td><span class="cf {_band_class(conf)}"><span class="d"></span>{conf_s}</span>'
+            f'<span class="xp" onclick="tog(event)" role="button" tabindex="0" '
+            f'aria-label="Show sources for {performer}">▸</span></td></tr>'
         )
 
         obs = load_event_observations(ev["id"], path) if ev.get("id") else []
-        detail = "".join(_obs_row_html(o) for o in obs)
-        if ev.get("conflict_flag") and ev.get("conflict_reason"):
+        detail = "".join(_obs_html(o) for o in obs)
+        if conflict and ev.get("conflict_reason"):
             detail += f'<div class="cflr">⚠ {html.escape(ev["conflict_reason"])}</div>'
         out.append(f'<tr class="exp"><td colspan="7">{detail}</td></tr>')
     return "\n".join(out)
 
 
-def _tonight_html(events: list[dict], today: str) -> str:
-    d = date.today()
-    label = d.strftime("%A, %B %-d")
-    todays = [e for e in events if (e.get("date") or "") == today]
-    parts = [f'<div class="tn" data-built="{today}"><h2>Tonight — {label}</h2>']
-    if not todays:
-        parts.append('<p style="opacity:.6">No shows tonight — check This Week</p>')
-    else:
-        for e in todays:
-            performer = html.escape(e.get("performer") or "")
-            venue = e.get("venue") or ""
-            parts.append(
-                f'<div class="sc"><div><b>{performer}</b><br><small>{html.escape(e.get("time_start") or "")}</small></div>'
-                f'<span class="vt {_venue_class(venue)}">{html.escape(venue)}</span></div>'
-            )
-    parts.append("</div>")
-    return "".join(parts)
-
-
 def _health(events: list[dict], path: Path) -> dict:
     confs = [e["confidence"] for e in events if isinstance(e.get("confidence"), (int, float))]
     avg = round(sum(confs) / len(confs), 2) if confs else 0
+    verified = sum(1 for e in events if (e.get("verification_count") or 0) > 1)
     conflicts = sum(1 for e in events if e.get("conflict_flag"))
     ids = [e["id"] for e in events if e.get("id")]
-    n_sources = 0
+    sources = 0
     if ids:
         conn = get_connection(path)
-        q = "SELECT COUNT(DISTINCT source) FROM event_observations WHERE event_id IN (%s)" % ",".join("?" * len(ids))
-        n_sources = conn.execute(q, ids).fetchone()[0]
+        q = ("SELECT COUNT(DISTINCT source) FROM event_observations WHERE event_id IN (%s)"
+             % ",".join("?" * len(ids)))
+        sources = conn.execute(q, ids).fetchone()[0]
         conn.close()
-    return {"total": len(events), "avgconf": f"{avg:.2f}", "conflicts": conflicts, "sources": n_sources}
+    return {
+        "total": len(events),
+        "avgconf": f"{avg:.2f}",
+        "verified": verified,
+        "conflicts": conflicts,
+        "sources": sources,
+    }
 
 
-def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None, path: Path = DB_PATH) -> Path:
-    """Render the dashboard for a run (default: latest) into out_path."""
+def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
+             path: Path = DB_PATH) -> Path:
+    """Render the dashboard for current knowledge (or a specific run) into out_path."""
     template = TEMPLATE.read_text(encoding="utf-8")
-    # Default: current knowledge across all runs (latest-wins per identity). A
-    # specific run_id can be passed for reproduction/testing.
     events = load_events(run_id=run_id, path=path) if run_id else load_current_events(path=path)
-    # date ascending, then insertion order (id) — reproduces the curated layout;
-    # within-day ordering follows how events were added, as the original did.
+    # date ascending, then insertion order — matches the curated layout
     events.sort(key=lambda e: ((e.get("date") or ""), e.get("id") or 0))
 
-    today = date.today().isoformat()
-    health = _health(events, path)
-
-    html_out = (
+    h = _health(events, path)
+    out = (
         template
-        .replace("{{TBODY}}", _event_rows_html(events, path))
-        .replace("{{TONIGHT}}", _tonight_html(events, today))
-        .replace("{{TOTAL}}", str(health["total"]))
-        .replace("{{AVGCONF}}", health["avgconf"])
-        .replace("{{CONFLICTS}}", str(health["conflicts"]))
-        .replace("{{SOURCES}}", str(health["sources"]))
+        .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
+        .replace("TOTAL_PLACEHOLDER", str(h["total"]))
+        .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
+        .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))
+        .replace("CONFLICTS_PLACEHOLDER", str(h["conflicts"]))
+        .replace("SOURCES_PLACEHOLDER", str(h["sources"]))
     )
-    out_path.write_text(html_out, encoding="utf-8")
+    out_path.write_text(out, encoding="utf-8")
     logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))
     return out_path
 

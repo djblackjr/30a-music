@@ -1,194 +1,277 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>30A Live Music</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>30A Live Music</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,sans-serif;background:#F5F0E8;font-size:16px;}
-header{background:#1F3864;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
-header h1{font-size:1.74rem;margin:0;}header p{font-size:1.015rem;opacity:.6;}
-.stats{display:flex;background:#fff;border-bottom:2px solid #e9ecef;}
-.stat{padding:10px 16px;border-right:1px solid #e9ecef;text-align:center;min-width:70px;}
-.stat .n{font-size:1.4rem;font-weight:700;color:#1F3864;}.stat .l{font-size:.58rem;color:#adb5bd;text-transform:uppercase;}
-.tn{background:#1F3864;color:#fff;padding:14px 16px;margin:12px;}
-.tn h2{font-size:.85rem;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
-.sc{background:rgba(255,255,255,.1);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
-.leg{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e9ecef;font-size:.75rem;}
-.ld{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;}
-.fil{padding:10px 12px;background:#fff;border-bottom:1px solid #e9ecef;display:flex;flex-direction:column;gap:8px;}
-input{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.9rem;width:100%;outline:none;}
-.dr{display:flex;gap:6px;}select{padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:.85rem;background:#fff;cursor:pointer;flex:1;outline:none;}
-.br{display:flex;gap:6px;flex-wrap:wrap;}
-.btn{padding:7px 12px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;font-size:.82rem;white-space:nowrap;}
-.btn:hover{background:#f0f0f0;}.btn.on{background:#1F3864;color:#fff;border-color:#1F3864;}
-.cnt{font-size:.8rem;color:#6c757d;margin-left:auto;align-self:center;}
-.wrap{padding:12px;}table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
-th{background:#1F3864;color:#fff;padding:10px 12px;text-align:left;font-size:.8rem;cursor:pointer;}th:hover{background:#1B7A8A;}
-td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:.88rem;vertical-align:middle;}tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f5faff;}tr.up td{background:rgba(27,122,138,.04);}tr.up td:first-child{border-left:3px solid #1B7A8A;}
-tr.now td{background:rgba(31,56,100,.12);}tr.now td:first-child{border-left:4px solid #1F3864;}
-.vt{padding:3px 10px;border-radius:8px;font-size:.82rem;font-weight:500;display:inline-block;color:#fff;}
+<style>
+:root{
+  --navy:#1F3864;--navy-dark:#152945;--navy-light:#2c4a7c;
+  --teal:#1B7A8A;--teal-light:#2497aa;
+  --cream:#F5F0E8;--card:#ffffff;--amber:#f59e0b;
+  --ink:#1c2b3a;--muted:#64748b;--border:#e7e2d8;
+  --radius-sm:8px;--radius-md:14px;--radius-lg:18px;
+  --shadow-sm:0 1px 3px rgba(31,56,100,.08);
+  --shadow-md:0 6px 20px rgba(31,56,100,.14);
+  --shadow-lg:0 16px 40px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.45;}
+a{color:var(--teal);text-decoration:none;}
+:focus-visible{outline:3px solid var(--teal-light);outline-offset:2px;border-radius:4px;}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.maplink,select,input,.stat,.legchip,th[data-sort]{transition:background-color .15s ease,box-shadow .15s ease,border-color .15s ease;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important;}
+}
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;padding:22px 16px 24px;box-shadow:var(--shadow-md);}
+.hd-inner{max-width:1100px;margin:0 auto;}
+header h1{font-size:1.9rem;font-weight:800;letter-spacing:-.01em;}
+header h1 .note{color:var(--amber);}
+header p{font-size:.95rem;opacity:.75;margin-top:4px;}
+.upd-badge{display:inline-block;font-size:.72rem;opacity:.75;margin-top:10px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:999px;}
+.page{max-width:1100px;margin:0 auto;padding:0 16px 40px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}
+.stat{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:14px 10px;text-align:center;}
+.stat .n{font-size:1.6rem;font-weight:800;color:var(--navy);letter-spacing:-.01em;}
+.stat .l{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr);}}
+.top{display:grid;gap:16px;margin-bottom:16px;}
+@media(min-width:900px){.top{grid-template-columns:1.35fr 1fr;align-items:start;}}
+.map-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;}
+.map-svg-wrap{width:100%;overflow:hidden;}
+.map-caption{font-size:.72rem;color:var(--muted);padding:8px 14px 12px;text-align:center;}
+.tn{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:18px;display:flex;flex-direction:column;max-height:480px;}
+.tn-body{overflow-y:auto;flex:1;min-height:0;padding-right:4px;margin-right:-4px;}
+.tn-body::-webkit-scrollbar{width:6px;}
+.tn-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px;}
+.tn-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+.tn h2{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}
+.tn-hint{font-size:.975rem;opacity:.55;}
+.tn-empty{opacity:.7;padding:6px 2px;}
+.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.sc:last-child{margin-bottom:0;}
+.sc b{font-size:.98rem;}
+.sc small{opacity:.75;font-size:.8rem;}
+.sc .vt{padding:10px 16px;font-size:.9rem;}
+.sc .maplink{min-height:44px;}
+.maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
+.tip{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink);}
+.tip-ico{font-size:1.1rem;line-height:1;}
+.tip-stat{margin-left:auto;font-weight:700;color:var(--navy);font-size:.82rem;background:var(--cream);padding:5px 11px;border-radius:999px;white-space:nowrap;}
+@media(max-width:680px){.tip-stat{margin-left:0;}}
+.tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
+.leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.leg::-webkit-scrollbar{height:6px;}
+.leg::-webkit-scrollbar-thumb{background:rgba(31,56,100,.25);border-radius:99px;}
+.legchip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:.78rem;box-shadow:var(--shadow-sm);white-space:nowrap;}
+.ld{width:9px;height:9px;border-radius:50%;display:inline-block;}
+@media(max-width:680px){.leg{margin:0 -16px;padding:10px 16px;}}
+.fil{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.fil input[type=search]{min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;width:100%;background:var(--cream);outline:none;}
+.fil input[type=search]:focus{border-color:var(--teal);background:#fff;}
+.dr{display:flex;gap:8px;}
+.dr select{min-height:44px;flex:1;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--cream);cursor:pointer;outline:none;}
+.dr select:focus{border-color:var(--teal);background:#fff;}
+.br{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.btn{min-height:44px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--navy);white-space:nowrap;box-shadow:var(--shadow-sm);}
+.btn:hover{background:var(--cream);}
+.btn.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:var(--shadow-md);}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--muted);}
+.btn.ghost:hover{background:var(--cream);}
+.cnt{font-size:.8rem;color:var(--muted);margin-left:auto;align-self:center;}
+@media(max-width:680px){
+  .br{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+  .cnt{display:block;width:100%;margin:6px 0 0;}
+}
+.wrap{margin-bottom:20px;}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;}
+thead th{background:var(--navy);color:#fff;padding:12px 14px;text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+th[data-sort]{cursor:pointer;}
+th[data-sort]:hover{background:var(--teal);}
+th[data-sort].asc::after{content:" ▲";font-size:.7em;}
+th[data-sort].desc::after{content:" ▼";font-size:.7em;}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f5faff;}
+tr.up td:first-child{border-left:3px solid var(--teal);}
+tr.now td:first-child{border-left:4px solid var(--navy);}
+.vt{padding:4px 11px;border-radius:999px;font-size:.8rem;font-weight:600;display:inline-block;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.15);}
 .vt-rft{background:#c0392b;}.vt-ps{background:#d35400;}.vt-sbb{background:#8e44ad;}.vt-nbs{background:#16a085;}
 .vt-sbs{background:#27ae60;}.vt-aj{background:#2980b9;}.vt-pav{background:#e67e22;}
 .vt-chi{background:#e91e8c;}.vt-30a{background:#1565c0;}.vt-mcg{background:#4a235a;}.vt-def{background:#555;}
-a{color:#1B7A8A;text-decoration:none;}@media(max-width:600px){.hm{display:none;}td,th{padding:7px 8px;font-size:.8rem;}}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.xp{cursor:pointer;color:#1B7A8A;font-weight:700;user-select:none;margin-left:6px;}tr.exp{display:none;}tr.exp td{background:#f8fbff;font-size:.8rem;color:#334155;padding:8px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted #e2e8f0;}tr.exp .cflr{color:#b91c1c;font-weight:600;margin-top:6px;}</style></head><body>
-<header><div><h1><span style="color:#f59e0b;">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p id="upd" style="font-size:.65rem;opacity:.45;margin-top:4px;"></p></div></header>
-<div class="stats"><div class="stat"><div class="n">{{TOTAL}}</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div><div class="stat"><div class="n">{{AVGCONF}}</div><div class="l">Avg Conf</div></div><div class="stat"><div class="n">{{CONFLICTS}}</div><div class="l">Conflicts</div></div><div class="stat"><div class="n">{{SOURCES}}</div><div class="l">Sources</div></div></div>
-<div style="width:100%;overflow:hidden;">
-<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
-<rect width="820" height="300" fill="#eef6f0" rx="12"/>
-<rect x="0" y="0" width="820" height="70" fill="#c8e8f5"/>
+.maplink{display:inline-flex;align-items:center;min-height:44px;padding:2px 2px;border-radius:999px;}
+@media(max-width:680px){
+  .wrap table,.wrap thead,.wrap tbody,.wrap tr,.wrap td{display:block;width:100%;}
+  .wrap thead{display:none;}
+  .wrap table{background:transparent;box-shadow:none;border:none;}
+  .wrap tbody{display:block;}
+  .wrap tr{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 14px;margin-bottom:10px;}
+  .wrap tr.now{border-left:4px solid var(--navy);}
+  .wrap tr.up{border-left:3px solid var(--teal);}
+  .wrap td{border:none;padding:2px 0;}
+  .wrap td:first-child{border-left:none;}
+  .wrap td:nth-of-type(1){font-size:1.02rem;margin-bottom:4px;}
+  .wrap td:nth-of-type(2),.wrap td:nth-of-type(3){display:inline-block;color:var(--muted);font-size:.82rem;}
+  .wrap td:nth-of-type(2)::after{content:" · ";color:var(--muted);}
+  .wrap td:nth-of-type(4){margin-top:10px;}
+  .wrap td:nth-of-type(4) .vt{padding:8px 14px;font-size:.85rem;}
+  .wrap td:nth-of-type(5){margin-top:8px;}
+  .wrap td:nth-of-type(5) a{display:inline-flex;align-items:center;min-height:36px;font-weight:600;}
+}
+.mm{position:fixed;inset:0;background:rgba(15,26,40,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.mm.on{display:flex;}
+.mmbox{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:85vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
+.mmhd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--navy);color:#fff;gap:10px;}
+.mmhd b{font-size:.95rem;}
+.mmx{background:rgba(255,255,255,.14);border:none;color:#fff;font-size:1.3rem;line-height:1;cursor:pointer;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.mmx:hover{background:rgba(255,255,255,.26);}
+.mmfr{width:100%;height:420px;border:0;display:block;flex:1;}
+.mmft{padding:10px 16px;text-align:right;background:#fff;border-top:1px solid var(--border);font-size:.85rem;}
+.mmft a{font-weight:600;}
+@media(max-width:680px){
+  .mm{padding:0;}
+  .mmbox{max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;}
+  .mmfr{flex:1;height:auto;}
+}
+.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}.xp{cursor:pointer;color:var(--teal);font-weight:800;user-select:none;margin-left:8px;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p></div></header>
+<main class="page">
+<div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div><div class="stat"><div class="n">AVGCONF_PLACEHOLDER</div><div class="l">Avg Confidence</div></div><div class="stat"><div class="n">VERIFIED_PLACEHOLDER</div><div class="l">Verified</div></div><div class="stat"><div class="n">CONFLICTS_PLACEHOLDER</div><div class="l">Conflicts</div></div><div class="stat"><div class="n">SOURCES_PLACEHOLDER</div><div class="l">Sources</div></div></div>
+<div class="top">
+<div class="map-card">
+<div class="map-svg-wrap">
+<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;" role="img" aria-label="Illustrative map of the 30A coastal corridor showing approximate locations of featured live-music venues. Not to scale and not geographically exact.">
+<defs>
+<linearGradient id="bay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdeaf7"/><stop offset="1" stop-color="#a9d8ee"/></linearGradient>
+<linearGradient id="gulf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd0e8"/><stop offset="1" stop-color="#5fb3d6"/></linearGradient>
+<linearGradient id="land" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1df"/><stop offset="1" stop-color="#e3ddc4"/></linearGradient>
+<filter id="pinShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.4" flood-color="#0f2038" flood-opacity="0.35"/></filter>
+</defs>
+<rect width="820" height="300" fill="url(#land)" rx="16"/>
+<rect x="0" y="0" width="820" height="70" fill="url(#bay)"/>
 <path d="M0,55 Q200,70 400,60 Q600,50 820,65 L820,0 L0,0 Z" fill="#b0d8ee"/>
-<text x="410" y="38" text-anchor="middle" fill="#5a9ab5" font-size="11" font-family="-apple-system,sans-serif">Choctawhatchee Bay</text>
-<rect x="0" y="235" width="820" height="65" fill="#7ec8e3"/>
+<text x="410" y="38" text-anchor="middle" fill="#4d87a2" font-size="11" font-family="-apple-system,sans-serif">Choctawhatchee Bay</text>
+<rect x="0" y="235" width="820" height="65" fill="url(#gulf)"/>
 <path d="M0,235 Q200,225 400,232 Q600,238 820,228 L820,235 Z" fill="#a8d8ea"/>
-<text x="410" y="270" text-anchor="middle" fill="#1e6e8e" font-size="12" font-family="-apple-system,sans-serif">Gulf of Mexico</text>
+<text x="410" y="270" text-anchor="middle" fill="#155a76" font-size="12" font-family="-apple-system,sans-serif">Gulf of Mexico</text>
 <path d="M0,218 Q200,210 400,216 Q600,222 820,214 L820,235 Q600,238 400,232 Q200,226 0,235 Z" fill="#e8d5a3" opacity="0.8"/>
-<path d="M20,188 Q200,180 410,184 Q620,188 800,182" stroke="#f59e0b" stroke-width="5" fill="none" stroke-linecap="round"/>
-<rect x="22" y="168" width="28" height="16" rx="3" fill="#f59e0b"/>
+<path d="M20,188 Q200,180 410,184 Q620,188 800,182" stroke="#3b4a5a" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M20,188 Q200,180 410,184 Q620,188 800,182" stroke="#f5f0e8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="6 7"/>
+<rect x="22" y="168" width="28" height="16" rx="4" fill="#f59e0b"/>
 <text x="36" y="180" text-anchor="middle" fill="white" font-size="10" font-family="-apple-system,sans-serif" font-weight="700">30A</text>
-<text x="18" y="205" fill="#64748b" font-size="10" font-family="-apple-system,sans-serif">← Destin</text>
-<text x="720" y="205" fill="#64748b" font-size="10" font-family="-apple-system,sans-serif">Panama City →</text>
+<text x="18" y="205" fill="#54637a" font-size="10" font-family="-apple-system,sans-serif">← Destin</text>
+<text x="720" y="205" fill="#54637a" font-size="10" font-family="-apple-system,sans-serif">Panama City →</text>
+<g filter="url(#pinShadow)">
 <line x1="60" y1="184" x2="60" y2="145" stroke="#27ae60" stroke-width="2"/>
 <circle cx="60" cy="184" r="9" fill="#27ae60" stroke="white" stroke-width="2"/>
-<text x="60" y="132" text-anchor="middle" fill="#14532d" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Stinky's</text>
 <line x1="145" y1="183" x2="145" y2="218" stroke="#8e44ad" stroke-width="2"/>
 <circle cx="145" cy="183" r="9" fill="#8e44ad" stroke="white" stroke-width="2"/>
-<text x="145" y="232" text-anchor="middle" fill="#581c87" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Shelby's</text>
 <line x1="230" y1="182" x2="230" y2="145" stroke="#d35400" stroke-width="2"/>
 <circle cx="230" cy="182" r="9" fill="#d35400" stroke="white" stroke-width="2"/>
-<text x="230" y="132" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Papa Surf</text>
 <line x1="315" y1="183" x2="315" y2="218" stroke="#c0392b" stroke-width="2"/>
 <circle cx="315" cy="183" r="9" fill="#c0392b" stroke="white" stroke-width="2"/>
-<text x="315" y="231" text-anchor="middle" fill="#7f1d1d" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Red Fish Taco</text>
 <line x1="400" y1="182" x2="400" y2="145" stroke="#16a085" stroke-width="2"/>
 <circle cx="400" cy="182" r="9" fill="#16a085" stroke="white" stroke-width="2"/>
-<text x="400" y="127" text-anchor="middle" fill="#064e3b" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">North Beach Social</text>
 <line x1="485" y1="183" x2="485" y2="218" stroke="#2980b9" stroke-width="2"/>
 <circle cx="485" cy="183" r="9" fill="#2980b9" stroke="white" stroke-width="2"/>
-<text x="485" y="232" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">AJ's Grayton</text>
 <line x1="570" y1="182" x2="570" y2="145" stroke="#e91e8c" stroke-width="2"/>
 <circle cx="570" cy="182" r="9" fill="#e91e8c" stroke="white" stroke-width="2"/>
-<text x="570" y="132" text-anchor="middle" fill="#831843" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Chiringo</text>
 <line x1="655" y1="183" x2="655" y2="218" stroke="#e67e22" stroke-width="2"/>
 <circle cx="655" cy="183" r="9" fill="#e67e22" stroke="white" stroke-width="2"/>
-<text x="655" y="232" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">Watersound</text>
 <line x1="740" y1="182" x2="740" y2="145" stroke="#1565c0" stroke-width="2"/>
 <circle cx="740" cy="182" r="9" fill="#1565c0" stroke="white" stroke-width="2"/>
-<text x="740" y="132" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="500">30Avenue</text>
-<rect x="10" y="8" width="185" height="26" rx="5" fill="white" opacity="0.9"/>
-<text x="102" y="25" text-anchor="middle" fill="#1F3864" font-size="12" font-family="-apple-system,sans-serif" font-weight="600">30A Music Venues</text>
-</svg></div>
-
-
-{{TONIGHT}}
-<div class="leg"><span><span class="ld" style="background:#27ae60"></span>Stinky's</span><span><span class="ld" style="background:#8e44ad"></span>Shelby's</span><span><span class="ld" style="background:#d35400"></span>Papa Surf</span><span><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span><span><span class="ld" style="background:#16a085"></span>North Beach Social</span><span><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span><span><span class="ld" style="background:#e91e8c"></span>Chiringo</span><span><span class="ld" style="background:#e67e22"></span>Watersound</span><span><span class="ld" style="background:#1565c0"></span>30Avenue</span></div>
-<div class="fil"><input type="search" id="q" placeholder="Search..." oninput="go()"><div class="dr"><select id="vf" onchange="go()"><option value="">All Venues</option></select><select id="af" onchange="go()"><option value="">All Artists</option></select></div><div class="br"><button class="btn" id="b-today" onclick="sf('today')">Today</button><button class="btn" id="b-up" onclick="sf('up')">Upcoming</button><button class="btn" id="b-week" onclick="sf('week')">This Week</button><button class="btn" id="b-month" onclick="sf('month')">This Month</button><button class="btn" id="b-all" onclick="sf('all')">All Dates</button><button class="btn" id="b-past" onclick="sf('past')">Past</button><button class="btn" onclick="ca()">✕ Clear</button><span class="cnt" id="cnt"></span></div></div>
-<div class="wrap"><table><thead><tr><th>Artist</th><th>Date</th><th class="hm">Time</th><th>Venue</th><th class="hm">Link</th><th class="hm">Sources</th><th>Conf</th></tr></thead><tbody id="tb">{{TBODY}}</tbody></table></div>
+</g>
+<text x="60" y="132" text-anchor="middle" fill="#14532d" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Stinky's</text>
+<text x="145" y="232" text-anchor="middle" fill="#581c87" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Shelby's</text>
+<text x="230" y="132" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Papa Surf</text>
+<text x="315" y="231" text-anchor="middle" fill="#7f1d1d" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Red Fish Taco</text>
+<text x="400" y="127" text-anchor="middle" fill="#064e3b" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">North Beach Social</text>
+<text x="485" y="232" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">AJ's Grayton</text>
+<text x="570" y="132" text-anchor="middle" fill="#831843" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Chiringo</text>
+<text x="655" y="232" text-anchor="middle" fill="#7c2d12" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">Watersound</text>
+<text x="740" y="132" text-anchor="middle" fill="#1e3a8a" font-size="13" font-family="-apple-system,sans-serif" font-weight="600">30Avenue</text>
+<rect x="10" y="8" width="185" height="26" rx="6" fill="white" opacity="0.92"/>
+<text x="102" y="25" text-anchor="middle" fill="#1F3864" font-size="12" font-family="-apple-system,sans-serif" font-weight="700">30A Music Venues</text>
+</svg>
+</div>
+<p class="map-caption">Illustrative route map — general orientation only, not to scale or geographically exact.</p>
+</div>
+<div class="tn"></div>
+</div>
+<div class="tip"><span class="tip-ico" aria-hidden="true">📍</span><span>Color-coded venues — click any badge for turn-by-turn directions.</span><span class="tip-stat" id="hlt"></span></div>
+<div class="leg">
+<span class="legchip"><span class="ld" style="background:#27ae60"></span>Stinky's</span>
+<span class="legchip"><span class="ld" style="background:#8e44ad"></span>Shelby's</span>
+<span class="legchip"><span class="ld" style="background:#d35400"></span>Papa Surf</span>
+<span class="legchip"><span class="ld" style="background:#c0392b"></span>Red Fish Taco</span>
+<span class="legchip"><span class="ld" style="background:#16a085"></span>North Beach Social</span>
+<span class="legchip"><span class="ld" style="background:#2980b9"></span>AJ's Grayton</span>
+<span class="legchip"><span class="ld" style="background:#e91e8c"></span>Chiringo</span>
+<span class="legchip"><span class="ld" style="background:#e67e22"></span>Watersound</span>
+<span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
+</div>
+<div class="fil">
+<input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="go()">
+<div class="dr">
+<select id="vf" onchange="bd();go()" aria-label="Filter by venue"><option value="">All Venues</option></select>
+<select id="af" onchange="bd();go()" aria-label="Filter by artist"><option value="">All Artists</option></select>
+</div>
+<div class="br">
+<button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
+<button class="btn" id="b-up" onclick="sf('up')" aria-pressed="false">Upcoming</button>
+<button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
+<button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
+<button class="btn" id="b-all" onclick="sf('all')" aria-pressed="false">All Dates</button>
+<button class="btn" id="b-past" onclick="sf('past')" aria-pressed="false">Past</button>
+<button class="btn ghost" onclick="ca()" aria-label="Clear all filters">✕ Clear</button>
+<span class="cnt" id="cnt"></span>
+</div>
+</div>
+<div class="wrap"><p class="tbl-hint">Click any venue for directions</p><table><thead><tr>
+<th scope="col" data-sort="performer" tabindex="0" role="button" aria-sort="none" onclick="srt('performer',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('performer',this);}">Artist</th>
+<th scope="col" data-sort="date" tabindex="0" role="button" aria-sort="ascending" onclick="srt('date',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('date',this);}">Date</th>
+<th scope="col">Time</th>
+<th scope="col" data-sort="venue" tabindex="0" role="button" aria-sort="none" onclick="srt('venue',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('venue',this);}">Directions</th>
+<th scope="col">Link</th><th scope="col">Sources</th><th scope="col">Confidence</th>
+</tr></thead><tbody id="tb">TBODY_PLACEHOLDER</tbody></table></div>
+</main>
+<div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
-var T=new Date().toISOString().slice(0,10);
-var df='up';
+function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+var T=_localDate();
+var sk='date',sd=1,df='up';
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-function we(){var d=new Date();d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
-function me(){var d=new Date();d.setMonth(d.getMonth()+1);return d.toISOString().slice(0,10);}
-function bd(){
-  var w=we(),m=me(),vv={},aa={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'';
-    var v=r.getAttribute('data-venue')||'';
-    var a=r.getAttribute('data-performer')||'';
-    var ok=false;
-    if(df==='today'&&dt===T)ok=true;
-    else if(df==='up'&&dt>=T)ok=true;
-    else if(df==='week'&&dt>=T&&dt<=w)ok=true;
-    else if(df==='month'&&dt>=T&&dt<=m)ok=true;
-    else if(df==='all')ok=true;
-    else if(df==='past'&&dt<T)ok=true;
-    if(ok){if(v)vv[v]=1;if(a)aa[a]=1;}
+function _timeMins(tok){
+  var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
+  if(!m)return null;
+  var h=parseInt(m[1],10)%12,mins=m[2]?parseInt(m[2],10):0;
+  if(m[3].toLowerCase()==='p')h+=12;
+  return h*60+mins;
+}
+function _fmtTime(str){
+  if(!str)return str;
+  return str.replace(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/gi,function(_,h,mn,ap){
+    return parseInt(h,10)+':'+String(mn?parseInt(mn,10):0).padStart(2,'0')+' '+(ap.toLowerCase()==='p'?'PM':'AM');
   });
-  var vs=document.getElementById('vf');
-  var cv=vs.value;
-  vs.innerHTML='<option value="">All Venues</option>';
-  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===cv)o.selected=true;vs.appendChild(o);});
-  var as=document.getElementById('af');
-  var ca=as.value;
-  as.innerHTML='<option value="">All Artists</option>';
-  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===ca)o.selected=true;as.appendChild(o);});
 }
-function sf(f){
-  df=f;
-  document.querySelectorAll('.btn').forEach(function(b){b.classList.remove('on');});
-  var b=document.getElementById('b-'+f);
-  if(b)b.classList.add('on');
-  bd();go();
+function _startMins(str){
+  if(!str)return 99999;
+  var parts=str.split(/\s*-\s*/);
+  var v=_timeMins(parts[0]);
+  if(v!==null)return v;
+  var bare=parts[0].match(/(\d{1,2})(?::(\d{2}))?/);
+  if(!bare)return 99999;
+  var h=parseInt(bare[1],10),mins=bare[2]?parseInt(bare[2],10):0;
+  if(!parts[1])return h*60+mins;
+  var endAp=(parts[1].match(/([ap])\.?m\.?/i)||[])[1];
+  var endH=(parts[1].match(/(\d{1,2})/)||[])[1];
+  var ap=endAp?endAp.toLowerCase():'p';
+  if(endH&&h>parseInt(endH,10)&&ap==='a')ap='p';
+  var hh=h%12;if(ap==='p')hh+=12;
+  return hh*60+mins;
 }
-function go(){
-  var q=document.getElementById('q').value.toLowerCase();
-  var vf=document.getElementById('vf').value;
-  var af=document.getElementById('af').value;
-  var w=we(),m=me();
-  var n=0,vv={},aa={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'';
-    var v=r.getAttribute('data-venue')||'';
-    var a=r.getAttribute('data-performer')||'';
-    var s=true;
-    if(df==='today'&&dt!==T)s=false;
-    if(df==='up'&&dt<T)s=false;
-    if(df==='week'&&(dt<T||dt>w))s=false;
-    if(df==='month'&&(dt<T||dt>m))s=false;
-    if(df==='past'&&dt>=T)s=false;
-    if(vf&&v!==vf)s=false;
-    if(af&&a!==af)s=false;
-    if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)s=false;
-    r.style.display=s?'':'none';
-    r.className=dt===T?'now':dt>T?'up':'';
-    if(s){n++;if(v)vv[v]=1;if(a)aa[a]=1;}
-  });
-  document.getElementById('ss').textContent=n;
-  document.getElementById('sv').textContent=Object.keys(vv).length;
-  document.getElementById('sa').textContent=Object.keys(aa).length;
-  document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
-}
-function ca(){
-  document.getElementById('q').value='';
-  document.getElementById('vf').value='';
-  document.getElementById('af').value='';
-  // Build tonight card dynamically - runs after page loads
-function buildTonightCard(){
-  var T=new Date().toISOString().slice(0,10);
-  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var d=new Date();
-  var label=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
-  var shows=[];
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    if(r.getAttribute('data-date')===T){
-      var tds=r.querySelectorAll('td');
-      shows.push({
-        artist:tds[0]?tds[0].textContent.trim():'',
-        time:tds[2]?tds[2].textContent.trim():'',
-        venue:r.getAttribute('data-venue')||'',
-        vcls:tds[3]?tds[3].querySelector('span')?tds[3].querySelector('span').className:'':''
-      });
-    }
-  });
-  var card=document.getElementById('tonight-card');
-  if(!card)return;
-  if(shows.length===0){
-    card.innerHTML='<h2>Tonight — '+label+'</h2><p style="opacity:.6">No shows tonight — check This Week</p>';
-  } else {
-    var html='<h2>Tonight — '+label+'</h2>';
-    shows.forEach(function(s){
-      html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+s.time+'</small></div><span class="'+s.vcls+'">'+s.venue+'</span></div>';
-    });
-    card.innerHTML=html;
-  }
-}
-buildTonightCard();
-
-// Auto-rebuild tonight card if date has changed since last build
 (function(){
-  var T=new Date().toISOString().slice(0,10);
   var card=document.querySelector('.tn');
-  if(!card||card.getAttribute('data-built')===T)return;
+  if(!card)return;
+  if(card.getAttribute('data-built')===T)return;
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var d=new Date();
@@ -198,22 +281,138 @@ buildTonightCard();
     if(r.getAttribute('data-date')===T){
       var tds=r.querySelectorAll('td');
       var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
-      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls});
+      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||''});
     }
   });
+  shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
+  var hd='<div class="tn-head"><h2>Today — '+label+'</h2><span class="tn-hint">Click Venue for Directions</span></div>';
   if(shows.length===0){
-    card.innerHTML='<h2>Tonight — '+label+'</h2><p style="opacity:.6">No shows tonight — check This Week</p>';
+    card.innerHTML=hd+'<p class="tn-empty">No shows today — check This Week</p>';
   } else {
-    var html='<h2>Tonight — '+label+'</h2>';
-    shows.forEach(function(s){html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+s.time+'</small></div><span class="'+s.vcls+'">'+s.venue+'</span></div>';});
-    card.innerHTML=html;
+    var html='';
+    shows.forEach(function(s){
+      var v='<span class="'+s.vcls+'">'+s.venue+'</span>';
+      if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
+      html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>';
+    });
+    card.innerHTML=hd+'<div class="tn-body">'+html+'</div>';
   }
   card.setAttribute('data-built',T);
 })();
-sf('up');
+function _syncTodayHeight(){
+  var mapCard=document.querySelector('.map-card'),tn=document.querySelector('.tn');
+  if(!mapCard||!tn)return;
+  if(window.innerWidth>=900){
+    var h=mapCard.getBoundingClientRect().height;
+    if(h>0)tn.style.maxHeight=h+'px';
+  } else {
+    tn.style.maxHeight='';
+  }
 }
-
-
+_syncTodayHeight();
+window.addEventListener('resize',_syncTodayHeight);
+(function(){
+  var el=document.getElementById('hlt');
+  if(!el)return;
+  var w=we(),count=0,venues={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date')||'';
+    if(dt>=T&&dt<=w){
+      count++;
+      var v=r.getAttribute('data-venue');
+      if(v)venues[v]=1;
+    }
+  });
+  var vn=Object.keys(venues).length;
+  el.textContent=count+' show'+(count!==1?'s':'')+' this week across '+vn+' venue'+(vn!==1?'s':'');
+})();
+function bd(){
+  var w=we(),m=me(),curV=document.getElementById('vf').value,curA=document.getElementById('af').value,vv={},aa={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',inc=false;
+    if(df==='today'&&dt===T)inc=true;
+    else if(df==='up'&&dt>=T)inc=true;
+    else if(df==='week'&&dt>=T&&dt<=w)inc=true;
+    else if(df==='month'&&dt>=T&&dt<=m)inc=true;
+    else if(df==='all')inc=true;
+    else if(df==='past'&&dt<T)inc=true;
+    if(!inc)return;
+    if((!curA||a===curA)&&v)vv[v]=1;
+    if((!curV||v===curV)&&a)aa[a]=1;
+  });
+  var vs=document.getElementById('vf');vs.innerHTML='<option value="">All Venues</option>';
+  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===curV)o.selected=true;vs.appendChild(o);});
+  var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
+  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
+}
+function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
+function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
+function sf(f){
+  df=f;
+  document.querySelectorAll('.btn').forEach(function(b){
+    b.classList.remove('on');
+    if(b.id&&b.id.indexOf('b-')===0)b.setAttribute('aria-pressed','false');
+  });
+  var b=document.getElementById('b-'+f);
+  if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
+  bd();go();
+}
+function go(){
+  var q=document.getElementById('q').value.toLowerCase(),vf=document.getElementById('vf').value,af=document.getElementById('af').value,w=we(),m=me(),n=0,vv={},aa={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',s=true;
+    if(df==='today'&&dt!==T)s=false;
+    if(df==='up'&&dt<T)s=false;
+    if(df==='week'&&(dt<T||dt>w))s=false;
+    if(df==='month'&&(dt<T||dt>m))s=false;
+    if(df==='past'&&dt>=T)s=false;
+    if(vf&&v!==vf)s=false;if(af&&a!==af)s=false;
+    if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)s=false;
+    r.style.display=s?'':'none';r.className=dt===T?'now':dt>T?'up':'';
+    if(s){n++;if(v)vv[v]=1;if(a)aa[a]=1;}
+  });
+  document.getElementById('ss').textContent=n;
+  document.getElementById('sv').textContent=Object.keys(vv).length;
+  document.getElementById('sa').textContent=Object.keys(aa).length;
+  document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
+}
+function srt(k,th){
+  var tb=document.getElementById('tb');
+  var mains=Array.from(tb.querySelectorAll('tr')).filter(function(r){return !r.classList.contains('exp');});
+  var pairs=mains.map(function(r){var d=r.nextElementSibling;return {r:r,d:(d&&d.classList.contains('exp'))?d:null};});
+  if(sk===k){sd*=-1;}else{sk=k;sd=1;}
+  var m={'performer':'data-performer','date':'data-date','venue':'data-venue'};
+  pairs.sort(function(a,b){
+    var av=(a.r.getAttribute(m[k])||'').toLowerCase(),bv=(b.r.getAttribute(m[k])||'').toLowerCase();
+    return av<bv?-sd:av>bv?sd:0;
+  });
+  pairs.forEach(function(p){tb.appendChild(p.r);if(p.d)tb.appendChild(p.d);});
+  document.querySelectorAll('th[data-sort]').forEach(function(t){t.classList.remove('asc','desc');t.setAttribute('aria-sort','none');});
+  if(th){th.classList.add(sd===1?'asc':'desc');th.setAttribute('aria-sort',sd===1?'ascending':'descending');}
+  go();
+}
+function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';sf('up');}
+var _lastTrigger=null;
+function openMap(embed,ext,name){
+  if(!embed)return;
+  document.getElementById('mmt').textContent=name||'Map';
+  document.getElementById('mmf').src=embed;
+  document.getElementById('mme').href=ext||embed;
+  document.getElementById('mm').classList.add('on');
+  var closeBtn=document.querySelector('.mmx');
+  if(closeBtn)closeBtn.focus();
+}
+function closeMap(){
+  document.getElementById('mm').classList.remove('on');
+  document.getElementById('mmf').src='';
+  if(_lastTrigger&&typeof _lastTrigger.focus==='function')_lastTrigger.focus();
+}
+document.getElementById('mm').addEventListener('click',function(e){if(e.target.id==='mm')closeMap();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();});
+document.addEventListener('click',function(e){
+  var t=e.target.closest('.maplink');
+  if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}
+});
+function tog(e){var tr=e.target.closest('tr');var d=tr.nextElementSibling;if(d&&d.classList.contains('exp'))d.classList.toggle('open');}
 sf('up');
-function tog(e){var tr=e.target.closest('tr');var d=tr.nextElementSibling;if(d&&d.classList.contains('exp')){d.style.display=(d.style.display==='table-row')?'none':'table-row';}}
 </script></body></html>
