@@ -15,7 +15,8 @@ from app.database.db import (
     upsert_events,
 )
 from app.excel.exporter import generate_report
-from app.images.importer import INBOX_DIR, SUPPORTED_EXTS, process_inbox
+from app.images import ingest_inbox
+from app.images.importer import INBOX_DIR, SUPPORTED_EXTS
 from app.normalize import normalize_events
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ def run_pipeline() -> dict:
         if INBOX_DIR.exists() and f.suffix.lower() in SUPPORTED_EXTS
     ] if INBOX_DIR.exists() else []
 
-    image_events = process_inbox()
+    image_events = ingest_inbox()   # GPT-4o Vision, else Apple Vision OCR
     logger.info("Images processed: %d files, %d events", len(inbox_images), len(image_events))
 
     # 4. Combine + normalise

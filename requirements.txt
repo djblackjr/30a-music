@@ -5,3 +5,7 @@ pytest>=7.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
+
+# Optional (macOS only) — free offline screenshot ingestion via Apple Vision,
+# used automatically when OPENAI_API_KEY is not set. Not installable on Linux/CI:
+#   pip install pyobjc-framework-Vision
