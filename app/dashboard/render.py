@@ -116,7 +116,6 @@ def _rows_html(events: list[dict], path: Path) -> str:
         venue = ev.get("venue") or ""
         venue_e = html.escape(venue)
         time_s = html.escape(ev.get("time_start") or "")
-        url = html.escape(ev.get("url") or "#")
         date = ev.get("date") or ""
 
         embed, ext = _venue_maps_urls(venue)
@@ -130,17 +129,16 @@ def _rows_html(events: list[dict], path: Path) -> str:
             if embed else badge
         )
 
-        # The report stays clean: no Sources/Confidence columns. Provenance is
-        # one click away — clicking a row reveals its observations.
+        # The report stays clean: no Sources/Confidence/Link columns. The source
+        # listing and provenance are one click away — clicking a row reveals its
+        # observations, each linking back to its original listing.
         out.append(
             f'<tr data-date="{date}" data-venue="{venue_e}" data-performer="{performer}" '
             f'data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
             f"<td>{time_s}</td>"
-            f"<td>{venue_cell}</td>"
-            f'<td><a href="{url}" target="_blank" rel="noopener" '
-            f'aria-label="View original listing for {performer}">View listing ↗</a></td></tr>'
+            f"<td>{venue_cell}</td></tr>"
         )
 
         conf = ev.get("confidence")
@@ -155,7 +153,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         detail += "".join(_obs_html(o) for o in obs)
         if ev.get("conflict_flag") and ev.get("conflict_reason"):
             detail += f'<div class="cflr">⚠ {html.escape(ev["conflict_reason"])}</div>'
-        out.append(f'<tr class="exp"><td colspan="5">{detail}</td></tr>')
+        out.append(f'<tr class="exp"><td colspan="4">{detail}</td></tr>')
     return "\n".join(out)
 
 

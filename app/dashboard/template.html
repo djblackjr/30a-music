@@ -35,22 +35,22 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr);}}
 .top{display:grid;gap:16px;margin-bottom:16px;}
 @media(min-width:900px){.top{grid-template-columns:1.35fr 1fr;align-items:start;}}
-.map-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;}
+.map-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;margin-top:8px;}
 .map-svg-wrap{width:100%;overflow:hidden;}
 .map-caption{font-size:.72rem;color:var(--muted);padding:8px 14px 12px;text-align:center;}
-.tn{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:18px;display:flex;flex-direction:column;max-height:480px;}
-.tn-body{overflow-y:auto;flex:1;min-height:0;padding-right:4px;margin-right:-4px;}
+.tn{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:20px;display:flex;flex-direction:column;margin:16px 0;}
+.tn-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-content:start;}
 .tn-body::-webkit-scrollbar{width:6px;}
 .tn-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px;}
 .tn-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
 .tn h2{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}
-.tn-hint{font-size:.975rem;opacity:.55;}
+.tn-hint{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}.tn-sub{text-transform:none;font-weight:500;opacity:.62;letter-spacing:0;}
 .tn-empty{opacity:.7;padding:6px 2px;}
-.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
-.sc:last-child{margin-bottom:0;}
-.sc b{font-size:.98rem;}
-.sc small{opacity:.75;font-size:.8rem;}
-.sc .vt{padding:10px 16px;font-size:.9rem;}
+.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}.sc>div{min-width:0;}
+
+.sc b{font-size:.92rem;line-height:1.25;}
+.sc small{opacity:.75;font-size:.76rem;}
+.sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
 .tip{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink);}
@@ -68,7 +68,7 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .fil input[type=search]{min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;width:100%;background:var(--cream);outline:none;}
 .fil input[type=search]:focus{border-color:var(--teal);background:#fff;}
 .dr{display:flex;gap:8px;}
-.dr select{min-height:44px;flex:1;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--cream);cursor:pointer;outline:none;}
+.dr select{min-height:44px;flex:1 1 0;min-width:0;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--cream);cursor:pointer;outline:none;text-overflow:ellipsis;}
 .dr select:focus{border-color:var(--teal);background:#fff;}
 .br{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .btn{min-height:44px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--navy);white-space:nowrap;box-shadow:var(--shadow-sm);}
@@ -78,7 +78,9 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .btn.ghost:hover{background:var(--cream);}
 .cnt{font-size:.8rem;color:var(--muted);margin-left:auto;align-self:center;}
 @media(max-width:680px){
-  .br{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+  .dr{flex-direction:column;}
+  .br{flex-wrap:wrap;overflow-x:visible;}
+  .br .btn{flex:1 1 auto;justify-content:center;}
   .cnt{display:block;width:100%;margin:6px 0 0;}
 }
 .wrap{margin-bottom:20px;}
@@ -88,7 +90,7 @@ th[data-sort]{cursor:pointer;}
 th[data-sort]:hover{background:var(--teal);}
 th[data-sort].asc::after{content:" ▲";font-size:.7em;}
 th[data-sort].desc::after{content:" ▼";font-size:.7em;}
-td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;}
+td{padding:7px 14px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#f5faff;}
 tr.up td:first-child{border-left:3px solid var(--teal);}
@@ -103,18 +105,16 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .wrap thead{display:none;}
   .wrap table{background:transparent;box-shadow:none;border:none;}
   .wrap tbody{display:block;}
-  .wrap tr{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 14px;margin-bottom:10px;}
+  .wrap tr{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:9px 12px;margin-bottom:7px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;}
   .wrap tr.now{border-left:4px solid var(--navy);}
   .wrap tr.up{border-left:3px solid var(--teal);}
   .wrap td{border:none;padding:2px 0;}
   .wrap td:first-child{border-left:none;}
-  .wrap td:nth-of-type(1){font-size:1.02rem;margin-bottom:4px;}
-  .wrap td:nth-of-type(2),.wrap td:nth-of-type(3){display:inline-block;color:var(--muted);font-size:.82rem;}
-  .wrap td:nth-of-type(2)::after{content:" · ";color:var(--muted);}
-  .wrap td:nth-of-type(4){margin-top:10px;}
+  .wrap td:nth-of-type(1){grid-column:1;grid-row:1;font-size:1.02rem;font-weight:600;}
+  .wrap td:nth-of-type(4){grid-column:2;grid-row:1;justify-self:end;}
   .wrap td:nth-of-type(4) .vt{padding:8px 14px;font-size:.85rem;}
-  .wrap td:nth-of-type(5){margin-top:8px;}
-  .wrap td:nth-of-type(5) a{display:inline-flex;align-items:center;min-height:36px;font-weight:600;}
+  .wrap td:nth-of-type(2){grid-column:1;grid-row:2;color:var(--muted);font-size:.82rem;}
+  .wrap td:nth-of-type(3){grid-column:2;grid-row:2;color:var(--muted);font-size:.82rem;justify-self:end;}
 }
 .mm{position:fixed;inset:0;background:rgba(15,26,40,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
 .mm.on{display:flex;}
@@ -134,8 +134,33 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p></div></header>
 <main class="page">
-<div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div><div class="stat"><div class="n">AVGCONF_PLACEHOLDER</div><div class="l">Avg Confidence</div></div><div class="stat"><div class="n">VERIFIED_PLACEHOLDER</div><div class="l">Verified</div></div><div class="stat"><div class="n">CONFLICTS_PLACEHOLDER</div><div class="l">Conflicts</div></div><div class="stat"><div class="n">SOURCES_PLACEHOLDER</div><div class="l">Sources</div></div></div>
-<div class="top">
+<div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
+<div class="tn"></div>
+<div class="tip"><span class="tip-ico" aria-hidden="true">📍</span><span>Color-coded venues — click any badge for turn-by-turn directions.</span><span class="tip-stat" id="hlt"></span></div>
+<div class="fil">
+<input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="go()">
+<div class="dr">
+<select id="vf" onchange="bd();go()" aria-label="Filter by venue"><option value="">All Venues</option></select>
+<select id="af" onchange="bd();go()" aria-label="Filter by artist"><option value="">All Artists</option></select>
+</div>
+<div class="br">
+<button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
+<button class="btn" id="b-up" onclick="sf('up')" aria-pressed="false">Upcoming</button>
+<button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
+<button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
+<button class="btn" id="b-all" onclick="sf('all')" aria-pressed="false">All Dates</button>
+<button class="btn" id="b-past" onclick="sf('past')" aria-pressed="false">Past</button>
+<button class="btn ghost" onclick="ca()" aria-label="Clear all filters">✕ Clear</button>
+<span class="cnt" id="cnt"></span>
+</div>
+</div>
+<div class="wrap"><p class="tbl-hint">Click any venue for directions</p><table><thead><tr>
+<th scope="col" data-sort="performer" tabindex="0" role="button" aria-sort="none" onclick="srt('performer',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('performer',this);}">Artist</th>
+<th scope="col" data-sort="date" tabindex="0" role="button" aria-sort="ascending" onclick="srt('date',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('date',this);}">Date</th>
+<th scope="col">Time</th>
+<th scope="col" data-sort="venue" tabindex="0" role="button" aria-sort="none" onclick="srt('venue',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('venue',this);}">Directions</th>
+
+</tr></thead><tbody id="tb">TBODY_PLACEHOLDER</tbody></table></div>
 <div class="map-card">
 <div class="map-svg-wrap">
 <svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;" role="img" aria-label="Illustrative map of the 30A coastal corridor showing approximate locations of featured live-music venues. Not to scale and not geographically exact.">
@@ -194,9 +219,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 </div>
 <p class="map-caption">Illustrative route map — general orientation only, not to scale or geographically exact.</p>
 </div>
-<div class="tn"></div>
-</div>
-<div class="tip"><span class="tip-ico" aria-hidden="true">📍</span><span>Color-coded venues — click any badge for turn-by-turn directions.</span><span class="tip-stat" id="hlt"></span></div>
 <div class="leg">
 <span class="legchip"><span class="ld" style="background:#27ae60"></span>Stinky's</span>
 <span class="legchip"><span class="ld" style="background:#8e44ad"></span>Shelby's</span>
@@ -208,30 +230,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="legchip"><span class="ld" style="background:#e67e22"></span>Watersound</span>
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
-<div class="fil">
-<input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="go()">
-<div class="dr">
-<select id="vf" onchange="bd();go()" aria-label="Filter by venue"><option value="">All Venues</option></select>
-<select id="af" onchange="bd();go()" aria-label="Filter by artist"><option value="">All Artists</option></select>
-</div>
-<div class="br">
-<button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
-<button class="btn" id="b-up" onclick="sf('up')" aria-pressed="false">Upcoming</button>
-<button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
-<button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
-<button class="btn" id="b-all" onclick="sf('all')" aria-pressed="false">All Dates</button>
-<button class="btn" id="b-past" onclick="sf('past')" aria-pressed="false">Past</button>
-<button class="btn ghost" onclick="ca()" aria-label="Clear all filters">✕ Clear</button>
-<span class="cnt" id="cnt"></span>
-</div>
-</div>
-<div class="wrap"><p class="tbl-hint">Click any venue for directions</p><table><thead><tr>
-<th scope="col" data-sort="performer" tabindex="0" role="button" aria-sort="none" onclick="srt('performer',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('performer',this);}">Artist</th>
-<th scope="col" data-sort="date" tabindex="0" role="button" aria-sort="ascending" onclick="srt('date',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('date',this);}">Date</th>
-<th scope="col">Time</th>
-<th scope="col" data-sort="venue" tabindex="0" role="button" aria-sort="none" onclick="srt('venue',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('venue',this);}">Directions</th>
-<th scope="col">Link</th>
-</tr></thead><tbody id="tb">TBODY_PLACEHOLDER</tbody></table></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
@@ -285,7 +283,8 @@ function _startMins(str){
     }
   });
   shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
-  var hd='<div class="tn-head"><h2>Today — '+label+'</h2><span class="tn-hint">Click Venue for Directions</span></div>';
+  var hint=shows.length?(shows.length+' show'+(shows.length!==1?'s':'')+'<span class="tn-sub"> · Tap a venue for directions</span>'):'Nothing scheduled';
+  var hd='<div class="tn-head"><h2>Today — '+label+'</h2><span class="tn-hint">'+hint+'</span></div>';
   if(shows.length===0){
     card.innerHTML=hd+'<p class="tn-empty">No shows today — check This Week</p>';
   } else {
@@ -299,18 +298,7 @@ function _startMins(str){
   }
   card.setAttribute('data-built',T);
 })();
-function _syncTodayHeight(){
-  var mapCard=document.querySelector('.map-card'),tn=document.querySelector('.tn');
-  if(!mapCard||!tn)return;
-  if(window.innerWidth>=900){
-    var h=mapCard.getBoundingClientRect().height;
-    if(h>0)tn.style.maxHeight=h+'px';
-  } else {
-    tn.style.maxHeight='';
-  }
-}
-_syncTodayHeight();
-window.addEventListener('resize',_syncTodayHeight);
+
 (function(){
   var el=document.getElementById('hlt');
   if(!el)return;
