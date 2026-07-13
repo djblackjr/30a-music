@@ -113,18 +113,22 @@ ALL_CRAWLERS: list[BaseCrawler] = [
     ShunkGulleyCrawler(),
 ]
 
-# Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose:
-# 100 events far exceeds a ~14-day horizon, a 500+ request run every execution
-# is unnecessary load on SoWal, and total crawl time must stay reasonable as
-# more sources (Facebook, venue sites, artist pages, Bandsintown) are added.
-# The crawler itself stays unopinionated; strategy is injected here.
+# Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose,
+# but the unit changed with the calendar-table-parsing crawler: max_events now
+# caps the number of DISTINCT TITLES that get an enrichment page fetch (venue
+# lookup for titles with no " @ Venue" in the calendar row), not raw event
+# links — the listing page itself is always exactly 1 request regardless of
+# this cap. A live smoke test (2026-07-13) found 132 distinct titles needing
+# enrichment on a single day's listing; 150 leaves headroom above that while
+# keeping a run to ~2 minutes at request_delay=0.75. The crawler itself stays
+# unopinionated; strategy is injected here.
 # TODO (future): select Development / Production / Deep Scan by run context via a
 # scheduler — see the TODO in app/crawlers/policy.py. Not implemented yet.
 try:
     from app.crawlers.policy import CrawlPolicy
 
     SOWAL_POLICY = CrawlPolicy(
-        max_events=100,
+        max_events=150,
         request_delay=0.75,
     )
 except Exception as exc:  # pragma: no cover — policy import should not fail
