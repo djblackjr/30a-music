@@ -34,6 +34,18 @@ CEILING = 0.99
 
 _COMPLETENESS_FIELDS = ("date", "time_start", "venue", "performer")
 
+# How the performer was extracted lowers EXTRACTION confidence for weaker
+# provenance (description-derived, lineup-derived) relative to a performer named
+# directly in the title. Title-derived — and any unknown/legacy observation with
+# no extraction_method — is unpenalised (factor 1.0), so this is purely additive
+# and changes no pre-existing score. Source trust (SOURCE_TRUST) is intentionally
+# left untouched.
+EXTRACTION_METHOD_FACTOR: dict[str, float] = {
+    "title":       1.0,
+    "description": 0.8,
+    "lineup":      0.85,
+}
+
 
 def source_confidence(source: str | None) -> float:
     s = (source or "").strip().lower()
@@ -78,8 +90,11 @@ def extraction_confidence(ev: dict) -> float:
     model = ev.get("model_confidence")
     if isinstance(model, (int, float)):
         m = max(0.0, min(1.0, float(model)))
-        return round(0.5 * comp + 0.5 * m, 3)
-    return round(comp, 3)
+        base = 0.5 * comp + 0.5 * m
+    else:
+        base = comp
+    factor = EXTRACTION_METHOD_FACTOR.get(ev.get("extraction_method"), 1.0)
+    return round(base * factor, 3)
 
 
 def observation_confidence(ev: dict) -> float:

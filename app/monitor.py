@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.crawlers.registry import run_all_crawlers
+from app.crawlers.sowal import partition_observations
 from app.database.db import (
     init_db,
     load_events,
@@ -38,6 +39,21 @@ def run_pipeline() -> dict:
     logger.info("Step 1/6 — Running crawlers")
     crawler_events = run_all_crawlers()
     logger.info("Crawlers returned %d events", len(crawler_events))
+
+    # SoWal observations self-classify as named/unresolved/category via
+    # performer_status (see app/crawlers/sowal.py) so generic listings ("Live
+    # Music", "DJ Night") never get saved as if they were named artists.
+    # Observations from crawlers that don't declare a classification pass
+    # through untouched — this only filters what opts in to being filtered.
+    classifiable = [e for e in crawler_events if "performer_status" in e]
+    passthrough  = [e for e in crawler_events if "performer_status" not in e]
+    if classifiable:
+        partitioned = partition_observations(classifiable)
+        logger.info(
+            "Observation classification: %d named / %d unresolved / %d category",
+            len(partitioned["named"]), len(partitioned["unresolved"]), len(partitioned["category"]),
+        )
+        crawler_events = passthrough + partitioned["named"]
 
     # 3. Image inbox
     logger.info("Step 2/6 — Processing image inbox")

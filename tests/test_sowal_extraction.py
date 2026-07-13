@@ -1,0 +1,233 @@
+"""
+tests/test_sowal_extraction.py
+Phase 3 — pure, offline tests for the SoWal extraction enrichment:
+  - generic-title detection (narrow) and category detection
+  - conservative performer-from-description extraction
+  - multi-observation (lineup) parsing
+  - named / unresolved / category partitioning
+  - lower extraction confidence for description/lineup-derived performers
+
+No network. Lineup tests build BeautifulSoup from inline HTML.
+"""
+import sys
+from pathlib import Path
+
+from bs4 import BeautifulSoup
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.crawlers.sowal import (
+    SoWalCrawler,
+    classify_performer,
+    detect_category,
+    extract_performer_from_description,
+    is_generic_title,
+    parse_lineup_date,
+    partition_observations,
+)
+from app.normalize.confidence import extraction_confidence
+
+
+# --- generic-title detection (narrow) --------------------------------------
+
+def test_generic_titles_detected():
+    for t in ["Live Music", "Brunch & Live Music", "Music & Bonfire",
+              "Summer Concert Series", "Live Band", "Live Entertainment"]:
+        assert is_generic_title(t) is True, t
+
+
+def test_named_titles_not_generic():
+    for t in ["Duncan Crittenden", "Casey Kearney", "Boukou Groove",
+              "Dion Jones & The Neon Tears"]:
+        assert is_generic_title(t) is False, t
+
+
+def test_category_labels_are_not_generic_live_music():
+    # DJ/karaoke/trivia/open mic must NOT be classified as generic live music.
+    for t in ["DJ Night", "Karaoke", "Trivia Night", "Open Mic"]:
+        assert is_generic_title(t) is False, t
+
+
+def test_detect_category():
+    assert detect_category("DJ Night") == "dj"
+    assert detect_category("Karaoke") == "karaoke"
+    assert detect_category("Open Mic") == "open_mic"
+    assert detect_category("Open-Mic Night") == "open_mic"
+    assert detect_category("Trivia Night") == "trivia"
+    assert detect_category("Duncan Crittenden") is None
+    assert detect_category("Live Music") is None
+
+
+# --- conservative description extraction -----------------------------------
+
+def test_extract_strong_indicators():
+    assert extract_performer_from_description("Join us featuring Bill Garrett tonight") == "Bill Garrett"
+    assert extract_performer_from_description("feat. Casey Kearney") == "Casey Kearney"
+    assert extract_performer_from_description("ft. Gage Cowart on the deck") == "Gage Cowart"
+    assert extract_performer_from_description("The venue presents Stevie Monce") == "Stevie Monce"
+    assert extract_performer_from_description("performance by Nate Kelly") == "Nate Kelly"
+    assert extract_performer_from_description("music by Zoe Walega") == "Zoe Walega"
+
+
+def test_with_only_when_clearly_an_act():
+    assert extract_performer_from_description("An evening with Harrison Prentice") == "Harrison Prentice"
+
+
+def test_with_rejects_ordinary_prose():
+    for s in ["brunch with friends", "join us with family", "music with dinner",
+              "come hang with us"]:
+        assert extract_performer_from_description(s) is None, s
+
+
+def test_extract_rejects_generic_and_empty():
+    assert extract_performer_from_description("featuring live music all night") is None
+    assert extract_performer_from_description("") is None
+    assert extract_performer_from_description(None) is None
+
+
+# --- classify_performer end to end -----------------------------------------
+
+def test_classify_named_title():
+    c = classify_performer("Duncan Crittenden @ Local Catch")
+    assert c["performer"] == "Duncan Crittenden"
+    assert c["performer_status"] == "named"
+    assert c["resolved"] is True
+    assert c["event_category"] == "live_music"
+    assert c["extraction_method"] == "title"
+
+
+def test_classify_generic_unresolved():
+    c = classify_performer("Live Music @ North Beach Social")
+    assert c["performer"] is None
+    assert c["performer_status"] == "unresolved"
+    assert c["resolved"] is False
+    assert c["event_category"] == "live_music"
+    assert c["extraction_method"] == "unresolved"
+
+
+def test_classify_generic_recovered_from_description():
+    c = classify_performer("Brunch & Live Music @ Local Catch",
+                           "Join us featuring Bill Garrett on the patio")
+    assert c["performer"] == "Bill Garrett"
+    assert c["performer_status"] == "named"
+    assert c["resolved"] is True
+    assert c["extraction_method"] == "description"
+
+
+def test_classify_category_without_name():
+    c = classify_performer("DJ Night @ Chiringo")
+    assert c["performer"] is None
+    assert c["performer_status"] == "category"
+    assert c["event_category"] == "dj"
+    assert c["resolved"] is False
+    assert c["extraction_method"] == "category"
+
+
+def test_classify_category_with_named_performer():
+    # A category event names an act -> it becomes a named observation.
+    c = classify_performer("DJ Night @ Chiringo", "featuring Zack Miller")
+    assert c["performer"] == "Zack Miller"
+    assert c["performer_status"] == "named"
+    assert c["event_category"] == "dj"
+    assert c["resolved"] is True
+
+
+# --- lineup date handling ---------------------------------------------------
+
+def test_parse_lineup_date_explicit_year():
+    assert parse_lineup_date("Monday, July 06, 2026") == "2026-07-06"
+
+
+def test_parse_lineup_date_infers_year_from_page_context():
+    assert parse_lineup_date("Monday, July 06", page_year=2026) == "2026-07-06"
+
+
+def test_parse_lineup_date_rejects_without_confident_date():
+    assert parse_lineup_date("sometime next week", page_year=2026) is None
+    assert parse_lineup_date("Gage Cowart", page_year=2026) is None
+
+
+# --- multi-observation (lineup) parsing ------------------------------------
+
+_LINEUP_HTML = """
+<html><body>
+  <h1>Weekly Live Music Series @ AJ's Grayton</h1>
+  <p>When: Monday, July 06, 2026</p>
+  <p>Where: AJ's Grayton</p>
+  <table>
+    <tr><td>Monday, July 06, 2026</td><td>Gage Cowart</td><td>6:00 pm</td></tr>
+    <tr><td>Tuesday, July 07, 2026</td><td>Nate Kelly</td><td>7:00 pm</td></tr>
+    <tr><td>Wednesday, July 08, 2026</td><td>featuring Zack Miller</td><td>6:00 pm</td></tr>
+  </table>
+</body></html>
+"""
+
+
+def test_lineup_yields_one_observation_per_row():
+    soup = BeautifulSoup(_LINEUP_HTML, "lxml")
+    crawler = SoWalCrawler()
+    obs = crawler._parse_lineup(soup, "AJ's Grayton", 2026, "https://sowal.com/event/x", "Weekly Live Music Series")
+    assert len(obs) == 3
+    by_perf = {o["performer"]: o for o in obs}
+    assert set(by_perf) == {"Gage Cowart", "Nate Kelly", "Zack Miller"}
+    # each row keeps its OWN date (page-level date is not smeared across rows)
+    assert by_perf["Gage Cowart"]["date"] == "2026-07-06"
+    assert by_perf["Nate Kelly"]["date"] == "2026-07-07"
+    assert by_perf["Zack Miller"]["date"] == "2026-07-08"
+    # a "featuring X" cell resolves to the credited act
+    assert by_perf["Zack Miller"]["extraction_method"] == "lineup"
+    assert all(o["performer_status"] == "named" and o["resolved"] for o in obs)
+
+
+def test_lineup_row_without_confident_date_marked_unresolved():
+    html = """
+    <html><body>
+      <h1>Series @ Venue</h1>
+      <table>
+        <tr><td>Monday, July 06, 2026</td><td>Gage Cowart</td><td>6:00 pm</td></tr>
+        <tr><td>date TBA</td><td>Nate Kelly</td><td>7:00 pm</td></tr>
+      </table>
+    </body></html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    obs = SoWalCrawler()._parse_lineup(soup, "Venue", None, "u", "Series")
+    assert len(obs) == 2
+    named = [o for o in obs if o["performer_status"] == "named"]
+    unresolved = [o for o in obs if o["performer_status"] == "unresolved"]
+    # The row with a confident date resolves; the one without is unresolved (date None).
+    assert len(named) == 1 and named[0]["performer"] == "Gage Cowart"
+    assert named[0]["date"] == "2026-07-06"
+    assert len(unresolved) == 1
+    assert unresolved[0]["date"] is None and unresolved[0]["resolved"] is False
+
+
+# --- partitioning -----------------------------------------------------------
+
+def test_partition_observations():
+    obs = [
+        {"performer": "A", "performer_status": "named", "resolved": True},
+        {"performer": None, "performer_status": "unresolved", "resolved": False},
+        {"performer": None, "performer_status": "category", "resolved": False},
+        {"performer": "B", "performer_status": "named", "resolved": True},
+    ]
+    parts = partition_observations(obs)
+    assert [o["performer"] for o in parts["named"]] == ["A", "B"]
+    assert len(parts["unresolved"]) == 1
+    assert len(parts["category"]) == 1
+
+
+# --- extraction confidence by method (constraint 7) ------------------------
+
+def _ev(method):
+    return {"performer": "A", "venue": "V", "date": "2026-07-11",
+            "time_start": "6:00 pm", "extraction_method": method}
+
+
+def test_description_and_lineup_confidence_lower_than_title():
+    title = extraction_confidence(_ev("title"))
+    lineup = extraction_confidence(_ev("lineup"))
+    desc = extraction_confidence(_ev("description"))
+    assert title > lineup > desc
+    # title-derived is unpenalised (same as no method at all)
+    assert extraction_confidence(_ev("title")) == extraction_confidence(
+        {k: v for k, v in _ev("title").items() if k != "extraction_method"})

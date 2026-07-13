@@ -251,7 +251,11 @@ def merge_group(observations: list[dict]) -> dict:
 
     # Drop per-observation-only fields from the canonical event.
     for k in ("source_confidence", "extraction_confidence", "checksum",
-              "model_confidence", "observation_type"):
+              "model_confidence", "observation_type",
+              # SoWal extraction evidence — used to weight extraction_confidence
+              # in build_observation(); not part of the canonical event shape.
+              "title_raw", "description_raw", "source_url",
+              "extraction_method", "performer_status", "resolved", "event_category"):
         event.pop(k, None)
 
     return event
