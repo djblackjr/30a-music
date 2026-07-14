@@ -57,13 +57,13 @@ def test_render_preserves_shell():
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # the hand-built design is preserved: corridor map, search, date filters,
-    # filter/sort JS, Today card container, and the Google Maps modal
+    # filter/sort JS, the date-grouped results renderer, and the Google Maps modal
     assert "<svg" in html
     assert 'id="q"' in html
     assert 'id="b-today"' in html
-    assert "function go()" in html
+    assert "function rr()" in html
     assert "function srt(" in html
-    assert 'class="tn"' in html
+    assert 'class="tn"' in html       # emitted by rr() for each date group
     assert 'id="mm"' in html          # directions modal
     assert "no unfilled placeholders", "PLACEHOLDER" not in html
 
@@ -135,26 +135,55 @@ def test_render_includes_region_and_favorites_filter_controls():
     assert "★ Favorites" in html
 
 
-def test_today_card_rebuilds_on_favorites_toggle_and_clear():
+def test_results_rebuild_on_favorites_toggle_and_clear():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # Today is a named, re-callable function (not a run-once IIFE) that skips
-    # non-favorite rows when the favorites toggle is on.
-    assert "function bt()" in html
-    assert "favOnly&&r.getAttribute('data-favorite')!=='Y'" in html
-    # both the favorites toggle and Clear rebuild Today, not just the table
-    assert "bd();go();bt();" in html
-    assert "sf('up');bt();" in html
+    # rr() is the single, re-callable renderer (replacing the old table +
+    # separate Today card) and it skips non-favorite rows when the
+    # favorites toggle is on.
+    assert "function rr()" in html
+    assert "favOnly&&fv!=='Y'" in html
+    # both the favorites toggle and Clear rebuild the results view
+    assert "bd();rr();" in html
+    assert "sf('today');" in html      # Clear resets to the default filter
 
 
-def test_today_card_also_filters_by_region():
+def test_results_also_filter_by_region():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    assert "curR&&r.getAttribute('data-region')!==curR" in html
-    # the region select rebuilds Today too, not just the table
-    assert "bd();go();bt()" in html
+    assert "rf&&rg!==rf" in html
+    # the region select rebuilds the results view too
+    assert 'onchange="bd();rr()" aria-label="Filter by region"' in html
+
+
+def test_startup_filter_defaults_to_today():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert "df='today'" in html
+    assert html.rstrip().endswith("sf('today');\n</script></body></html>")
+
+
+def test_date_groups_render_with_date_header_and_favorite_star():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # each date-grouped box gets a header built from the date, and every
+    # show card still carries the favorite star when the venue is a favorite
+    assert "'Today — '" in html
+    assert "tn-head" in html
+    assert "fav-star" in html
+
+
+def test_stats_counters_moved_to_bottom_of_page():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # stats now render after the map/legend, not immediately under the header
+    assert html.index('class="map-card"') < html.index('class="stats"')
+    assert html.index('class="stats"') < html.index("</main>")
 
 
 def test_mobile_cards_suppress_the_desktop_first_cell_border():

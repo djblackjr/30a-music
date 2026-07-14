@@ -45,7 +45,16 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .tn h2{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}
 .tn-hint{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}.tn-sub{text-transform:none;font-weight:500;opacity:.62;letter-spacing:0;}
 .tn-empty{opacity:.7;padding:6px 2px;}
-.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}.sc>div{min-width:0;}
+.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);overflow:hidden;}
+.sc-row{padding:12px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 10px;cursor:pointer;}
+.sc-row>div{min-width:0;}
+.sc-row .vt,.sc-row .maplink{max-width:100%;white-space:normal;}
+.sc-row:focus-visible{outline:2px solid var(--teal-light);outline-offset:-2px;}
+.scdet{display:none;background:#fff;color:#334155;padding:10px 14px;font-size:.8rem;border-top:1px solid rgba(255,255,255,.15);}
+.scdet.open{display:block;}
+.scdet .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}
+.scdet .ob:last-child{border-bottom:none;}
+.scdet .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}
 
 .sc b{font-size:.92rem;line-height:1.25;}
 .sc small{opacity:.75;font-size:.76rem;}
@@ -82,7 +91,7 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
   .br .btn{flex:1 1 auto;justify-content:center;}
   .cnt{display:block;width:100%;margin:6px 0 0;}
 }
-.wrap{margin-bottom:20px;}
+.wrap{display:none;}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;}
 thead th{background:var(--navy);color:#fff;padding:12px 14px;text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
 th[data-sort]{cursor:pointer;}
@@ -133,15 +142,13 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">BUILD_PLACEHOLDER</p></div></header>
 <main class="page">
-<div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="tn"></div>
 <div class="tip"><span class="tip-ico" aria-hidden="true">📍</span><span>Color-coded venues — click any badge for turn-by-turn directions.</span><span class="tip-stat" id="hlt"></span></div>
 <div class="fil">
-<input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="go()">
+<input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">
-<select id="vf" onchange="bd();go()" aria-label="Filter by venue"><option value="">All Venues</option></select>
-<select id="af" onchange="bd();go()" aria-label="Filter by artist"><option value="">All Artists</option></select>
-<select id="rf" onchange="bd();go();bt()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
+<select id="vf" onchange="bd();rr()" aria-label="Filter by venue"><option value="">All Venues</option></select>
+<select id="af" onchange="bd();rr()" aria-label="Filter by artist"><option value="">All Artists</option></select>
+<select id="rf" onchange="bd();rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
 </div>
 <div class="br">
 <button class="btn" id="favbtn" onclick="tf()" aria-pressed="false">★ Favorites</button>
@@ -155,6 +162,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="cnt" id="cnt"></span>
 </div>
 </div>
+<div class="results" id="results"></div>
 <div class="wrap"><p class="tbl-hint">Click any venue for directions</p><table><thead><tr>
 <th scope="col" data-sort="performer" tabindex="0" role="button" aria-sort="none" onclick="srt('performer',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('performer',this);}">Artist</th>
 <th scope="col" data-sort="date" tabindex="0" role="button" aria-sort="ascending" onclick="srt('date',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();srt('date',this);}">Date</th>
@@ -231,12 +239,13 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="legchip"><span class="ld" style="background:#e67e22"></span>Watersound</span>
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
+<div class="stats"><div class="stat"><div class="n">TOTAL_PLACEHOLDER</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
-var sk='date',sd=1,df='up',favOnly=false;
+var sk='date',sd=1,df='today',favOnly=false;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -267,41 +276,64 @@ function _startMins(str){
   var hh=h%12;if(ap==='p')hh+=12;
   return hh*60+mins;
 }
-function bt(){
-  var card=document.querySelector('.tn');
-  if(!card)return;
-  var curR=document.getElementById('rf').value;
+function _dateFromKey(k){var p=k.split('-');return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));}
+function rr(){
+  var host=document.getElementById('results');
+  if(!host)return;
+  var q=document.getElementById('q').value.toLowerCase(),vf=document.getElementById('vf').value,af=document.getElementById('af').value,rf=document.getElementById('rf').value,w=we(),m=me();
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var d=new Date();
-  var label=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
-  var shows=[];
+  var groups={},order=[],n=0,vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    if(r.getAttribute('data-date')===T){
-      if(favOnly&&r.getAttribute('data-favorite')!=='Y')return;
-      if(curR&&r.getAttribute('data-region')!==curR)return;
-      var tds=r.querySelectorAll('td');
-      var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
-      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vdisp:r.getAttribute('data-venue-display')||r.getAttribute('data-venue')||'',vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',favorite:r.getAttribute('data-favorite')==='Y'});
-    }
+    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',inc=true;
+    if(df==='today'&&dt!==T)inc=false;
+    else if(df==='up'&&dt<T)inc=false;
+    else if(df==='week'&&(dt<T||dt>w))inc=false;
+    else if(df==='month'&&(dt<T||dt>m))inc=false;
+    else if(df==='past'&&dt>=T)inc=false;
+    if(vf&&v!==vf)inc=false;
+    if(af&&a!==af)inc=false;
+    if(rf&&rg!==rf)inc=false;
+    if(favOnly&&fv!=='Y')inc=false;
+    if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)inc=false;
+    if(!inc)return;
+    n++;if(v)vv[v]=1;if(a)aa[a]=1;
+    if(!groups[dt]){groups[dt]=[];order.push(dt);}
+    var tds=r.querySelectorAll('td');
+    var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
+    var sib=r.nextElementSibling;
+    var det=(sib&&sib.classList.contains('exp'))?sib.querySelector('td').innerHTML:'';
+    groups[dt].push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:v,vdisp:r.getAttribute('data-venue-display')||v,vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',favorite:fv==='Y',detail:det});
   });
-  shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
-  var hint=shows.length?(shows.length+' show'+(shows.length!==1?'s':'')+'<span class="tn-sub"> · Tap a venue for directions</span>'):'Nothing scheduled';
-  var hd='<div class="tn-head"><h2>Today — '+label+'</h2><span class="tn-hint">'+hint+'</span></div>';
-  if(shows.length===0){
-    card.innerHTML=hd+'<p class="tn-empty">No shows today — check This Week</p>';
+  order.sort();
+  var html='';
+  if(order.length===0){
+    html='<div class="tn"><p class="tn-empty">No shows match these filters — try Clear or a different range.</p></div>';
   } else {
-    var html='';
-    shows.forEach(function(s){
-      var star=s.favorite?'<span class="fav-star" aria-hidden="true">★</span> ':'<span></span>';
-      var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
-      if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
-      html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>';
+    order.forEach(function(dt,gi){
+      var shows=groups[dt];
+      shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
+      var d=_dateFromKey(dt);
+      var label=(dt===T?'Today — ':'')+days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
+      var hint=shows.length+' show'+(shows.length!==1?'s':'')+'<span class="tn-sub"> · Tap a venue for directions</span>';
+      var hd='<div class="tn-head"><h2>'+label+'</h2><span class="tn-hint">'+hint+'</span></div>';
+      var body='';
+      shows.forEach(function(s,i){
+        var star=s.favorite?'<span class="fav-star" aria-hidden="true">★</span> ':'<span></span>';
+        var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
+        if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
+        var cid='d-'+gi+'-'+i;
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+      });
+      html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
-    card.innerHTML=hd+'<div class="tn-body">'+html+'</div>';
   }
+  host.innerHTML=html;
+  document.getElementById('ss').textContent=n;
+  document.getElementById('sv').textContent=Object.keys(vv).length;
+  document.getElementById('sa').textContent=Object.keys(aa).length;
+  document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
-bt();
 
 (function(){
   var el=document.getElementById('hlt');
@@ -344,7 +376,7 @@ function tf(){
   var b=document.getElementById('favbtn');
   b.classList.toggle('on',favOnly);
   b.setAttribute('aria-pressed',favOnly?'true':'false');
-  bd();go();bt();
+  bd();rr();
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
@@ -356,27 +388,7 @@ function sf(f){
   });
   var b=document.getElementById('b-'+f);
   if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
-  bd();go();
-}
-function go(){
-  var q=document.getElementById('q').value.toLowerCase(),vf=document.getElementById('vf').value,af=document.getElementById('af').value,rf=document.getElementById('rf').value,w=we(),m=me(),n=0,vv={},aa={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',s=true;
-    if(df==='today'&&dt!==T)s=false;
-    if(df==='up'&&dt<T)s=false;
-    if(df==='week'&&(dt<T||dt>w))s=false;
-    if(df==='month'&&(dt<T||dt>m))s=false;
-    if(df==='past'&&dt>=T)s=false;
-    if(vf&&v!==vf)s=false;if(af&&a!==af)s=false;if(rf&&rg!==rf)s=false;
-    if(favOnly&&fv!=='Y')s=false;
-    if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)s=false;
-    r.style.display=s?'':'none';r.className=dt===T?'now':dt>T?'up':'';
-    if(s){n++;if(v)vv[v]=1;if(a)aa[a]=1;}
-  });
-  document.getElementById('ss').textContent=n;
-  document.getElementById('sv').textContent=Object.keys(vv).length;
-  document.getElementById('sa').textContent=Object.keys(aa).length;
-  document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
+  bd();rr();
 }
 function srt(k,th){
   var tb=document.getElementById('tb');
@@ -391,9 +403,9 @@ function srt(k,th){
   pairs.forEach(function(p){tb.appendChild(p.r);if(p.d)tb.appendChild(p.d);});
   document.querySelectorAll('th[data-sort]').forEach(function(t){t.classList.remove('asc','desc');t.setAttribute('aria-sort','none');});
   if(th){th.classList.add(sd===1?'asc':'desc');th.setAttribute('aria-sort',sd===1?'ascending':'descending');}
-  go();
+  rr();
 }
-function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';document.getElementById('rf').value='';favOnly=false;var fb=document.getElementById('favbtn');fb.classList.remove('on');fb.setAttribute('aria-pressed','false');sf('up');bt();}
+function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';document.getElementById('rf').value='';favOnly=false;var fb=document.getElementById('favbtn');fb.classList.remove('on');fb.setAttribute('aria-pressed','false');sf('today');}
 var _lastTrigger=null;
 function openMap(embed,ext,name){
   if(!embed)return;
@@ -417,10 +429,22 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('click',function(e){
   if(e.target.closest('a')||e.target.closest('.maplink'))return;
-  var tr=e.target.closest('#tb tr');
-  if(!tr||tr.classList.contains('exp'))return;
-  var d=tr.nextElementSibling;
-  if(d&&d.classList.contains('exp'))d.classList.toggle('open');
+  var row=e.target.closest('[data-detail-for]');
+  if(!row)return;
+  var det=document.getElementById(row.getAttribute('data-detail-for'));
+  if(!det)return;
+  var open=det.classList.toggle('open');
+  row.setAttribute('aria-expanded',open?'true':'false');
 });
-sf('up');
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  var row=e.target.closest?e.target.closest('[data-detail-for]'):null;
+  if(!row)return;
+  e.preventDefault();
+  var det=document.getElementById(row.getAttribute('data-detail-for'));
+  if(!det)return;
+  var open=det.classList.toggle('open');
+  row.setAttribute('aria-expanded',open?'true':'false');
+});
+sf('today');
 </script></body></html>
