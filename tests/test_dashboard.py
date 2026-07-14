@@ -125,27 +125,23 @@ def test_render_rows_carry_data_region_and_favorite():
     assert 'data-favorite="' in html
 
 
-# --- performer favorites (editable CSV, same pattern as venue favorites) ---
+# --- performer favorites (artists.txt, one name per line, same idea as
+# venue favorites but no CSV/columns needed) -------------------------------
 
-def test_performer_favorite_yes_no_and_defaults(tmp_path):
-    csv_file = tmp_path / "performer_favorites.csv"
-    csv_file.write_text(
-        "performer,favorite\nJim Couch,Y\nOther Act,N\nNo Flag,\n",
-        encoding="utf-8",
-    )
-    meta = render._load_performer_meta(csv_file)
-    assert render._performer_favorite("Jim Couch", meta) is True
-    assert render._performer_favorite("jim couch", meta) is True   # case-insensitive
-    assert render._performer_favorite("Other Act", meta) is False
-    assert render._performer_favorite("No Flag", meta) is False    # blank cell -> not a favorite
-    assert render._performer_favorite("Never Listed", meta) is False
-    assert render._performer_favorite(None, meta) is False
+def test_performer_favorite_listed_and_unlisted(tmp_path):
+    txt_file = tmp_path / "artists.txt"
+    txt_file.write_text("Jim Couch\nOther Act\n\n", encoding="utf-8")
+    favorites = render._load_performer_favorites(txt_file)
+    assert render._performer_favorite("Jim Couch", favorites) is True
+    assert render._performer_favorite("jim couch", favorites) is True   # case-insensitive
+    assert render._performer_favorite("Never Listed", favorites) is False
+    assert render._performer_favorite(None, favorites) is False
 
 
-def test_performer_favorite_missing_csv_defaults_everything_to_false():
-    meta = render._load_performer_meta(Path("/tmp/does_not_exist_performer_favorites.csv"))
-    assert meta == {}
-    assert render._performer_favorite("Jim Couch", meta) is False
+def test_performer_favorite_missing_file_defaults_everything_to_false():
+    favorites = render._load_performer_favorites(Path("/tmp/does_not_exist_artists.txt"))
+    assert favorites == set()
+    assert render._performer_favorite("Jim Couch", favorites) is False
 
 
 def test_render_rows_carry_data_performer_favorite():
