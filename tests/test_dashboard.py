@@ -196,3 +196,13 @@ def test_pavilion_venue_badge_shows_shortened_name():
     assert "The Pavilion at WTC" in html
     assert 'data-venue="The Pavilion at Watersound Town Center"' in html
     assert "Get directions to The Pavilion at Watersound Town Center" in html
+
+
+def test_stat_counters_stay_four_across_on_mobile():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # Total/Showing/Venues/Artists render as one row on every screen size --
+    # no narrow-viewport override dropping to a 2x2 grid.
+    assert ".stats{display:grid;grid-template-columns:repeat(4,1fr)" in html
+    assert "grid-template-columns:repeat(2,1fr)" not in html
