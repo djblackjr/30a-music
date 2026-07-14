@@ -61,10 +61,6 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
-.tip{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink);}
-.tip-ico{font-size:1.1rem;line-height:1;}
-.tip-stat{margin-left:auto;font-weight:700;color:var(--navy);font-size:.82rem;background:var(--cream);padding:5px 11px;border-radius:999px;white-space:nowrap;}
-@media(max-width:680px){.tip-stat{margin-left:0;}}
 .tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
 .leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
 .leg::-webkit-scrollbar{height:6px;}
@@ -142,7 +138,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">BUILD_PLACEHOLDER</p></div></header>
 <main class="page">
-<div class="tip"><span class="tip-ico" aria-hidden="true">📍</span><span>Color-coded venues — click any badge for turn-by-turn directions.</span><span class="tip-stat" id="hlt"></span></div>
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">
@@ -295,7 +290,8 @@ function rr(){
     if(vf&&v!==vf)inc=false;
     if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
-    if((favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y')))inc=false;
+    if(favVenue&&fv!=='Y')inc=false;
+    if(favArtist&&pfv!=='Y')inc=false;
     if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)inc=false;
     if(!inc)return;
     n++;if(v)vv[v]=1;if(a)aa[a]=1;
@@ -337,21 +333,6 @@ function rr(){
   document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
 
-(function(){
-  var el=document.getElementById('hlt');
-  if(!el)return;
-  var w=we(),count=0,venues={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'';
-    if(dt>=T&&dt<=w){
-      count++;
-      var v=r.getAttribute('data-venue');
-      if(v)venues[v]=1;
-    }
-  });
-  var vn=Object.keys(venues).length;
-  el.textContent=count+' show'+(count!==1?'s':'')+' this week across '+vn+' venue'+(vn!==1?'s':'');
-})();
 function bd(){
   var w=we(),m=me(),curV=document.getElementById('vf').value,curA=document.getElementById('af').value,curR=document.getElementById('rf').value,vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
@@ -364,7 +345,8 @@ function bd(){
     else if(df==='past'&&dt<T)inc=true;
     if(!inc)return;
     if(curR&&rg!==curR)return;
-    if((favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y')))return;
+    if(favVenue&&fv!=='Y')return;
+    if(favArtist&&pfv!=='Y')return;
     if((!curA||a===curA)&&v)vv[v]=1;
     if((!curV||v===curV)&&a)aa[a]=1;
   });

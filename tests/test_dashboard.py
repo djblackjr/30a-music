@@ -156,15 +156,16 @@ def test_render_rows_carry_data_performer_favorite():
     assert 'data-performer-favorite="' in html
 
 
-def test_favorites_filters_are_independent_venue_and_artist_toggles():
+def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # ★ Venues and ★ Artists are two separate toggles: each filters on its
-    # own flag alone, and enabling both shows the union (either matches),
-    # not the intersection. Same logic in both the results renderer and the
-    # dropdown-population pass.
-    assert "(favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y'))" in html
+    # ★ Venues and ★ Artists are independent toggles that each narrow the
+    # results further when on, same as the venue/artist/region dropdowns —
+    # enabling both requires BOTH the venue and the performer to be
+    # favorited (intersection), not either one (union).
+    assert "if(favVenue&&fv!=='Y')inc=false;" in html
+    assert "if(favArtist&&pfv!=='Y')inc=false;" in html
 
 
 def test_render_includes_region_and_favorites_filter_controls():
@@ -187,7 +188,7 @@ def test_results_rebuild_on_favorites_toggle_and_clear():
     # separate Today card) and it skips rows that don't match whichever
     # favorites toggle(s) are on.
     assert "function rr()" in html
-    assert "favVenue||favArtist" in html
+    assert "favVenue&&fv!=='Y'" in html
     # both the favorites toggles and Clear rebuild the results view
     assert "bd();rr();" in html
     assert "sf('today');" in html      # Clear resets to the default filter
