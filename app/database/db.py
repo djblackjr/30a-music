@@ -598,6 +598,62 @@ def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int
     return len(ids)
 
 
+def purge_source_observations(source: str, path: Path = DB_PATH) -> dict:
+    """
+    Delete every observation from `source`, then drop any event left with
+    zero observations (nothing else corroborates it) and recompute
+    aggregates for events that still have at least one — e.g. an event that
+    was source_count=2 (this source + another) drops back to source_count=1
+    once this source's observation is gone, instead of staying stale.
+
+    For a source whose data has gone stale and duplicates a still-active
+    source under slightly different performer names, this is the deliberate
+    fix: safe to re-run, and distinct from the "never infer removal from a
+    crawl gap" policy in app/monitor.py, since here removal isn't inferred
+    from absence — the whole source is being retired on purpose.
+
+    Returns {"observations_deleted", "events_deleted", "events_recomputed"}.
+    """
+    conn = get_connection(path)
+    obs_ids = [r["id"] for r in conn.execute(
+        "SELECT id FROM event_observations WHERE source = ?", (source,)
+    ).fetchall()]
+    affected_event_ids = [r["event_id"] for r in conn.execute(
+        "SELECT DISTINCT event_id FROM event_observations WHERE source = ?", (source,)
+    ).fetchall()]
+
+    if obs_ids:
+        placeholders = ",".join("?" * len(obs_ids))
+        conn.execute(f"DELETE FROM event_observations WHERE id IN ({placeholders})", obs_ids)
+        conn.commit()
+
+    events_deleted = 0
+    if affected_event_ids:
+        placeholders = ",".join("?" * len(affected_event_ids))
+        orphaned = [r["id"] for r in conn.execute(
+            f"SELECT id FROM events WHERE id IN ({placeholders}) "
+            "AND id NOT IN (SELECT DISTINCT event_id FROM event_observations)",
+            affected_event_ids,
+        ).fetchall()]
+        if orphaned:
+            op = ",".join("?" * len(orphaned))
+            conn.execute(f"DELETE FROM events WHERE id IN ({op})", orphaned)
+            conn.commit()
+            events_deleted = len(orphaned)
+
+    conn.close()
+    recomputed = recompute_aggregates(path) if obs_ids else 0
+    logger.info(
+        "Purged %d observations from source=%s: deleted %d orphaned events, recomputed %d",
+        len(obs_ids), source, events_deleted, recomputed,
+    )
+    return {
+        "observations_deleted": len(obs_ids),
+        "events_deleted": events_deleted,
+        "events_recomputed": recomputed,
+    }
+
+
 def recompute_aggregates(path: Path = DB_PATH) -> int:
     """
     Re-derive every event's aggregate (confidence, source/verification counts,

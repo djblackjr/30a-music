@@ -18,6 +18,7 @@ from app.database.db import (
     load_event_observations,
     load_events,
     purge_past_events,
+    purge_source_observations,
     upsert_events,
 )
 from app.normalize import normalize_events
@@ -137,4 +138,56 @@ def test_purge_past_events_is_a_no_op_when_nothing_is_past():
     p = _db()
     upsert_events(normalize_events([_ev("sowal", date="2026-07-20")]), run_id="r1", path=p)
     assert purge_past_events(before="2026-07-15", path=p) == 0
+    assert len(load_events(path=p)) == 1
+
+
+# --- retiring a stale source -------------------------------------------------
+
+def test_purge_source_drops_it_from_a_corroborated_event_without_deleting_the_event():
+    p = _db()
+    # same performer/venue/date from two sources -> one event, source_count=2
+    upsert_events(normalize_events([_ev("sowal", performer="Jim Couch")]), run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("dashboard_legacy", performer="Jim Couch")]), run_id="r1", path=p)
+    [ev] = load_events(path=p)
+    assert ev["source_count"] == 2
+
+    result = purge_source_observations("dashboard_legacy", path=p)
+    assert result["observations_deleted"] == 1
+    assert result["events_deleted"] == 0
+
+    [ev] = load_events(path=p)
+    assert ev["source_count"] == 1
+    remaining_obs = load_event_observations(ev["id"], path=p)
+    assert [o["source"] for o in remaining_obs] == ["sowal"]
+
+
+def test_purge_source_deletes_an_event_that_only_existed_from_that_source():
+    p = _db()
+    upsert_events(normalize_events([_ev("dashboard_legacy", performer="Karaoke")]), run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("sowal", performer="Karaoke Night")]), run_id="r1", path=p)
+    assert len(load_events(path=p)) == 2   # different performer strings -> two events
+
+    result = purge_source_observations("dashboard_legacy", path=p)
+    assert result["observations_deleted"] == 1
+    assert result["events_deleted"] == 1
+
+    remaining = load_events(path=p)
+    assert len(remaining) == 1
+    assert remaining[0]["performer"] == "Karaoke Night"
+
+
+def test_purge_source_leaves_other_sources_untouched():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", performer="Untouched")]), run_id="r1", path=p)
+    purge_source_observations("dashboard_legacy", path=p)
+    events = load_events(path=p)
+    assert len(events) == 1
+    assert events[0]["performer"] == "Untouched"
+
+
+def test_purge_source_is_a_no_op_for_an_absent_source():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal")]), run_id="r1", path=p)
+    result = purge_source_observations("does_not_exist", path=p)
+    assert result == {"observations_deleted": 0, "events_deleted": 0, "events_recomputed": 0}
     assert len(load_events(path=p)) == 1
