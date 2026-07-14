@@ -149,7 +149,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <button class="btn" id="favvenue" onclick="tf('venue')" aria-pressed="false">★ Venues</button>
 <button class="btn" id="favartist" onclick="tf('artist')" aria-pressed="false">★ Artists</button>
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
-<button class="btn" id="b-up" onclick="sf('up')" aria-pressed="false">Upcoming</button>
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
 <button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
 <button class="btn" id="b-all" onclick="sf('all')" aria-pressed="false">All Dates</button>
@@ -283,7 +282,6 @@ function rr(){
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
     var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=true;
     if(df==='today'&&dt!==T)inc=false;
-    else if(df==='up'&&dt<T)inc=false;
     else if(df==='week'&&(dt<T||dt>w))inc=false;
     else if(df==='month'&&(dt<T||dt>m))inc=false;
     else if(df==='past'&&dt>=T)inc=false;
@@ -338,7 +336,6 @@ function bd(){
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
     var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=false;
     if(df==='today'&&dt===T)inc=true;
-    else if(df==='up'&&dt>=T)inc=true;
     else if(df==='week'&&dt>=T&&dt<=w)inc=true;
     else if(df==='month'&&dt>=T&&dt<=m)inc=true;
     else if(df==='all')inc=true;

@@ -12,6 +12,7 @@ from app.crawlers.sowal import partition_observations
 from app.database.db import (
     init_db,
     load_events,
+    purge_past_events,
     record_run,
     upsert_events,
 )
@@ -36,7 +37,7 @@ def run_pipeline() -> dict:
     init_db()
 
     # 2. Run crawlers
-    logger.info("Step 1/6 — Running crawlers")
+    logger.info("Step 1/8 — Running crawlers")
     crawler_events = run_all_crawlers()
     logger.info("Crawlers returned %d events", len(crawler_events))
 
@@ -56,7 +57,7 @@ def run_pipeline() -> dict:
         crawler_events = passthrough + partitioned["named"]
 
     # 3. Image inbox
-    logger.info("Step 2/6 — Processing image inbox")
+    logger.info("Step 2/8 — Processing image inbox")
     inbox_images = [
         f for f in INBOX_DIR.iterdir()
         if INBOX_DIR.exists() and f.suffix.lower() in SUPPORTED_EXTS
@@ -66,14 +67,14 @@ def run_pipeline() -> dict:
     logger.info("Images processed: %d files, %d events", len(inbox_images), len(image_events))
 
     # 4. Combine + normalise
-    logger.info("Step 3/6 — Normalising events")
+    logger.info("Step 3/8 — Normalising events")
     all_raw    = crawler_events + image_events
     normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
     # 5. Upsert by identity — observations accumulate onto existing events, so a
     #    second source corroborates rather than creating a duplicate.
-    logger.info("Step 4/6 — Upserting events (accumulating observations)")
+    logger.info("Step 4/8 — Upserting events (accumulating observations)")
     result = upsert_events(normalised, run_id=run_id)
     saved  = result["saved"]
     record_run(run_id=run_id, events_saved=saved)
@@ -82,7 +83,7 @@ def run_pipeline() -> dict:
     #    NOTE: a run is a PARTIAL view (one crawl), not a full snapshot of reality,
     #    so a source simply not re-observing an event does NOT mean it was removed.
     #    Removal is therefore never inferred here.
-    logger.info("Step 5/6 — Reconciling")
+    logger.info("Step 5/8 — Reconciling")
     changes = {
         "new":       result["new"],
         "changed":   result["changed"],
@@ -97,13 +98,20 @@ def run_pipeline() -> dict:
         },
     }
 
-    # 7. Generate Excel
-    logger.info("Step 6/6 — Generating Excel report")
+    # 7. Drop events whose date has already passed. Unlike "removed" above,
+    #    this isn't inferred from crawl absence — a past date is a fact, not
+    #    a guess — so it's safe to delete outright rather than just hide.
+    logger.info("Step 6/8 — Purging past events")
+    purged = purge_past_events()
+    logger.info("Purged %d past events", purged)
+
+    # 8. Generate Excel
+    logger.info("Step 7/8 — Generating Excel report")
     all_events  = load_events()          # canonical events (one row per identity)
     report_path = generate_report(all_events, changes, run_id)
 
     # 9. Generate the dashboard from current knowledge (union across runs)
-    logger.info("Step 7/7 — Generating dashboard")
+    logger.info("Step 8/8 — Generating dashboard")
     try:
         from app.dashboard.render import generate as generate_dashboard
         dashboard_path = generate_dashboard()
@@ -117,6 +125,7 @@ def run_pipeline() -> dict:
         "image_files":     len(inbox_images),
         "image_events":    len(image_events),
         "events_saved":    saved,
+        "purged_past":     purged,
         "new_or_changed":  changes["summary"]["total_delta"],
         "report_path":     str(report_path),
         "dashboard_path":  str(dashboard_path) if dashboard_path else None,

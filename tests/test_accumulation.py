@@ -13,7 +13,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database.db import init_db, load_events, load_event_observations, upsert_events
+from app.database.db import (
+    init_db,
+    load_event_observations,
+    load_events,
+    purge_past_events,
+    upsert_events,
+)
 from app.normalize import normalize_events
 from app.normalize.provenance import start_minutes, _times_conflict
 
@@ -100,3 +106,35 @@ def test_upsert_reports_new_then_unchanged():
     assert len(r2["new"]) == 0
     assert len(r2["changed"]) == 0
     assert len(r2["unchanged"]) == 1
+
+
+# --- purging past events ----------------------------------------------------
+
+def test_purge_past_events_deletes_only_dates_before_cutoff():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", date="2026-07-10")]), run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("sowal", date="2026-07-15")]), run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("sowal", date="2026-07-20")]), run_id="r1", path=p)
+
+    deleted = purge_past_events(before="2026-07-15", path=p)
+    assert deleted == 1
+
+    remaining = sorted(e["date"] for e in load_events(path=p))
+    assert remaining == ["2026-07-15", "2026-07-20"]
+
+
+def test_purge_past_events_also_drops_their_observations():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", date="2026-07-10")]), run_id="r1", path=p)
+    [ev] = load_events(path=p)
+    assert load_event_observations(ev["id"], path=p)   # sanity: has an observation
+
+    purge_past_events(before="2026-07-15", path=p)
+    assert load_event_observations(ev["id"], path=p) == []
+
+
+def test_purge_past_events_is_a_no_op_when_nothing_is_past():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", date="2026-07-20")]), run_id="r1", path=p)
+    assert purge_past_events(before="2026-07-15", path=p) == 0
+    assert len(load_events(path=p)) == 1

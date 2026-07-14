@@ -573,6 +573,31 @@ def save_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> int:
     return upsert_events(events, run_id=run_id, path=path)["saved"]
 
 
+def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int:
+    """
+    Permanently delete events (and their observations) dated before `before`
+    (defaults to today, local date, YYYY-MM-DD). This is a different kind of
+    removal than the pipeline's "never infer removal" policy (see
+    app/monitor.py) — that policy exists because a crawl not re-observing an
+    event doesn't mean the event went away. A date in the past is not an
+    inference; it's an unambiguous fact. Safe to re-run. Returns the number
+    of events deleted.
+    """
+    cutoff = before or datetime.now().strftime("%Y-%m-%d")
+    conn = get_connection(path)
+    ids = [row["id"] for row in conn.execute(
+        "SELECT id FROM events WHERE date < ?", (cutoff,)
+    ).fetchall()]
+    if ids:
+        placeholders = ",".join("?" * len(ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
+        conn.commit()
+    conn.close()
+    logger.info("Purged %d events dated before %s", len(ids), cutoff)
+    return len(ids)
+
+
 def recompute_aggregates(path: Path = DB_PATH) -> int:
     """
     Re-derive every event's aggregate (confidence, source/verification counts,
