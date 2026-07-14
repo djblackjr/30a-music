@@ -146,3 +146,12 @@ def test_today_card_rebuilds_on_favorites_toggle_and_clear():
     # both the favorites toggle and Clear rebuild Today, not just the table
     assert "bd();go();bt();" in html
     assert "sf('up');bt();" in html
+
+
+def test_today_card_also_filters_by_region():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert "curR&&r.getAttribute('data-region')!==curR" in html
+    # the region select rebuilds Today too, not just the table
+    assert "bd();go();bt()" in html

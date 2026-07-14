@@ -106,7 +106,9 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .wrap thead{display:none;}
   .wrap table{background:transparent;box-shadow:none;border:none;}
   .wrap tbody{display:block;}
-  .wrap tr{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:9px 12px;margin-bottom:7px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;}
+  .wrap tr{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:9px 12px;margin-bottom:7px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;}
+  .wrap tr.now::before{content:'';position:absolute;left:-10px;top:10px;bottom:10px;width:4px;border-radius:3px;background:var(--navy);}
+  .wrap tr.up::before{content:'';position:absolute;left:-10px;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--teal);}
   .wrap td{border:none;padding:2px 0;}
   .wrap td:nth-of-type(1){grid-column:1;grid-row:1;font-size:1.02rem;font-weight:600;}
   .wrap td:nth-of-type(4){grid-column:2;grid-row:1;justify-self:end;}
@@ -140,7 +142,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <div class="dr">
 <select id="vf" onchange="bd();go()" aria-label="Filter by venue"><option value="">All Venues</option></select>
 <select id="af" onchange="bd();go()" aria-label="Filter by artist"><option value="">All Artists</option></select>
-<select id="rf" onchange="bd();go()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
+<select id="rf" onchange="bd();go();bt()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
 </div>
 <div class="br">
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
@@ -269,6 +271,7 @@ function _startMins(str){
 function bt(){
   var card=document.querySelector('.tn');
   if(!card)return;
+  var curR=document.getElementById('rf').value;
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var d=new Date();
@@ -277,6 +280,7 @@ function bt(){
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
     if(r.getAttribute('data-date')===T){
       if(favOnly&&r.getAttribute('data-favorite')!=='Y')return;
+      if(curR&&r.getAttribute('data-region')!==curR)return;
       var tds=r.querySelectorAll('td');
       var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
       shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||''});
