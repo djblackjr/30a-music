@@ -75,3 +75,74 @@ def test_render_venue_links_to_google_maps():
     assert 'class="maplink"' in html
     assert "google.com/maps" in html
     assert "Get directions to Chiringo" in html
+
+
+# --- venue region grouping + favorites (editable CSV, not code) -------------
+
+def test_venue_group_known_venue(tmp_path):
+    csv_file = tmp_path / "venue_groups.csv"
+    csv_file.write_text("venue,group,favorite\nChiringo,West 30A,N\n", encoding="utf-8")
+    meta = render._load_venue_meta(csv_file)
+    assert render._venue_group("Chiringo", meta) == "West 30A"
+    assert render._venue_group("CHIRINGO", meta) == "West 30A"  # case-insensitive
+
+
+def test_venue_group_unlisted_or_blank_falls_back_to_other(tmp_path):
+    csv_file = tmp_path / "venue_groups.csv"
+    csv_file.write_text("venue,group,favorite\nSome Church,,N\n", encoding="utf-8")
+    meta = render._load_venue_meta(csv_file)
+    assert render._venue_group("Some Church", meta) == "Other"      # blank group in file
+    assert render._venue_group("Never Listed", meta) == "Other"     # not in file at all
+    assert render._venue_group(None, meta) == "Other"
+
+
+def test_venue_group_missing_csv_defaults_everything_to_other(tmp_path):
+    meta = render._load_venue_meta(tmp_path / "does_not_exist.csv")
+    assert meta == {}
+    assert render._venue_group("Chiringo", meta) == "Other"
+
+
+def test_venue_favorite_yes_no_and_defaults(tmp_path):
+    csv_file = tmp_path / "venue_groups.csv"
+    csv_file.write_text(
+        "venue,group,favorite\nChiringo,West 30A,Y\nOther Place,West 30A,N\nNo Flag,West 30A,\n",
+        encoding="utf-8",
+    )
+    meta = render._load_venue_meta(csv_file)
+    assert render._venue_favorite("Chiringo", meta) is True
+    assert render._venue_favorite("chiringo", meta) is True   # case-insensitive
+    assert render._venue_favorite("Other Place", meta) is False
+    assert render._venue_favorite("No Flag", meta) is False   # blank cell -> not a favorite
+    assert render._venue_favorite("Never Listed", meta) is False
+    assert render._venue_favorite(None, meta) is False
+
+
+def test_render_rows_carry_data_region_and_favorite():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
+    ])
+    assert 'data-region="' in html
+    assert 'data-favorite="' in html
+
+
+def test_render_includes_region_and_favorites_filter_controls():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert 'id="rf"' in html
+    assert "All Regions" in html
+    assert 'id="favbtn"' in html
+    assert "★ Favorites" in html
+
+
+def test_today_card_rebuilds_on_favorites_toggle_and_clear():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # Today is a named, re-callable function (not a run-once IIFE) that skips
+    # non-favorite rows when the favorites toggle is on.
+    assert "function bt()" in html
+    assert "favOnly&&r.getAttribute('data-favorite')!=='Y'" in html
+    # both the favorites toggle and Clear rebuild Today, not just the table
+    assert "bd();go();bt();" in html
+    assert "sf('up');bt();" in html

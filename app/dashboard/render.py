@@ -11,6 +11,7 @@ directions modal, sortable/responsive table); this module adds the intelligence
 columns (Sources, Confidence), the expandable observation detail, and the health
 metrics — nothing else.
 """
+import csv
 import html
 import logging
 from datetime import datetime
@@ -30,6 +31,12 @@ logger = logging.getLogger(__name__)
 
 TEMPLATE = Path("app/dashboard/template.html")
 DEFAULT_OUT = Path("docs/index.html")
+
+# Editable venue -> region grouping, maintained by hand as a flat CSV (same
+# "flat file as source of truth" pattern as venues.txt/artists.txt) rather
+# than a code-edited table, so groupings can be corrected without touching
+# Python. Blank/unlisted venues fall back to "Other" — see _venue_group().
+VENUE_GROUPS_CSV = Path("app/dashboard/venue_groups.csv")
 
 # Venues with a dedicated colour in the template's .vt-* classes and map legend.
 # Keyed by every spelling variant seen across sources; anything else is vt-def.
@@ -65,6 +72,34 @@ VENUE_MAPS_QUERY = {
 
 def _venue_class(venue: str | None) -> str:
     return VENUE_CLASS.get((venue or "").strip().lower(), "vt-def")
+
+
+def _load_venue_meta(csv_path: Path = VENUE_GROUPS_CSV) -> dict[str, dict]:
+    """
+    Read venue_groups.csv into {venue_lower: {"group": str, "favorite": bool}}.
+    Missing file, an unlisted venue, or a blank cell all take the same default
+    (see _venue_group / _venue_favorite) — favorite defaults to False since
+    it's a curation call only a human can make, not something inferable.
+    """
+    if not csv_path.exists():
+        return {}
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        return {
+            (row.get("venue") or "").strip().lower(): {
+                "group": (row.get("group") or "").strip(),
+                "favorite": (row.get("favorite") or "").strip().upper() == "Y",
+            }
+            for row in csv.DictReader(f)
+            if (row.get("venue") or "").strip()
+        }
+
+
+def _venue_group(venue: str | None, meta: dict[str, dict]) -> str:
+    return (meta.get((venue or "").strip().lower()) or {}).get("group") or "Other"
+
+
+def _venue_favorite(venue: str | None, meta: dict[str, dict]) -> bool:
+    return bool((meta.get((venue or "").strip().lower()) or {}).get("favorite"))
 
 
 def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
@@ -110,6 +145,7 @@ def _obs_html(o: dict) -> str:
 
 
 def _rows_html(events: list[dict], path: Path) -> str:
+    venue_meta = _load_venue_meta()
     out = []
     for ev in events:
         performer = html.escape(ev.get("performer") or ev.get("name") or "")
@@ -117,12 +153,16 @@ def _rows_html(events: list[dict], path: Path) -> str:
         venue_e = html.escape(venue)
         time_s = html.escape(ev.get("time_start") or "")
         date = ev.get("date") or ""
+        region = html.escape(_venue_group(venue, venue_meta))
+        favorite = _venue_favorite(venue, venue_meta)
+        fav_attr = "Y" if favorite else "N"
 
         embed, ext = _venue_maps_urls(venue)
         embed_a = (embed or "").replace("&", "&amp;")
         ext_a = (ext or "").replace("&", "&amp;")
 
-        badge = f'<span class="vt {_venue_class(venue)}">{venue_e}</span>'
+        star = '<span class="fav-star" aria-label="Favorite">★ </span>' if favorite else ""
+        badge = f'<span class="vt {_venue_class(venue)}">{star}{venue_e}</span>'
         venue_cell = (
             f'<a href="#" class="maplink" data-embed="{embed_a}" data-ext="{ext_a}" '
             f'data-vname="{venue_e}" aria-label="Get directions to {venue_e}">{badge}</a>'
@@ -134,7 +174,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         # observations, each linking back to its original listing.
         out.append(
             f'<tr data-date="{date}" data-venue="{venue_e}" data-performer="{performer}" '
-            f'data-embed="{embed_a}" data-ext="{ext_a}">'
+            f'data-region="{region}" data-favorite="{fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
             f"<td>{time_s}</td>"
