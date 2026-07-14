@@ -152,7 +152,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
 <button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
 <button class="btn" id="b-all" onclick="sf('all')" aria-pressed="false">All Dates</button>
-<button class="btn" id="b-past" onclick="sf('past')" aria-pressed="false">Past</button>
 <button class="btn ghost" onclick="ca()" aria-label="Clear all filters">✕ Clear</button>
 <span class="cnt" id="cnt"></span>
 </div>
@@ -284,7 +283,6 @@ function rr(){
     if(df==='today'&&dt!==T)inc=false;
     else if(df==='week'&&(dt<T||dt>w))inc=false;
     else if(df==='month'&&(dt<T||dt>m))inc=false;
-    else if(df==='past'&&dt>=T)inc=false;
     if(vf&&v!==vf)inc=false;
     if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
@@ -339,7 +337,6 @@ function bd(){
     else if(df==='week'&&dt>=T&&dt<=w)inc=true;
     else if(df==='month'&&dt>=T&&dt<=m)inc=true;
     else if(df==='all')inc=true;
-    else if(df==='past'&&dt<T)inc=true;
     if(!inc)return;
     if(curR&&rg!==curR)return;
     if(favVenue&&fv!=='Y')return;
