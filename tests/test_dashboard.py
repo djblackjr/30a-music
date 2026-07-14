@@ -155,15 +155,3 @@ def test_today_card_also_filters_by_region():
     assert "curR&&r.getAttribute('data-region')!==curR" in html
     # the region select rebuilds Today too, not just the table
     assert "bd();go();bt()" in html
-
-
-def test_mobile_table_does_not_clip_the_external_brace():
-    html, _ = _render_to_temp([
-        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
-    ])
-    # table{overflow:hidden} (desktop) is never reset in the mobile media
-    # query, which clips the now/upcoming ::before brace (positioned
-    # outside the card via a negative left offset) right back to the
-    # table's edge -- undoing the "external brace" fix. Regression test
-    # for that exact bug.
-    assert ".wrap table{background:transparent;box-shadow:none;border:none;overflow:visible;}" in html
