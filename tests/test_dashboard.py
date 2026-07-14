@@ -162,11 +162,16 @@ def test_mobile_cards_suppress_the_desktop_first_cell_border():
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # tr.now/tr.up td:first-child{border-left:...} (desktop only, unscoped)
-    # still exists for the plain table view. Without an explicit mobile
-    # override, that border-left leaks onto every mobile card's first cell
-    # regardless of now/up state -- the actual cause of a line that
-    # survived multiple unrelated "fixes" to the mobile-specific rules.
-    assert ".wrap td:first-child{border-left:none;}" in html
+    # still exists for the plain table view. A plain `.wrap td:first-child`
+    # override is NOT enough to suppress it on mobile: that selector has
+    # specificity (0,0,2,1) -- lower than the original's (0,0,2,2) (tr + td
+    # element selectors beat .wrap + td), so CSS specificity lets the
+    # desktop rule win regardless of source order or media-query nesting.
+    # Verified live: this was the actual cause of a line that survived
+    # several rounds of unrelated "fixes". The override must match the
+    # original's tr.now/tr.up + td:first-child pattern with an added class
+    # to be strictly more specific, not just present.
+    assert ".wrap tr.now td:first-child,.wrap tr.up td:first-child{border-left:none;}" in html
 
 
 def test_build_marker_is_filled_and_visible_in_header():
