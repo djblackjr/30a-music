@@ -151,7 +151,8 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <select id="rf" onchange="bd();rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
 </div>
 <div class="br">
-<button class="btn" id="favbtn" onclick="tf()" aria-pressed="false">★ Favorites</button>
+<button class="btn" id="favvenue" onclick="tf('venue')" aria-pressed="false">★ Venues</button>
+<button class="btn" id="favartist" onclick="tf('artist')" aria-pressed="false">★ Artists</button>
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
 <button class="btn" id="b-up" onclick="sf('up')" aria-pressed="false">Upcoming</button>
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
@@ -245,7 +246,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
-var sk='date',sd=1,df='today',favOnly=false;
+var sk='date',sd=1,df='today',favVenue=false,favArtist=false;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -294,7 +295,7 @@ function rr(){
     if(vf&&v!==vf)inc=false;
     if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
-    if(favOnly&&fv!=='Y'&&pfv!=='Y')inc=false;
+    if((favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y')))inc=false;
     if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)inc=false;
     if(!inc)return;
     n++;if(v)vv[v]=1;if(a)aa[a]=1;
@@ -363,7 +364,7 @@ function bd(){
     else if(df==='past'&&dt<T)inc=true;
     if(!inc)return;
     if(curR&&rg!==curR)return;
-    if(favOnly&&fv!=='Y'&&pfv!=='Y')return;
+    if((favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y')))return;
     if((!curA||a===curA)&&v)vv[v]=1;
     if((!curV||v===curV)&&a)aa[a]=1;
   });
@@ -372,11 +373,12 @@ function bd(){
   var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
   Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
 }
-function tf(){
-  favOnly=!favOnly;
-  var b=document.getElementById('favbtn');
-  b.classList.toggle('on',favOnly);
-  b.setAttribute('aria-pressed',favOnly?'true':'false');
+function tf(kind){
+  var on;
+  if(kind==='venue'){favVenue=!favVenue;on=favVenue;}else{favArtist=!favArtist;on=favArtist;}
+  var b=document.getElementById(kind==='venue'?'favvenue':'favartist');
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-pressed',on?'true':'false');
   bd();rr();
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
@@ -406,7 +408,7 @@ function srt(k,th){
   if(th){th.classList.add(sd===1?'asc':'desc');th.setAttribute('aria-sort',sd===1?'ascending':'descending');}
   rr();
 }
-function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';document.getElementById('rf').value='';favOnly=false;var fb=document.getElementById('favbtn');fb.classList.remove('on');fb.setAttribute('aria-pressed','false');sf('today');}
+function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';document.getElementById('rf').value='';favVenue=false;favArtist=false;var fv=document.getElementById('favvenue'),fa=document.getElementById('favartist');fv.classList.remove('on');fv.setAttribute('aria-pressed','false');fa.classList.remove('on');fa.setAttribute('aria-pressed','false');sf('today');}
 var _lastTrigger=null;
 function openMap(embed,ext,name){
   if(!embed)return;

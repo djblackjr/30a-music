@@ -156,14 +156,15 @@ def test_render_rows_carry_data_performer_favorite():
     assert 'data-performer-favorite="' in html
 
 
-def test_favorites_filter_matches_venue_or_performer_favorite():
+def test_favorites_filters_are_independent_venue_and_artist_toggles():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # the ★ Favorites toggle includes a show if EITHER the venue or the
-    # performer is marked favorite, in both the results renderer and the
-    # dropdown-population pass
-    assert "favOnly&&fv!=='Y'&&pfv!=='Y'" in html
+    # ★ Venues and ★ Artists are two separate toggles: each filters on its
+    # own flag alone, and enabling both shows the union (either matches),
+    # not the intersection. Same logic in both the results renderer and the
+    # dropdown-population pass.
+    assert "(favVenue||favArtist)&&!((favVenue&&fv==='Y')||(favArtist&&pfv==='Y'))" in html
 
 
 def test_render_includes_region_and_favorites_filter_controls():
@@ -172,8 +173,10 @@ def test_render_includes_region_and_favorites_filter_controls():
     ])
     assert 'id="rf"' in html
     assert "All Regions" in html
-    assert 'id="favbtn"' in html
-    assert "★ Favorites" in html
+    assert 'id="favvenue"' in html
+    assert "★ Venues" in html
+    assert 'id="favartist"' in html
+    assert "★ Artists" in html
 
 
 def test_results_rebuild_on_favorites_toggle_and_clear():
@@ -181,11 +184,11 @@ def test_results_rebuild_on_favorites_toggle_and_clear():
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # rr() is the single, re-callable renderer (replacing the old table +
-    # separate Today card) and it skips non-favorite rows when the
-    # favorites toggle is on.
+    # separate Today card) and it skips rows that don't match whichever
+    # favorites toggle(s) are on.
     assert "function rr()" in html
-    assert "favOnly&&fv!=='Y'" in html
-    # both the favorites toggle and Clear rebuild the results view
+    assert "favVenue||favArtist" in html
+    # both the favorites toggles and Clear rebuild the results view
     assert "bd();rr();" in html
     assert "sf('today');" in html      # Clear resets to the default filter
 
