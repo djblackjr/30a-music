@@ -155,3 +155,15 @@ def test_today_card_also_filters_by_region():
     assert "curR&&r.getAttribute('data-region')!==curR" in html
     # the region select rebuilds Today too, not just the table
     assert "bd();go();bt()" in html
+
+
+def test_mobile_cards_suppress_the_desktop_first_cell_border():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # tr.now/tr.up td:first-child{border-left:...} (desktop only, unscoped)
+    # still exists for the plain table view. Without an explicit mobile
+    # override, that border-left leaks onto every mobile card's first cell
+    # regardless of now/up state -- the actual cause of a line that
+    # survived multiple unrelated "fixes" to the mobile-specific rules.
+    assert ".wrap td:first-child{border-left:none;}" in html
