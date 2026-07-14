@@ -67,17 +67,6 @@ class SeedCrawler(BaseCrawler):
 # Venue website crawlers (stubs — add real scrapers here)
 # ---------------------------------------------------------------------------
 
-class AJsGraytonCrawler(BaseCrawler):
-    """Crawl AJ's Grayton Beach website for live events."""
-    name = "ajs_grayton"
-    URL = "https://www.ajsgraytonbeach.com/entertainment"
-
-    def fetch(self) -> list[dict]:
-        # TODO: implement HTTP scraping with requests + BeautifulSoup
-        logger.info("[AJsGraytonCrawler] stub — no live scraping yet")
-        return []
-
-
 class ChiringoCrawler(BaseCrawler):
     """Crawl Chiringo website for live events."""
     name = "chiringo"
@@ -97,13 +86,20 @@ class ChiringoCrawler(BaseCrawler):
 # events, which would publish fabricated shows to the live dashboard. The class
 # is kept for local experimentation only.
 ALL_CRAWLERS: list[BaseCrawler] = [
-    AJsGraytonCrawler(),
     ChiringoCrawler(),
 ]
 
-# Shunk Gulley is imported defensively like SoWal below: it depends on
-# requests + zoneinfo, so a missing dependency logs a warning and skips the
-# crawler rather than breaking the whole pipeline (which imports this module).
+# AJ's Grayton Beach and Shunk Gulley are imported defensively like SoWal
+# below: each depends on requests (+ bs4/lxml or zoneinfo), so a missing
+# dependency logs a warning and skips the crawler rather than breaking the
+# whole pipeline (which imports this module).
+try:
+    from app.crawlers.ajs_grayton import AJsGraytonCrawler
+    ALL_CRAWLERS.append(AJsGraytonCrawler())
+    logger.info("[registry] AJ's Grayton Beach crawler registered")
+except Exception as exc:
+    logger.warning("[registry] AJ's Grayton Beach crawler unavailable: %s", exc)
+
 try:
     from app.crawlers.shunk_gulley import ShunkGulleyCrawler
     ALL_CRAWLERS.append(ShunkGulleyCrawler())
