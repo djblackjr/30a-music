@@ -607,6 +607,163 @@ def recompute_aggregates(path: Path = DB_PATH) -> int:
     return updated
 
 
+def recanonicalize_venues(path: Path = DB_PATH) -> dict:
+    """
+    Re-apply venue canonicalization (app.normalize.canonical.canonicalize) to
+    every stored event. New aliases added to CANONICAL_FIXES only affect
+    events ingested AFTER the alias is added — this retroactively rewrites
+    venue + identity_key on existing rows and, when the rename makes two
+    already-saved events collide on identity, collapses them into one
+    canonical event (re-pointing observations, deleting the redundant row) —
+    the same collapse pattern _migration_6 uses for cross-run accumulation,
+    applied here for renames instead.
+
+    Safe to re-run any time new venue aliases are added to canonical.py.
+    Returns {"renamed": N, "merged": M}.
+    """
+    from app.normalize.canonical import canonicalize
+    from app.normalize.provenance import event_identity
+
+    conn = get_connection(path)
+    rows = [dict(r) for r in conn.execute(
+        "SELECT id, performer, venue, date, identity_key FROM events"
+    ).fetchall()]
+
+    # Compute the post-canonicalization identity for every row BEFORE writing
+    # anything, so collisions caused by the rename are detected up front
+    # rather than tripping the UNIQUE identity_key index mid-loop.
+    by_new_identity: dict[str, list[dict]] = {}
+    for row in rows:
+        new_venue = canonicalize(row["venue"])
+        new_identity = event_identity({
+            "performer": row["performer"], "venue": new_venue, "date": row["date"],
+        })
+        by_new_identity.setdefault(new_identity, []).append({**row, "new_venue": new_venue})
+
+    renamed = 0
+    merged = 0
+    for new_identity, group in by_new_identity.items():
+        keep = min(group, key=lambda r: r["id"])
+        others = [r for r in group if r["id"] != keep["id"]]
+
+        if others:
+            other_ids = [r["id"] for r in others]
+            placeholders = ",".join("?" * len(other_ids))
+            conn.execute(
+                f"UPDATE event_observations SET event_id = ? WHERE event_id IN ({placeholders})",
+                (keep["id"], *other_ids),
+            )
+            conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", other_ids)
+            merged += len(others)
+
+        if keep["new_venue"] != keep["venue"] or others:
+            new_name = f"{keep['performer']} at {keep['new_venue']}" if keep["performer"] else None
+            if new_name:
+                conn.execute(
+                    "UPDATE events SET venue = ?, identity_key = ?, name = ? WHERE id = ?",
+                    (keep["new_venue"], new_identity, new_name, keep["id"]),
+                )
+            else:
+                conn.execute(
+                    "UPDATE events SET venue = ?, identity_key = ? WHERE id = ?",
+                    (keep["new_venue"], new_identity, keep["id"]),
+                )
+        if keep["new_venue"] != keep["venue"]:
+            renamed += 1
+
+    if merged:
+        # Drop repeat observations of identical content from the same source
+        # that may now collide under one event_id after the merge (same
+        # cleanup _migration_6 does after its own duplicate collapse).
+        conn.execute(
+            "DELETE FROM event_observations WHERE id NOT IN "
+            "(SELECT MIN(id) FROM event_observations GROUP BY event_id, source, checksum)"
+        )
+
+    conn.commit()
+    conn.close()
+
+    logger.info(
+        "Recanonicalized %d event venues, merged %d duplicate rows into existing events",
+        renamed, merged,
+    )
+    if merged:
+        recompute_aggregates(path)
+
+    return {"renamed": renamed, "merged": merged}
+
+
+def recanonicalize_performers(path: Path = DB_PATH) -> dict:
+    """
+    Re-apply performer canonicalization (app.normalize.canonical.canonicalize)
+    to every stored event. Same purpose and pattern as recanonicalize_venues()
+    — new CANONICAL_FIXES aliases only affect events ingested AFTER the alias
+    is added, so this retroactively fixes already-saved rows and collapses
+    any resulting identity collisions.
+
+    Safe to re-run any time new performer aliases are added to canonical.py.
+    Returns {"renamed": N, "merged": M}.
+    """
+    from app.normalize.canonical import canonicalize
+    from app.normalize.provenance import event_identity
+
+    conn = get_connection(path)
+    rows = [dict(r) for r in conn.execute(
+        "SELECT id, performer, venue, date, identity_key FROM events"
+    ).fetchall()]
+
+    by_new_identity: dict[str, list[dict]] = {}
+    for row in rows:
+        new_performer = canonicalize(row["performer"])
+        new_identity = event_identity({
+            "performer": new_performer, "venue": row["venue"], "date": row["date"],
+        })
+        by_new_identity.setdefault(new_identity, []).append({**row, "new_performer": new_performer})
+
+    renamed = 0
+    merged = 0
+    for new_identity, group in by_new_identity.items():
+        keep = min(group, key=lambda r: r["id"])
+        others = [r for r in group if r["id"] != keep["id"]]
+
+        if others:
+            other_ids = [r["id"] for r in others]
+            placeholders = ",".join("?" * len(other_ids))
+            conn.execute(
+                f"UPDATE event_observations SET event_id = ? WHERE event_id IN ({placeholders})",
+                (keep["id"], *other_ids),
+            )
+            conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", other_ids)
+            merged += len(others)
+
+        if keep["new_performer"] != keep["performer"] or others:
+            new_name = f"{keep['new_performer']} at {keep['venue']}" if keep["venue"] else keep["new_performer"]
+            conn.execute(
+                "UPDATE events SET performer = ?, identity_key = ?, name = ? WHERE id = ?",
+                (keep["new_performer"], new_identity, new_name, keep["id"]),
+            )
+        if keep["new_performer"] != keep["performer"]:
+            renamed += 1
+
+    if merged:
+        conn.execute(
+            "DELETE FROM event_observations WHERE id NOT IN "
+            "(SELECT MIN(id) FROM event_observations GROUP BY event_id, source, checksum)"
+        )
+
+    conn.commit()
+    conn.close()
+
+    logger.info(
+        "Recanonicalized %d event performers, merged %d duplicate rows into existing events",
+        renamed, merged,
+    )
+    if merged:
+        recompute_aggregates(path)
+
+    return {"renamed": renamed, "merged": merged}
+
+
 def load_event_observations(event_id: int, path: Path = DB_PATH) -> list[dict]:
     """Load the observations (event_observations rows) for a canonical event."""
     conn = get_connection(path)

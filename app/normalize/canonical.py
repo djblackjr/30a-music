@@ -51,6 +51,29 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / Corey Hall Trio"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / Harrison Prentice"),
     ("The Kennedys", "The Kennedy's"),
+
+    # Venue spelling/formatting variants surfaced by the SoWal crawler port
+    # (raw text straight off sowal.com; verified against a live crawl,
+    # 2026-07-13). Confirmed same physical venue — not fuzzy-matched.
+    ("AJ's Grayton Beach", "AJ's Grayton"),
+    ("Aaron Bessant Park", "Aaron Bessant Park at Pier Park"),
+    ("Crackings", "Crackings. - Grayton Beach"),
+    ("Hilton Sandestin Beach Golf Resort & Spa", "Hilton Sandestin Golf Resort & Spa"),
+    ("Seascape Towne Centre", "Seascape Town Centre"),
+    ("Seaside Amphitheater", "Seaside Ampitheatre"),
+    ("Chautauqua Theater", "Florida Chautauqua Theatre"),
+    ("The Village Door", "John Wehner's Village Door"),
+    ("Havana Beach Bar", "Havana Beach Rooftop Bar"),
+
+    # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
+    ("Coconut Radio", "COCONUT RADIO"),
+    ("DJ 30A", "DJ30A"),
+    ("DJ Q$", "DJ QS"),
+    ("Gilleran's Island", "Gilleran's Island Band"),
+    ("Pickled Pickers", "The Pickled Pickers"),
+    ("New Cahoots", "The New Cahoots"),
+    ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / The Typos"),
+    ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / WineLers"),
 ]
 
 # variant (lowercased) -> canonical
