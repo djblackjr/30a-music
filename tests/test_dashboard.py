@@ -184,3 +184,15 @@ def test_build_marker_is_filled_and_visible_in_header():
     # the header so it's visible without scrolling in any screenshot.
     assert "BUILD_PLACEHOLDER" not in html
     assert "Build " in html
+
+
+def test_pavilion_venue_badge_shows_shortened_name():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "The Pavilion at Watersound Town Center",
+         "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # Shortened text is for the badge label only -- filtering, directions,
+    # and aria-labels still key off the full real venue name.
+    assert "The Pavilion at WTC" in html
+    assert 'data-venue="The Pavilion at Watersound Town Center"' in html
+    assert "Get directions to The Pavilion at Watersound Town Center" in html

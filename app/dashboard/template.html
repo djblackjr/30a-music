@@ -283,7 +283,7 @@ function bt(){
       if(curR&&r.getAttribute('data-region')!==curR)return;
       var tds=r.querySelectorAll('td');
       var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
-      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||''});
+      shows.push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:r.getAttribute('data-venue')||'',vdisp:r.getAttribute('data-venue-display')||r.getAttribute('data-venue')||'',vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||''});
     }
   });
   shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
@@ -294,7 +294,7 @@ function bt(){
   } else {
     var html='';
     shows.forEach(function(s){
-      var v='<span class="'+s.vcls+'">'+s.venue+'</span>';
+      var v='<span class="'+s.vcls+'">'+s.vdisp+'</span>';
       if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
       html+='<div class="sc"><div><b>'+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>';
     });

@@ -70,9 +70,21 @@ VENUE_MAPS_QUERY = {
     "mcguire’s destin": "McGuire's Irish Pub, Destin, FL",
 }
 
+# Shortened text for the venue badge only — display purposes, never applied to
+# data-venue/aria-label/maps lookups, so filtering and directions still key
+# off the real venue name. Anything not listed shows in full.
+VENUE_DISPLAY_NAME = {
+    "the pavilion at watersound town center": "The Pavilion at WTC",
+}
+
 
 def _venue_class(venue: str | None) -> str:
     return VENUE_CLASS.get((venue or "").strip().lower(), "vt-def")
+
+
+def _venue_display_name(venue: str | None) -> str:
+    v = (venue or "").strip()
+    return VENUE_DISPLAY_NAME.get(v.lower(), v)
 
 
 def _load_venue_meta(csv_path: Path = VENUE_GROUPS_CSV) -> dict[str, dict]:
@@ -163,7 +175,8 @@ def _rows_html(events: list[dict], path: Path) -> str:
         ext_a = (ext or "").replace("&", "&amp;")
 
         star = '<span class="fav-star" aria-label="Favorite">★ </span>' if favorite else ""
-        badge = f'<span class="vt {_venue_class(venue)}">{star}{venue_e}</span>'
+        venue_display_e = html.escape(_venue_display_name(venue))
+        badge = f'<span class="vt {_venue_class(venue)}">{star}{venue_display_e}</span>'
         venue_cell = (
             f'<a href="#" class="maplink" data-embed="{embed_a}" data-ext="{ext_a}" '
             f'data-vname="{venue_e}" aria-label="Get directions to {venue_e}">{badge}</a>'
@@ -174,7 +187,8 @@ def _rows_html(events: list[dict], path: Path) -> str:
         # listing and provenance are one click away — clicking a row reveals its
         # observations, each linking back to its original listing.
         out.append(
-            f'<tr data-date="{date}" data-venue="{venue_e}" data-performer="{performer}" '
+            f'<tr data-date="{date}" data-venue="{venue_e}" data-venue-display="{venue_display_e}" '
+            f'data-performer="{performer}" '
             f'data-region="{region}" data-favorite="{fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
