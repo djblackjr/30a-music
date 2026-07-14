@@ -285,7 +285,7 @@ function rr(){
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var groups={},order=[],n=0,vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',inc=true;
+    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=true;
     if(df==='today'&&dt!==T)inc=false;
     else if(df==='up'&&dt<T)inc=false;
     else if(df==='week'&&(dt<T||dt>w))inc=false;
@@ -294,7 +294,7 @@ function rr(){
     if(vf&&v!==vf)inc=false;
     if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
-    if(favOnly&&fv!=='Y')inc=false;
+    if(favOnly&&fv!=='Y'&&pfv!=='Y')inc=false;
     if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)inc=false;
     if(!inc)return;
     n++;if(v)vv[v]=1;if(a)aa[a]=1;
@@ -303,7 +303,7 @@ function rr(){
     var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
     var sib=r.nextElementSibling;
     var det=(sib&&sib.classList.contains('exp'))?sib.querySelector('td').innerHTML:'';
-    groups[dt].push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:v,vdisp:r.getAttribute('data-venue-display')||v,vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',favorite:fv==='Y',detail:det});
+    groups[dt].push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:v,vdisp:r.getAttribute('data-venue-display')||v,vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',favorite:fv==='Y',performerFavorite:pfv==='Y',detail:det});
   });
   order.sort();
   var html='';
@@ -320,10 +320,11 @@ function rr(){
       var body='';
       shows.forEach(function(s,i){
         var star=s.favorite?'<span class="fav-star" aria-hidden="true">★</span> ':'<span></span>';
+        var astar=s.performerFavorite?'<span class="fav-star" aria-hidden="true">★</span> ':'';
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
@@ -353,7 +354,7 @@ function rr(){
 function bd(){
   var w=we(),m=me(),curV=document.getElementById('vf').value,curA=document.getElementById('af').value,curR=document.getElementById('rf').value,vv={},aa={};
   document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',inc=false;
+    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=false;
     if(df==='today'&&dt===T)inc=true;
     else if(df==='up'&&dt>=T)inc=true;
     else if(df==='week'&&dt>=T&&dt<=w)inc=true;
@@ -362,7 +363,7 @@ function bd(){
     else if(df==='past'&&dt<T)inc=true;
     if(!inc)return;
     if(curR&&rg!==curR)return;
-    if(favOnly&&fv!=='Y')return;
+    if(favOnly&&fv!=='Y'&&pfv!=='Y')return;
     if((!curA||a===curA)&&v)vv[v]=1;
     if((!curV||v===curV)&&a)aa[a]=1;
   });

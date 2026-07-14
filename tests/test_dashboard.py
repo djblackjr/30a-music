@@ -125,6 +125,46 @@ def test_render_rows_carry_data_region_and_favorite():
     assert 'data-favorite="' in html
 
 
+# --- performer favorites (editable CSV, same pattern as venue favorites) ---
+
+def test_performer_favorite_yes_no_and_defaults(tmp_path):
+    csv_file = tmp_path / "performer_favorites.csv"
+    csv_file.write_text(
+        "performer,favorite\nJim Couch,Y\nOther Act,N\nNo Flag,\n",
+        encoding="utf-8",
+    )
+    meta = render._load_performer_meta(csv_file)
+    assert render._performer_favorite("Jim Couch", meta) is True
+    assert render._performer_favorite("jim couch", meta) is True   # case-insensitive
+    assert render._performer_favorite("Other Act", meta) is False
+    assert render._performer_favorite("No Flag", meta) is False    # blank cell -> not a favorite
+    assert render._performer_favorite("Never Listed", meta) is False
+    assert render._performer_favorite(None, meta) is False
+
+
+def test_performer_favorite_missing_csv_defaults_everything_to_false():
+    meta = render._load_performer_meta(Path("/tmp/does_not_exist_performer_favorites.csv"))
+    assert meta == {}
+    assert render._performer_favorite("Jim Couch", meta) is False
+
+
+def test_render_rows_carry_data_performer_favorite():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
+    ])
+    assert 'data-performer-favorite="' in html
+
+
+def test_favorites_filter_matches_venue_or_performer_favorite():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # the ★ Favorites toggle includes a show if EITHER the venue or the
+    # performer is marked favorite, in both the results renderer and the
+    # dropdown-population pass
+    assert "favOnly&&fv!=='Y'&&pfv!=='Y'" in html
+
+
 def test_render_includes_region_and_favorites_filter_controls():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},

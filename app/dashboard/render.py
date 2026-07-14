@@ -39,6 +39,11 @@ DEFAULT_OUT = Path("docs/index.html")
 # Python. Blank/unlisted venues fall back to "Other" — see _venue_group().
 VENUE_GROUPS_CSV = Path("app/dashboard/venue_groups.csv")
 
+# Editable performer favorites, same flat-CSV pattern as VENUE_GROUPS_CSV but
+# without a group column — there's no regional grouping for performers, just
+# a curated favorite/not-favorite call. Unlisted performers default to N.
+PERFORMER_FAVORITES_CSV = Path("app/dashboard/performer_favorites.csv")
+
 # Venues with a dedicated colour in the template's .vt-* classes and map legend.
 # Keyed by every spelling variant seen across sources; anything else is vt-def.
 VENUE_CLASS = {
@@ -115,6 +120,27 @@ def _venue_favorite(venue: str | None, meta: dict[str, dict]) -> bool:
     return bool((meta.get((venue or "").strip().lower()) or {}).get("favorite"))
 
 
+def _load_performer_meta(csv_path: Path = PERFORMER_FAVORITES_CSV) -> dict[str, bool]:
+    """
+    Read performer_favorites.csv into {performer_lower: favorite_bool}. Same
+    "flat file as source of truth" pattern as _load_venue_meta — missing file
+    or an unlisted performer both default to not-favorite, since favoriting
+    is a curation call only a human can make.
+    """
+    if not csv_path.exists():
+        return {}
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        return {
+            (row.get("performer") or "").strip().lower(): (row.get("favorite") or "").strip().upper() == "Y"
+            for row in csv.DictReader(f)
+            if (row.get("performer") or "").strip()
+        }
+
+
+def _performer_favorite(performer: str | None, meta: dict[str, bool]) -> bool:
+    return bool(meta.get((performer or "").strip().lower()))
+
+
 def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
     """(embed_url, external_url) for the venue's Google Maps modal. No API key needed."""
     v = (venue or "").strip()
@@ -159,9 +185,11 @@ def _obs_html(o: dict) -> str:
 
 def _rows_html(events: list[dict], path: Path) -> str:
     venue_meta = _load_venue_meta()
+    performer_meta = _load_performer_meta()
     out = []
     for ev in events:
-        performer = html.escape(ev.get("performer") or ev.get("name") or "")
+        performer_raw = ev.get("performer") or ev.get("name") or ""
+        performer = html.escape(performer_raw)
         venue = ev.get("venue") or ""
         venue_e = html.escape(venue)
         time_s = html.escape(ev.get("time_start") or "")
@@ -169,6 +197,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         region = html.escape(_venue_group(venue, venue_meta))
         favorite = _venue_favorite(venue, venue_meta)
         fav_attr = "Y" if favorite else "N"
+        performer_fav_attr = "Y" if _performer_favorite(performer_raw, performer_meta) else "N"
 
         embed, ext = _venue_maps_urls(venue)
         embed_a = (embed or "").replace("&", "&amp;")
@@ -189,7 +218,8 @@ def _rows_html(events: list[dict], path: Path) -> str:
         out.append(
             f'<tr data-date="{date}" data-venue="{venue_e}" data-venue-display="{venue_display_e}" '
             f'data-performer="{performer}" '
-            f'data-region="{region}" data-favorite="{fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
+            f'data-region="{region}" data-favorite="{fav_attr}" '
+            f'data-performer-favorite="{performer_fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
             f"<td>{time_s}</td>"
