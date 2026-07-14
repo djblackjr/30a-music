@@ -89,17 +89,6 @@ class ChiringoCrawler(BaseCrawler):
         return []
 
 
-class ShunkGulleyCrawler(BaseCrawler):
-    """Crawl Shunk Gulley for live events."""
-    name = "shunk_gulley"
-    URL = "https://www.shunkgulley.com"
-
-    def fetch(self) -> list[dict]:
-        # TODO: implement HTTP scraping with requests + BeautifulSoup
-        logger.info("[ShunkGulleyCrawler] stub — no live scraping yet")
-        return []
-
-
 # ---------------------------------------------------------------------------
 # Registry — add every crawler you want to run here
 # ---------------------------------------------------------------------------
@@ -110,8 +99,17 @@ class ShunkGulleyCrawler(BaseCrawler):
 ALL_CRAWLERS: list[BaseCrawler] = [
     AJsGraytonCrawler(),
     ChiringoCrawler(),
-    ShunkGulleyCrawler(),
 ]
+
+# Shunk Gulley is imported defensively like SoWal below: it depends on
+# requests + zoneinfo, so a missing dependency logs a warning and skips the
+# crawler rather than breaking the whole pipeline (which imports this module).
+try:
+    from app.crawlers.shunk_gulley import ShunkGulleyCrawler
+    ALL_CRAWLERS.append(ShunkGulleyCrawler())
+    logger.info("[registry] Shunk Gulley crawler registered (Tockify ICS feed)")
+except Exception as exc:
+    logger.warning("[registry] Shunk Gulley crawler unavailable: %s", exc)
 
 # Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose,
 # but the unit changed with the calendar-table-parsing crawler: max_events now
