@@ -14,6 +14,7 @@ metrics — nothing else.
 import csv
 import html
 import logging
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -219,6 +220,25 @@ def _health(events: list[dict], path: Path) -> dict:
     }
 
 
+def _build_marker() -> str:
+    """
+    Short git SHA + generation timestamp, baked server-side into the HTML at
+    generate() time. Unlike the client-side "Updated <today>" badge (which
+    always shows the VIEWER's current date regardless of page staleness),
+    this is fixed at build time — the one thing in the page a screenshot can
+    use to prove whether the browser is showing current or cached content.
+    """
+    try:
+        sha = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5, check=True,
+        ).stdout.strip()
+    except Exception:
+        sha = "unknown"
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    return f"Build {sha} · {stamp}"
+
+
 def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
              path: Path = DB_PATH) -> Path:
     """Render the dashboard for current knowledge (or a specific run) into out_path."""
@@ -236,6 +256,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))
         .replace("CONFLICTS_PLACEHOLDER", str(h["conflicts"]))
         .replace("SOURCES_PLACEHOLDER", str(h["sources"]))
+        .replace("BUILD_PLACEHOLDER", _build_marker())
     )
     out_path.write_text(out, encoding="utf-8")
     logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))
