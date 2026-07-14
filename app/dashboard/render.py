@@ -39,11 +39,10 @@ DEFAULT_OUT = Path("docs/index.html")
 # Python. Blank/unlisted venues fall back to "Other" — see _venue_group().
 VENUE_GROUPS_CSV = Path("app/dashboard/venue_groups.csv")
 
-# Editable performer favorites: one performer name per line, same
-# "flat file as source of truth" idea as VENUE_GROUPS_CSV but plain-text
-# since there's no group/region dimension for performers — presence in the
-# file means favorite. Unlisted performers default to not-favorite.
-ARTISTS_FAVORITES_TXT = Path("artists.txt")
+# Editable performer favorites, same flat-CSV pattern as VENUE_GROUPS_CSV but
+# without a group column — there's no regional grouping for performers, just
+# a curated favorite/not-favorite call. Unlisted performers default to N.
+ARTISTS_CSV = Path("app/dashboard/artists.csv")
 
 # Venues with a dedicated colour in the template's .vt-* classes and map legend.
 # Keyed by every spelling variant seen across sources; anything else is vt-def.
@@ -121,23 +120,25 @@ def _venue_favorite(venue: str | None, meta: dict[str, dict]) -> bool:
     return bool((meta.get((venue or "").strip().lower()) or {}).get("favorite"))
 
 
-def _load_performer_favorites(path: Path = ARTISTS_FAVORITES_TXT) -> set[str]:
+def _load_performer_meta(csv_path: Path = ARTISTS_CSV) -> dict[str, bool]:
     """
-    Read artists.txt into a lowercased set of favorite performer names, one
-    per line. Missing file or an unlisted performer both default to
-    not-favorite, since favoriting is a curation call only a human can make.
+    Read artists.csv into {performer_lower: favorite_bool}. Same
+    "flat file as source of truth" pattern as _load_venue_meta — missing file
+    or an unlisted performer both default to not-favorite, since favoriting
+    is a curation call only a human can make.
     """
-    if not path.exists():
-        return set()
-    return {
-        line.strip().lower()
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    }
+    if not csv_path.exists():
+        return {}
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        return {
+            (row.get("performer") or "").strip().lower(): (row.get("favorite") or "").strip().upper() == "Y"
+            for row in csv.DictReader(f)
+            if (row.get("performer") or "").strip()
+        }
 
 
-def _performer_favorite(performer: str | None, favorites: set[str]) -> bool:
-    return (performer or "").strip().lower() in favorites
+def _performer_favorite(performer: str | None, meta: dict[str, bool]) -> bool:
+    return bool(meta.get((performer or "").strip().lower()))
 
 
 def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
@@ -184,7 +185,7 @@ def _obs_html(o: dict) -> str:
 
 def _rows_html(events: list[dict], path: Path) -> str:
     venue_meta = _load_venue_meta()
-    performer_favorites = _load_performer_favorites()
+    performer_meta = _load_performer_meta()
     out = []
     for ev in events:
         performer_raw = ev.get("performer") or ev.get("name") or ""
@@ -196,7 +197,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         region = html.escape(_venue_group(venue, venue_meta))
         favorite = _venue_favorite(venue, venue_meta)
         fav_attr = "Y" if favorite else "N"
-        performer_fav_attr = "Y" if _performer_favorite(performer_raw, performer_favorites) else "N"
+        performer_fav_attr = "Y" if _performer_favorite(performer_raw, performer_meta) else "N"
 
         embed, ext = _venue_maps_urls(venue)
         embed_a = (embed or "").replace("&", "&amp;")
