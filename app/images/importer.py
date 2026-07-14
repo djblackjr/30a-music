@@ -28,6 +28,9 @@ FAILED_DIR    = Path("images/failed")
 
 SUPPORTED_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
+# OpenAI Vision model — override with OPENAI_MODEL if needed.
+VISION_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+
 VISION_PROMPT = """
 You are a music event data extractor.
 
@@ -42,6 +45,8 @@ Extract EVERY live music event you can see. For each event return a JSON object 
   - time_start  (string)           — e.g. "6PM", "8:30PM", null if not shown
   - stage       (string)           — e.g. "Main Stage", "Courtyard Stage", null if not shown
   - week_of     (string)           — if the schedule shows a week label like "6/22", include it
+  - confidence  (number)           — your confidence from 0.0 to 1.0 that THIS event was
+                                      read correctly (legible text, unambiguous fields)
 
 Return ONLY a JSON array of event objects. No markdown, no explanation, no code fences.
 If no events are found return an empty array: []
@@ -82,10 +87,10 @@ def _call_gpt4o(image_path: Path) -> list[dict]:
     mime = _mime_type(image_path)
     prompt = VISION_PROMPT.format(today=date.today().isoformat())
 
-    logger.info("Sending %s to GPT-4o Vision...", image_path.name)
+    logger.info("Sending %s to OpenAI Vision (%s)...", image_path.name, VISION_MODEL)
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=VISION_MODEL,
         max_tokens=2000,
         messages=[
             {
@@ -124,10 +129,20 @@ def _call_gpt4o(image_path: Path) -> list[dict]:
         return []
 
 
+def _coerce_confidence(value) -> Optional[float]:
+    """Coerce a model-reported confidence into a clamped float, or None."""
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
     """
     Convert GPT-4o output into the standard event dict used by the pipeline.
-    Resolves day_of_week + week_of into a real date where possible.
+    Resolves day_of_week + week_of into a real date where possible, and carries
+    the model-reported confidence through as `model_confidence` so the central
+    scorer (app/normalize/confidence.py) can blend it into the final score.
     """
     DAY_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     normalised = []
@@ -177,15 +192,17 @@ def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
         name = f"{artist} at {venue}" if venue else artist
 
         normalised.append({
-            "name":       name,
-            "date":       event_date,
-            "time_start": time_start,
-            "time_end":   None,
-            "venue":      venue,
-            "performer":  artist,
-            "stage":      stage,
-            "url":        None,
-            "source":     f"image:{image_path.name}",
+            "name":             name,
+            "date":             event_date,
+            "time_start":       time_start,
+            "time_end":         None,
+            "venue":            venue,
+            "performer":        artist,
+            "stage":            stage,
+            "url":              None,
+            "source":           f"image:{image_path.name}",
+            "observation_type": "image",
+            "model_confidence": _coerce_confidence(ev.get("confidence")),
         })
 
     return normalised

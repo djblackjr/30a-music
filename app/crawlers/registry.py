@@ -1,4 +1,3 @@
-from app.crawlers.sowal import SoWalCrawler
 """
 app/crawlers/registry.py
 Crawler registry — add new crawlers here and they auto-run in the pipeline.
@@ -105,15 +104,46 @@ class ShunkGulleyCrawler(BaseCrawler):
 # Registry — add every crawler you want to run here
 # ---------------------------------------------------------------------------
 
-from app.crawlers.sowal import SoWalCrawler
-
-ALL_CRAWLERS = [
-    SeedCrawler(),
-    SoWalCrawler(),
+# NOTE: SeedCrawler is intentionally NOT registered. It returns hard-coded demo
+# events, which would publish fabricated shows to the live dashboard. The class
+# is kept for local experimentation only.
+ALL_CRAWLERS: list[BaseCrawler] = [
     AJsGraytonCrawler(),
     ChiringoCrawler(),
     ShunkGulleyCrawler(),
 ]
+
+# Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose,
+# but the unit changed with the calendar-table-parsing crawler: max_events now
+# caps the number of DISTINCT TITLES that get an enrichment page fetch (venue
+# lookup for titles with no " @ Venue" in the calendar row), not raw event
+# links — the listing page itself is always exactly 1 request regardless of
+# this cap. A live smoke test (2026-07-13) found 132 distinct titles needing
+# enrichment on a single day's listing; 150 leaves headroom above that while
+# keeping a run to ~2 minutes at request_delay=0.75. The crawler itself stays
+# unopinionated; strategy is injected here.
+# TODO (future): select Development / Production / Deep Scan by run context via a
+# scheduler — see the TODO in app/crawlers/policy.py. Not implemented yet.
+try:
+    from app.crawlers.policy import CrawlPolicy
+
+    SOWAL_POLICY = CrawlPolicy(
+        max_events=150,
+        request_delay=0.75,
+    )
+except Exception as exc:  # pragma: no cover — policy import should not fail
+    logger.warning("[registry] CrawlPolicy unavailable: %s", exc)
+    SOWAL_POLICY = None
+
+# SoWal is imported defensively: it depends on requests/bs4/lxml, so a missing
+# scraping dependency logs a warning and skips the crawler rather than breaking
+# the whole pipeline (which imports this module).
+try:
+    from app.crawlers.sowal import SoWalCrawler
+    ALL_CRAWLERS.append(SoWalCrawler(policy=SOWAL_POLICY))
+    logger.info("[registry] SoWal crawler registered with production policy")
+except Exception as exc:  # ImportError or any init failure
+    logger.warning("[registry] SoWal crawler unavailable: %s", exc)
 
 
 def run_all_crawlers() -> list[dict]:

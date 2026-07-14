@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head><title>SoWal — Upcoming Events</title></head>
+<body>
+  <h1>Upcoming Events</h1>
+
+  <!-- Non-event navigation links, outside any calendar table: must be ignored. -->
+  <a href="/about">About SoWal</a>
+  <a href="https://sowal.com/contact">Contact</a>
+
+  <!-- Real SoWal listing shape: one <table class="views-table"> per date, a
+       caption holding the date, and one <tr> per event instance (a time cell
+       + a title/link cell). -->
+  <table class="views-table cols-0">
+    <caption><span class="date-display-single">Friday, July 10, 2026</span></caption>
+    <tbody>
+      <tr class="odd table-row views-row-first">
+        <td><span class="date-display-single">7:00 pm</span></td>
+        <td class="priority-medium">
+          <!-- No ' @ Venue' in the title: venue can only come from
+               enriching this title's representative page (Where: override). -->
+          <a href="https://sowal.com/event/casey-kearney-shunk">Casey Kearney Oyster Roast</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="views-table cols-0">
+    <caption><span class="date-display-single">Saturday, July 11, 2026</span></caption>
+    <tbody>
+      <tr class="odd table-row views-row-first">
+        <td><span class="date-display-range">
+          <span class="date-display-start">5:00 pm</span> to
+          <span class="date-display-end">8:00 pm</span>
+        </span></td>
+        <td class="priority-medium">
+          <!-- Named performer + venue, both resolvable from the title alone: no enrichment fetch. -->
+          <a href="/event/duncan-crittenden-local-catch">Duncan Crittenden @ Local Catch Bar &amp; Grill</a>
+        </td>
+      </tr>
+      <tr class="even table-row">
+        <td><span class="date-display-range">
+          <span class="date-display-start">6:00 pm</span> to
+          <span class="date-display-end">9:00 pm</span>
+        </span></td>
+        <td class="priority-medium">
+          <!-- Generic title: unresolved from the title alone, needs enrichment. -->
+          <a href="/event/live-music-north-beach">Live Music @ North Beach Social</a>
+        </td>
+      </tr>
+      <tr class="odd table-row">
+        <td><span class="date-display-single">9:00 pm</span></td>
+        <td class="priority-medium">
+          <!-- Category (DJ) event: needs enrichment to look for a named act. -->
+          <a href="/event/dj-night-chiringo">DJ Night @ Chiringo</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="views-table cols-0">
+    <caption><span class="date-display-single">Sunday, July 12, 2026</span></caption>
+    <tbody>
+      <tr class="odd table-row views-row-first">
+        <td><span class="date-display-range">
+          <span class="date-display-start">11:00 am</span> to
+          <span class="date-display-end">2:00 pm</span>
+        </span></td>
+        <td class="priority-medium">
+          <!-- Generic title recovers a named performer from the enriched description. -->
+          <a href="/event/brunch-bill-garrett">Brunch &amp; Live Music @ Local Catch Bar &amp; Grill</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="views-table cols-0">
+    <caption><span class="date-display-single">Monday, July 13, 2026</span></caption>
+    <tbody>
+      <tr class="odd table-row views-row-first">
+        <td><span class="date-display-range">
+          <span class="date-display-start">11:00 am</span> to
+          <span class="date-display-end">2:00 pm</span>
+        </span></td>
+        <td class="priority-medium">
+          <!-- Same recurring title as July 12, a different date instance/URL:
+               must reuse the July 12 enrichment fetch, never fetch this URL. -->
+          <a href="/event/brunch-bill-garrett-2">Brunch &amp; Live Music @ Local Catch Bar &amp; Grill</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

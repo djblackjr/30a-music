@@ -5,13 +5,12 @@ on:
     paths:
       - 'images/inbox/**'
   schedule:
-    - cron: '0 12 * * 5'
-  workflow_dispatch:
+    - cron: '0 12 * * 5'  # Every Friday at noon UTC
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   update:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -19,35 +18,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+        run: pip install -r requirements.txt
 
-      - name: Process inbox images
+      # Runs the single pipeline: crawlers -> image inbox (GPT-4o Vision) ->
+      # normalise + confidence + provenance -> SQLite -> reconcile -> Excel ->
+      # dashboard. run_monitor.py regenerates docs/index.html itself, so there
+      # is no copy step (the old `cp data/index.html docs/index.html` clobbered
+      # the real dashboard).
+      - name: Run pipeline
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          python process_inbox.py
+        run: python run_monitor.py
 
-      - name: Commit and push updated dashboard
+      - name: Commit updated dashboard + database
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-
-          if [ -f data/index.html ]; then
-            cp data/index.html docs/index.html
-          fi
-
-          git add -A
-
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Auto-update events $(date +'%Y-%m-%d')"
-            git push
-          fi
+          git add data/events.db docs/index.html
+          git diff --staged --quiet || git commit -m "Auto-update events $(date +'%Y-%m-%d')"
+          git push

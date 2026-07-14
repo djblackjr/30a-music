@@ -10,18 +10,27 @@ logger = logging.getLogger(__name__)
 
 def _event_key(ev: dict) -> str:
     """
-    Stable identity key — performer + date + time.
-    Venue is intentionally excluded so a venue change is detected as a 'changed'
-    event rather than a remove + new.
+    Stable identity key — performer + venue + date (the agreed identity model).
+
+    Two events with the same performer, venue, and date are the same event, so a
+    change to any MUTABLE attribute (time_start, time_end, stage, url, source,
+    confidence) is detected as a 'changed' event rather than remove + new. The
+    same performer at two different venues on one day yields two distinct events.
     """
     performer = (ev.get("performer") or "").strip().lower()
+    venue     = (ev.get("venue") or "").strip().lower()
     date      = (ev.get("date") or "").strip()
-    time      = (ev.get("time_start") or "").strip().upper()
-    return f"{performer}|{date}|{time}"
+    return f"{performer}|{venue}|{date}"
 
 
 def _event_signature(ev: dict) -> str:
-    """Full content hash — used to detect changes to existing events."""
+    """
+    Full content hash — used to detect changes to an existing event.
+
+    Includes the mutable attributes whose change should register as 'changed'
+    (time_start, time_end, stage). Deliberately EXCLUDES url, source, confidence
+    and confidence_reason, so a provenance or score change alone is not a change.
+    """
     fields = [
         ev.get("name") or "",
         ev.get("date") or "",

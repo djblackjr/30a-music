@@ -8,45 +8,19 @@ from datetime import datetime
 from pathlib import Path
 
 from app.crawlers.registry import run_all_crawlers
+from app.crawlers.sowal import partition_observations
 from app.database.db import (
-    get_last_run_id,
     init_db,
     load_events,
     record_run,
-    save_events,
+    upsert_events,
 )
 from app.excel.exporter import generate_report
-from app.images.importer import INBOX_DIR, SUPPORTED_EXTS, process_inbox
-from app.reconcile.changes import compare_runs
+from app.images import ingest_inbox
+from app.images.importer import INBOX_DIR, SUPPORTED_EXTS
+from app.normalize import normalize_events
 
 logger = logging.getLogger(__name__)
-
-
-def _normalise_events(events: list[dict]) -> list[dict]:
-    """
-    Light normalisation pass — deduplicate and fill missing name field.
-    """
-    seen = set()
-    out  = []
-    for ev in events:
-        performer = (ev.get("performer") or "").strip()
-        venue     = (ev.get("venue") or "").strip()
-        date      = (ev.get("date") or "").strip()
-        time      = (ev.get("time_start") or "").strip().upper()
-
-        if not performer:
-            continue
-
-        key = f"{performer.lower()}|{venue.lower()}|{date}|{time}"
-        if key in seen:
-            continue
-        seen.add(key)
-
-        if not ev.get("name"):
-            ev["name"] = f"{performer} at {venue}" if venue else performer
-
-        out.append(ev)
-    return out
 
 
 def run_pipeline() -> dict:
@@ -66,6 +40,21 @@ def run_pipeline() -> dict:
     crawler_events = run_all_crawlers()
     logger.info("Crawlers returned %d events", len(crawler_events))
 
+    # SoWal observations self-classify as named/unresolved/category via
+    # performer_status (see app/crawlers/sowal.py) so generic listings ("Live
+    # Music", "DJ Night") never get saved as if they were named artists.
+    # Observations from crawlers that don't declare a classification pass
+    # through untouched — this only filters what opts in to being filtered.
+    classifiable = [e for e in crawler_events if "performer_status" in e]
+    passthrough  = [e for e in crawler_events if "performer_status" not in e]
+    if classifiable:
+        partitioned = partition_observations(classifiable)
+        logger.info(
+            "Observation classification: %d named / %d unresolved / %d category",
+            len(partitioned["named"]), len(partitioned["unresolved"]), len(partitioned["category"]),
+        )
+        crawler_events = passthrough + partitioned["named"]
+
     # 3. Image inbox
     logger.info("Step 2/6 — Processing image inbox")
     inbox_images = [
@@ -73,35 +62,54 @@ def run_pipeline() -> dict:
         if INBOX_DIR.exists() and f.suffix.lower() in SUPPORTED_EXTS
     ] if INBOX_DIR.exists() else []
 
-    image_events = process_inbox()
+    image_events = ingest_inbox()   # GPT-4o Vision, else Apple Vision OCR
     logger.info("Images processed: %d files, %d events", len(inbox_images), len(image_events))
 
     # 4. Combine + normalise
     logger.info("Step 3/6 — Normalising events")
     all_raw    = crawler_events + image_events
-    normalised = _normalise_events(all_raw)
+    normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
-    # 5. Load previous run for comparison
-    logger.info("Step 4/6 — Loading previous run for comparison")
-    prev_run_id    = get_last_run_id()
-    previous_events = load_events(run_id=prev_run_id) if prev_run_id else []
-    logger.info("Previous run '%s' had %d events", prev_run_id, len(previous_events))
-
-    # 6. Save to DB
-    logger.info("Step 5/6 — Saving events to SQLite")
-    for ev in normalised:
-        ev["source"] = ev.get("source") or "crawler"
-    saved = save_events(normalised, run_id=run_id)
+    # 5. Upsert by identity — observations accumulate onto existing events, so a
+    #    second source corroborates rather than creating a duplicate.
+    logger.info("Step 4/6 — Upserting events (accumulating observations)")
+    result = upsert_events(normalised, run_id=run_id)
+    saved  = result["saved"]
     record_run(run_id=run_id, events_saved=saved)
 
-    # 7. Compare runs
-    changes = compare_runs(normalised, previous_events)
+    # 6. Changes come from the upsert itself.
+    #    NOTE: a run is a PARTIAL view (one crawl), not a full snapshot of reality,
+    #    so a source simply not re-observing an event does NOT mean it was removed.
+    #    Removal is therefore never inferred here.
+    logger.info("Step 5/6 — Reconciling")
+    changes = {
+        "new":       result["new"],
+        "changed":   result["changed"],
+        "removed":   [],
+        "unchanged": result["unchanged"],
+        "summary": {
+            "new":         len(result["new"]),
+            "changed":     len(result["changed"]),
+            "removed":     0,
+            "unchanged":   len(result["unchanged"]),
+            "total_delta": len(result["new"]) + len(result["changed"]),
+        },
+    }
 
-    # 8. Generate Excel
+    # 7. Generate Excel
     logger.info("Step 6/6 — Generating Excel report")
-    all_events  = load_events()          # full history for the report
-    report_path = generate_report(normalised, changes, run_id)
+    all_events  = load_events()          # canonical events (one row per identity)
+    report_path = generate_report(all_events, changes, run_id)
+
+    # 9. Generate the dashboard from current knowledge (union across runs)
+    logger.info("Step 7/7 — Generating dashboard")
+    try:
+        from app.dashboard.render import generate as generate_dashboard
+        dashboard_path = generate_dashboard()
+    except Exception as exc:
+        logger.warning("Dashboard generation failed: %s", exc)
+        dashboard_path = None
 
     result = {
         "run_id":          run_id,
@@ -111,6 +119,7 @@ def run_pipeline() -> dict:
         "events_saved":    saved,
         "new_or_changed":  changes["summary"]["total_delta"],
         "report_path":     str(report_path),
+        "dashboard_path":  str(dashboard_path) if dashboard_path else None,
         "changes":         changes,
     }
 

@@ -50,10 +50,12 @@ def _write_events_sheet(ws, events: list[dict], title: str):
     from openpyxl.styles import Font, PatternFill, Alignment
     from openpyxl.utils import get_column_letter
 
+    from app.normalize import confidence_band
+
     ws.title = title
 
     # Title row
-    ws.merge_cells("A1:H1")
+    ws.merge_cells("A1:I1")
     ws["A1"] = f"🎵 30A Music Intelligence — {title}"
     ws["A1"].font = Font(bold=True, color=WHITE, name="Arial", size=13)
     ws["A1"].fill = PatternFill("solid", fgColor=NAVY)
@@ -61,15 +63,15 @@ def _write_events_sheet(ws, events: list[dict], title: str):
     ws.row_dimensions[1].height = 28
 
     # Sub-title
-    ws.merge_cells("A2:H2")
+    ws.merge_cells("A2:I2")
     ws["A2"] = f"Generated {datetime.now().strftime('%b %d, %Y %I:%M %p')}  ·  {len(events)} events"
     ws["A2"].font = Font(italic=True, color="666666", name="Arial", size=9)
     ws["A2"].alignment = Alignment(horizontal="center")
     ws.row_dimensions[2].height = 16
 
     # Headers
-    headers = ["Artist / Performer", "Event Name", "Date", "Day", "Time", "Venue", "Stage", "Source"]
-    cols    = ["A","B","C","D","E","F","G","H"]
+    headers = ["Artist / Performer", "Event Name", "Date", "Day", "Time", "Venue", "Stage", "Source", "Confidence"]
+    cols    = ["A","B","C","D","E","F","G","H","I"]
     for col, hdr in zip(cols, headers):
         ws[f"{col}3"] = hdr
     _header_style(ws, 3, cols, bg=TEAL)
@@ -90,6 +92,9 @@ def _write_events_sheet(ws, events: list[dict], title: str):
             day_str  = ""
             date_str = ev_date
 
+        conf = ev.get("confidence")
+        conf_str = f"{conf:.2f} ({confidence_band(conf)})" if isinstance(conf, (int, float)) else ""
+
         values = [
             ev.get("performer") or "",
             ev.get("name") or "",
@@ -99,6 +104,7 @@ def _write_events_sheet(ws, events: list[dict], title: str):
             ev.get("venue") or "",
             ev.get("stage") or "",
             ev.get("source") or "",
+            conf_str,
         ]
         for col, val in zip(cols, values):
             cell = ws[f"{col}{i}"]
@@ -109,7 +115,7 @@ def _write_events_sheet(ws, events: list[dict], title: str):
         ws.row_dimensions[i].height = 18
 
     # Column widths
-    widths = [22, 30, 14, 12, 8, 20, 18, 20]
+    widths = [22, 30, 14, 12, 8, 20, 18, 20, 16]
     for col, w in zip(cols, widths):
         ws.column_dimensions[col].width = w
 
