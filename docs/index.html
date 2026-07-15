@@ -84,6 +84,12 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .btn.ghost{background:transparent;box-shadow:none;color:var(--muted);}
 .btn.ghost:hover{background:var(--cream);}
 .cnt{font-size:.8rem;color:var(--muted);margin-left:auto;align-self:center;}
+.favdd{position:relative;display:inline-flex;}
+.favdd-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:20;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:8px;min-width:220px;max-width:280px;max-height:280px;overflow-y:auto;}
+.favdd-item{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;color:var(--ink);}
+.favdd-item:hover{background:var(--cream);}
+.favdd-item input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--navy);}
+.favdd-empty{padding:8px 6px;color:var(--muted);font-size:.82rem;}
 @media(max-width:680px){
   .dr{flex-direction:column;}
   .br{flex-wrap:wrap;overflow-x:visible;}
@@ -139,7 +145,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 803d9c1 · 2026-07-14 20:14</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build aa6939b · 2026-07-14 20:41</p></div></header>
 <main class="page">
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
@@ -149,8 +155,14 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <select id="rf" onchange="bd();rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
 </div>
 <div class="br">
-<button class="btn" id="favvenue" onclick="tf('venue')" aria-pressed="false">★ Venues</button>
-<button class="btn" id="favartist" onclick="tf('artist')" aria-pressed="false">★ Artists</button>
+<div class="favdd" id="favVenueDD">
+<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">★ Venues ▾</button>
+<div class="favdd-panel" id="favVenuePanel" hidden></div>
+</div>
+<div class="favdd" id="favArtistDD">
+<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">★ Artists ▾</button>
+<div class="favdd-panel" id="favArtistPanel" hidden></div>
+</div>
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
 <button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
@@ -1769,7 +1781,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
-var sk='date',sd=1,df='today',favVenue=false,favArtist=false;
+var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -1842,8 +1854,8 @@ function rr(){
     if(vf&&v!==vf)inc=false;
     if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
-    if(favVenue&&fv!=='Y')inc=false;
-    if(favArtist&&pfv!=='Y')inc=false;
+    if(selVenues.size&&!selVenues.has(v))inc=false;
+    if(selArtists.size&&!selArtists.has(a))inc=false;
     if(q&&(a+' '+v).toLowerCase().indexOf(q)<0)inc=false;
     if(!inc)return;
     n++;if(v)vv[v]=1;if(a)aa[a]=1;
@@ -1896,8 +1908,8 @@ function bd(){
     else if(df==='all')inc=true;
     if(!inc)return;
     if(curR&&rg!==curR)return;
-    if(favVenue&&fv!=='Y')return;
-    if(favArtist&&pfv!=='Y')return;
+    if(selVenues.size&&!selVenues.has(v))return;
+    if(selArtists.size&&!selArtists.has(a))return;
     if((!curA||a===curA)&&v)vv[v]=1;
     if((!curV||v===curV)&&a)aa[a]=1;
   });
@@ -1906,13 +1918,56 @@ function bd(){
   var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
   Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
 }
-function tf(kind){
-  var on;
-  if(kind==='venue'){favVenue=!favVenue;on=favVenue;}else{favArtist=!favArtist;on=favArtist;}
-  var b=document.getElementById(kind==='venue'?'favvenue':'favartist');
-  b.classList.toggle('on',on);
-  b.setAttribute('aria-pressed',on?'true':'false');
-  bd();rr();
+var _favVenueNamesCache=null,_favArtistNamesCache=null;
+function _favVenueNames(){
+  if(_favVenueNamesCache)return _favVenueNamesCache;
+  var set={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    if(r.getAttribute('data-favorite')==='Y'){var v=r.getAttribute('data-venue');if(v)set[v]=1;}
+  });
+  _favVenueNamesCache=Object.keys(set).sort();
+  return _favVenueNamesCache;
+}
+function _favArtistNames(){
+  if(_favArtistNamesCache)return _favArtistNamesCache;
+  var set={};
+  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
+    if(r.getAttribute('data-performer-favorite')==='Y'){var a=r.getAttribute('data-performer');if(a)set[a]=1;}
+  });
+  _favArtistNamesCache=Object.keys(set).sort();
+  return _favArtistNamesCache;
+}
+function _favPanelHtml(names,selected){
+  if(!names.length)return '<div class="favdd-empty">No favorites yet</div>';
+  return names.map(function(n){
+    var checked=selected.has(n)?' checked':'';
+    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+_escAttr(n)+'</label>';
+  }).join('');
+}
+function _closeFavDD(){
+  document.getElementById('favVenuePanel').hidden=true;
+  document.getElementById('favArtistPanel').hidden=true;
+  document.getElementById('favVenueBtn').setAttribute('aria-expanded','false');
+  document.getElementById('favArtistBtn').setAttribute('aria-expanded','false');
+}
+function toggleFavDD(kind){
+  var panel=document.getElementById(kind==='venue'?'favVenuePanel':'favArtistPanel');
+  var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
+  var wasOpen=!panel.hidden;
+  _closeFavDD();
+  if(wasOpen)return;
+  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var selected=kind==='venue'?selVenues:selArtists;
+  panel.innerHTML=_favPanelHtml(names,selected);
+  panel.hidden=false;
+  btn.setAttribute('aria-expanded','true');
+}
+function _updateFavBtnLabel(kind){
+  var sel=kind==='venue'?selVenues:selArtists;
+  var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
+  var base=kind==='venue'?'★ Venues':'★ Artists';
+  btn.textContent=(sel.size?base+' ('+sel.size+')':base)+' ▾';
+  btn.classList.toggle('on',sel.size>0);
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
@@ -1941,7 +1996,16 @@ function srt(k,th){
   if(th){th.classList.add(sd===1?'asc':'desc');th.setAttribute('aria-sort',sd===1?'ascending':'descending');}
   rr();
 }
-function ca(){document.getElementById('q').value='';document.getElementById('vf').value='';document.getElementById('af').value='';document.getElementById('rf').value='';favVenue=false;favArtist=false;var fv=document.getElementById('favvenue'),fa=document.getElementById('favartist');fv.classList.remove('on');fv.setAttribute('aria-pressed','false');fa.classList.remove('on');fa.setAttribute('aria-pressed','false');sf('today');}
+function ca(){
+  document.getElementById('q').value='';
+  document.getElementById('vf').value='';
+  document.getElementById('af').value='';
+  document.getElementById('rf').value='';
+  selVenues.clear();selArtists.clear();
+  _updateFavBtnLabel('venue');_updateFavBtnLabel('artist');
+  _closeFavDD();
+  sf('today');
+}
 var _lastTrigger=null;
 function openMap(embed,ext,name){
   if(!embed)return;
@@ -1958,7 +2022,21 @@ function closeMap(){
   if(_lastTrigger&&typeof _lastTrigger.focus==='function')_lastTrigger.focus();
 }
 document.getElementById('mm').addEventListener('click',function(e){if(e.target.id==='mm')closeMap();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMap();_closeFavDD();}});
+document.addEventListener('change',function(e){
+  if(e.target.type!=='checkbox')return;
+  var panel=e.target.closest('.favdd-panel');
+  if(!panel)return;
+  var kind=panel.id==='favVenuePanel'?'venue':'artist';
+  var sel=kind==='venue'?selVenues:selArtists;
+  if(e.target.checked)sel.add(e.target.value);else sel.delete(e.target.value);
+  _updateFavBtnLabel(kind);
+  bd();rr();
+});
+document.addEventListener('click',function(e){
+  if(e.target.closest('.favdd'))return;
+  _closeFavDD();
+});
 document.addEventListener('click',function(e){
   var t=e.target.closest('.maplink');
   if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}

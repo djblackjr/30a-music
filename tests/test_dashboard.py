@@ -160,12 +160,13 @@ def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # ★ Venues and ★ Artists are independent toggles that each narrow the
-    # results further when on, same as the venue/artist/region dropdowns —
-    # enabling both requires BOTH the venue and the performer to be
-    # favorited (intersection), not either one (union).
-    assert "if(favVenue&&fv!=='Y')inc=false;" in html
-    assert "if(favArtist&&pfv!=='Y')inc=false;" in html
+    # ★ Venues and ★ Artists dropdowns are independent multi-selects that
+    # each narrow the results further when a choice is checked, same as the
+    # venue/artist/region single-selects — a non-empty selection in BOTH
+    # requires the venue to be in the checked set AND the performer to be
+    # in the checked set (intersection), not either one (union).
+    assert "if(selVenues.size&&!selVenues.has(v))inc=false;" in html
+    assert "if(selArtists.size&&!selArtists.has(a))inc=false;" in html
 
 
 def test_render_includes_region_and_favorites_filter_controls():
@@ -174,22 +175,29 @@ def test_render_includes_region_and_favorites_filter_controls():
     ])
     assert 'id="rf"' in html
     assert "All Regions" in html
-    assert 'id="favvenue"' in html
+    assert 'id="favVenueBtn"' in html
     assert "★ Venues" in html
-    assert 'id="favartist"' in html
+    assert 'id="favArtistBtn"' in html
     assert "★ Artists" in html
+    # each toggle button owns a checklist panel of the specific favorite
+    # venue/artist names (populated client-side from data-favorite rows),
+    # not a blanket all-or-nothing switch
+    assert 'id="favVenuePanel"' in html
+    assert 'id="favArtistPanel"' in html
+    assert "function _favVenueNames()" in html
+    assert "function _favArtistNames()" in html
 
 
-def test_results_rebuild_on_favorites_toggle_and_clear():
+def test_results_rebuild_on_favorites_selection_and_clear():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # rr() is the single, re-callable renderer (replacing the old table +
     # separate Today card) and it skips rows that don't match whichever
-    # favorites toggle(s) are on.
+    # favorites selection(s) are checked.
     assert "function rr()" in html
-    assert "favVenue&&fv!=='Y'" in html
-    # both the favorites toggles and Clear rebuild the results view
+    assert "selVenues.size&&!selVenues.has(v)" in html
+    # both a checkbox change and Clear rebuild the results view
     assert "bd();rr();" in html
     assert "sf('today');" in html      # Clear resets to the default filter
 
