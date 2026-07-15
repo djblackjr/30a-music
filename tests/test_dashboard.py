@@ -310,14 +310,14 @@ def test_mobile_cards_suppress_the_desktop_first_cell_border():
     assert ".wrap tr.now td:first-child,.wrap tr.up td:first-child{border-left:none;}" in html
 
 
-def test_build_marker_is_filled_and_visible_in_header():
+def test_build_marker_is_filled_and_present():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # Server-side build stamp (fixed at generation time), distinct from the
     # client-side "Updated <today>" badge which always shows the viewer's
-    # own current date and so can't reveal a stale cached page. Placed in
-    # the header so it's visible without scrolling in any screenshot.
+    # own current date and so can't reveal a stale cached page. Lives in
+    # the page footer (below the stats) rather than the header.
     assert "BUILD_PLACEHOLDER" not in html
     assert "Build " in html
 
