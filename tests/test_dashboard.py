@@ -201,32 +201,36 @@ def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    # ★ Venues and ★ Artists dropdowns are independent multi-selects that
+    # The Venues and Artists dropdowns are independent multi-selects that
     # each narrow the results further when a choice is checked, same as the
-    # venue/artist/region single-selects — a non-empty selection in BOTH
-    # requires the venue to be in the checked set AND the performer to be
-    # in the checked set (intersection), not either one (union).
+    # region single-select — a non-empty selection in BOTH requires the
+    # venue to be in the checked set AND the performer to be in the checked
+    # set (intersection), not either one (union).
     assert "if(selVenues.size&&!selVenues.has(v))inc=false;" in html
     assert "if(selArtists.size&&!selArtists.has(a))inc=false;" in html
 
 
-def test_render_includes_region_and_favorites_filter_controls():
+def test_render_includes_region_and_venue_artist_filter_controls():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     assert 'id="rf"' in html
     assert "All Regions" in html
     assert 'id="favVenueBtn"' in html
-    assert "★ Venues" in html
+    assert ">Venues ▾</button>" in html
     assert 'id="favArtistBtn"' in html
-    assert "★ Artists" in html
-    # each toggle button owns a checklist panel of the specific favorite
-    # venue/artist names (populated client-side from data-favorite rows),
-    # not a blanket all-or-nothing switch
+    assert ">Artists ▾</button>" in html
+    # each toggle button owns a checklist panel listing EVERY venue/artist
+    # (not just favorites -- this single control replaced the old pairing of
+    # a plain single-select "All Venues" dropdown alongside a separate
+    # favorites-only multi-select, which read as two different, confusing
+    # venue pickers). Favorites are starred and sorted first within the list.
     assert 'id="favVenuePanel"' in html
     assert 'id="favArtistPanel"' in html
-    assert "function _favVenueNames()" in html
-    assert "function _favArtistNames()" in html
+    assert "function _allVenueNames()" in html
+    assert "function _allArtistNames()" in html
+    assert "function _favVenueSet()" in html
+    assert "function _favArtistSet()" in html
 
 
 def test_favorites_panel_includes_select_all_toggle():
@@ -251,8 +255,8 @@ def test_results_rebuild_on_favorites_selection_and_clear():
     # favorites selection(s) are checked.
     assert "function rr()" in html
     assert "selVenues.size&&!selVenues.has(v)" in html
-    # both a checkbox change and Clear rebuild the results view
-    assert "bd();rr();" in html
+    # both a checkbox change and Select All/Deselect All rebuild the results view
+    assert "document.addEventListener('change',function(e){" in html
     assert "sf('today');" in html      # Clear resets to the default filter
 
 
@@ -262,7 +266,7 @@ def test_results_also_filter_by_region():
     ])
     assert "rf&&rg!==rf" in html
     # the region select rebuilds the results view too
-    assert 'onchange="bd();rr()" aria-label="Filter by region"' in html
+    assert 'onchange="rr()" aria-label="Filter by region"' in html
 
 
 def test_startup_filter_defaults_to_today():

@@ -159,19 +159,17 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">
-<select id="vf" onchange="bd();rr()" aria-label="Filter by venue"><option value="">All Venues</option></select>
-<select id="af" onchange="bd();rr()" aria-label="Filter by artist"><option value="">All Artists</option></select>
-<select id="rf" onchange="bd();rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
-</div>
-<div class="br">
 <div class="favdd" id="favVenueDD">
-<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">★ Venues ▾</button>
+<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">Venues ▾</button>
 <div class="favdd-panel" id="favVenuePanel" hidden></div>
 </div>
 <div class="favdd" id="favArtistDD">
-<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">★ Artists ▾</button>
+<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">Artists ▾</button>
 <div class="favdd-panel" id="favArtistPanel" hidden></div>
 </div>
+<select id="rf" onchange="rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
+</div>
+<div class="br">
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
 <button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
@@ -283,6 +281,8 @@ function _saveFavSelections(){
 _loadFavSelections();
 var ALL_FAV_VENUES=FAV_VENUES_PLACEHOLDER;
 var ALL_FAV_ARTISTS=FAV_ARTISTS_PLACEHOLDER;
+var ALL_VENUES=ALL_VENUES_PLACEHOLDER;
+var ALL_ARTISTS=ALL_ARTISTS_PLACEHOLDER;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -382,7 +382,7 @@ var GCAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" widt
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
-  var q=document.getElementById('q').value.toLowerCase(),vf=document.getElementById('vf').value,af=document.getElementById('af').value,rf=document.getElementById('rf').value,w=we(),m=me();
+  var q=document.getElementById('q').value.toLowerCase(),rf=document.getElementById('rf').value,w=we(),m=me();
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var groups={},order=[],n=0,vv={},aa={};
@@ -391,8 +391,6 @@ function rr(){
     if(df==='today'&&dt!==T)inc=false;
     else if(df==='week'&&(dt<T||dt>w))inc=false;
     else if(df==='month'&&(dt<T||dt>m))inc=false;
-    if(vf&&v!==vf)inc=false;
-    if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
     if(selVenues.size&&!selVenues.has(v))inc=false;
     if(selArtists.size&&!selArtists.has(a))inc=false;
@@ -440,35 +438,24 @@ function rr(){
   document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
 
-function bd(){
-  var w=we(),m=me(),curV=document.getElementById('vf').value,curA=document.getElementById('af').value,curR=document.getElementById('rf').value,vv={},aa={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=false;
-    if(df==='today'&&dt===T)inc=true;
-    else if(df==='week'&&dt>=T&&dt<=w)inc=true;
-    else if(df==='month'&&dt>=T&&dt<=m)inc=true;
-    else if(df==='all')inc=true;
-    if(!inc)return;
-    if(curR&&rg!==curR)return;
-    if(selVenues.size&&!selVenues.has(v))return;
-    if(selArtists.size&&!selArtists.has(a))return;
-    if((!curA||a===curA)&&v)vv[v]=1;
-    if((!curV||v===curV)&&a)aa[a]=1;
+function _allVenueNames(){return ALL_VENUES;}
+function _allArtistNames(){return ALL_ARTISTS;}
+function _favVenueSet(){return new Set(ALL_FAV_VENUES);}
+function _favArtistSet(){return new Set(ALL_FAV_ARTISTS);}
+function _favPanelHtml(names,selected,favSet,emptyLabel){
+  if(!names.length)return '<div class="favdd-empty">'+emptyLabel+'</div>';
+  var sorted=names.slice().sort(function(a,b){
+    var af=favSet.has(a),bf=favSet.has(b);
+    if(af!==bf)return af?-1:1;
+    var al=a.toLowerCase(),bl=b.toLowerCase();
+    return al<bl?-1:al>bl?1:0;
   });
-  var vs=document.getElementById('vf');vs.innerHTML='<option value="">All Venues</option>';
-  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===curV)o.selected=true;vs.appendChild(o);});
-  var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
-  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
-}
-function _favVenueNames(){return ALL_FAV_VENUES;}
-function _favArtistNames(){return ALL_FAV_ARTISTS;}
-function _favPanelHtml(names,selected){
-  if(!names.length)return '<div class="favdd-empty">No favorites yet</div>';
   var allSelected=selected.size===names.length;
   var selectAll='<button type="button" class="favdd-selectall">'+(allSelected?'Deselect All':'Select All')+'</button><hr class="favdd-sep">';
-  var items=names.map(function(n){
+  var items=sorted.map(function(n){
     var checked=selected.has(n)?' checked':'';
-    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+_escAttr(n)+'</label>';
+    var star=favSet.has(n)?'<span class="fav-star" aria-hidden="true">★</span> ':'';
+    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+star+_escAttr(n)+'</label>';
   }).join('');
   return selectAll+items;
 }
@@ -484,16 +471,18 @@ function toggleFavDD(kind){
   var wasOpen=!panel.hidden;
   _closeFavDD();
   if(wasOpen)return;
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var names=kind==='venue'?_allVenueNames():_allArtistNames();
+  var favSet=kind==='venue'?_favVenueSet():_favArtistSet();
   var selected=kind==='venue'?selVenues:selArtists;
-  panel.innerHTML=_favPanelHtml(names,selected);
+  var emptyLabel=kind==='venue'?'No venues yet':'No artists yet';
+  panel.innerHTML=_favPanelHtml(names,selected,favSet,emptyLabel);
   panel.hidden=false;
   btn.setAttribute('aria-expanded','true');
 }
 function _updateFavBtnLabel(kind){
   var sel=kind==='venue'?selVenues:selArtists;
   var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
-  var base=kind==='venue'?'★ Venues':'★ Artists';
+  var base=kind==='venue'?'Venues':'Artists';
   btn.textContent=(sel.size?base+' ('+sel.size+')':base)+' ▾';
   btn.classList.toggle('on',sel.size>0);
   _saveFavSelections();
@@ -508,7 +497,7 @@ function sf(f){
   });
   var b=document.getElementById('b-'+f);
   if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
-  bd();rr();
+  rr();
 }
 function srt(k,th){
   var tb=document.getElementById('tb');
@@ -527,8 +516,6 @@ function srt(k,th){
 }
 function ca(){
   document.getElementById('q').value='';
-  document.getElementById('vf').value='';
-  document.getElementById('af').value='';
   document.getElementById('rf').value='';
   selVenues.clear();selArtists.clear();
   _updateFavBtnLabel('venue');_updateFavBtnLabel('artist');
@@ -560,23 +547,25 @@ document.addEventListener('change',function(e){
   var sel=kind==='venue'?selVenues:selArtists;
   if(e.target.checked)sel.add(e.target.value);else sel.delete(e.target.value);
   _updateFavBtnLabel(kind);
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var names=kind==='venue'?_allVenueNames():_allArtistNames();
   var saBtn=panel.querySelector('.favdd-selectall');
   if(saBtn)saBtn.textContent=(names.length&&sel.size===names.length)?'Deselect All':'Select All';
-  bd();rr();
+  rr();
 });
 document.addEventListener('click',function(e){
   var saBtn=e.target.closest('.favdd-selectall');
   if(saBtn){
     var panel=saBtn.closest('.favdd-panel');
     var kind=panel.id==='favVenuePanel'?'venue':'artist';
-    var names=kind==='venue'?_favVenueNames():_favArtistNames();
+    var names=kind==='venue'?_allVenueNames():_allArtistNames();
+    var favSet=kind==='venue'?_favVenueSet():_favArtistSet();
     var sel=kind==='venue'?selVenues:selArtists;
+    var emptyLabel=kind==='venue'?'No venues yet':'No artists yet';
     var allSelected=names.length>0&&sel.size===names.length;
     if(allSelected){sel.clear();}else{names.forEach(function(n){sel.add(n);});}
     _updateFavBtnLabel(kind);
-    panel.innerHTML=_favPanelHtml(names,sel);
-    bd();rr();
+    panel.innerHTML=_favPanelHtml(names,sel,favSet,emptyLabel);
+    rr();
     return;
   }
   if(e.target.closest('.favdd'))return;

@@ -159,19 +159,17 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">
-<select id="vf" onchange="bd();rr()" aria-label="Filter by venue"><option value="">All Venues</option></select>
-<select id="af" onchange="bd();rr()" aria-label="Filter by artist"><option value="">All Artists</option></select>
-<select id="rf" onchange="bd();rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
-</div>
-<div class="br">
 <div class="favdd" id="favVenueDD">
-<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">★ Venues ▾</button>
+<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">Venues ▾</button>
 <div class="favdd-panel" id="favVenuePanel" hidden></div>
 </div>
 <div class="favdd" id="favArtistDD">
-<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">★ Artists ▾</button>
+<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">Artists ▾</button>
 <div class="favdd-panel" id="favArtistPanel" hidden></div>
 </div>
+<select id="rf" onchange="rr()" aria-label="Filter by region"><option value="">All Regions</option><option value="West 30A">West 30A</option><option value="Central 30A">Central 30A</option><option value="East 30A">East 30A</option><option value="Other">Other</option></select>
+</div>
+<div class="br">
 <button class="btn" id="b-today" onclick="sf('today')" aria-pressed="false">Today</button>
 <button class="btn" id="b-week" onclick="sf('week')" aria-pressed="false">This Week</button>
 <button class="btn" id="b-month" onclick="sf('month')" aria-pressed="false">This Month</button>
@@ -1803,7 +1801,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">773</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 12:29:57</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 12:58:31</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
@@ -1828,6 +1826,8 @@ function _saveFavSelections(){
 _loadFavSelections();
 var ALL_FAV_VENUES=["AJ's Grayton Beach", "Crackings", "Local Catch Bar & Grill", "North Beach Social", "Papa Surf", "Red Fish Taco", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "The Bay", "The Pavilion at Watersound Town Center", "The Red Bar"];
 var ALL_FAV_ARTISTS=["Casey Kearney", "Dion Jones", "Dion Jones and the Neon Tears", "Forrest Williams", "Queens Handsome", "Queens Ransom", "Stevie Monce", "The Typos", "Will Thompson"];
+var ALL_VENUES=["30AFest Headquarters @ WaterColor Inn", "30Ave", "30Avenue", "A Simple Faith Church", "Aaron Bessant Park", "AJ's Grayton Beach", "Alys Beach", "Boggy Boys Pizza", "Burn Pine Country Club", "Caf\u00e9 Thirty-A", "Camp Helen State Park", "Carillon Beach Village Green", "Central Square Records", "Chautauqua Theater", "Crackings", "Downtown Panama City", "Downtown Pensacola", "Eastern Lake Trailhead", "Eden Gardens State Park", "Emerald Bay Golf Course", "Emerald Coast Theatre Company", "Enterprise, AL", "EO Wilson Biophilia Center", "Fish Out of Water", "Frank Brown Park", "George Core Park", "Grand Boulevard", "HarborWalk Village", "Havana Beach Bar", "Hibiscus Guesthouse", "Hilton Sandestin Beach Golf Resort & Spa", "Hotel Effie", "Local Catch Bar & Grill", "Mattie Kelly Cultural Arts Village", "MCGUIRE'S DESTIN", "NEAT", "Nick's Seafood Restaurant", "North Beach", "North Beach Social", "Old Florida Fish House", "Papa Surf", "Point Washington State Forest", "Point Washington Trail Head", "Red Bar", "Red Fish Taco", "Rosemary Beach", "Rosemary Beach Town Hall", "Sandestin Golf and Beach Resort", "Scratch Biscuit Kitchen", "Seascape Towne Centre", "Seaside Amphitheater", "Shack's Art Gallery", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "Stinky's Fish Camp", "The Alice", "The Bay", "The Big Chill", "The Links Golf Club", "The Markey Shops", "The Pearl", "The Red Bar", "The Village Door", "The Village of Baytowne Wharf", "WaterColor Package Store", "Watersound", "Watersound Town Center"];
+var ALL_ARTISTS=["30A BBQ Festival", "30A Songwriters Festival", "30Avenue Summer Concert Series", "3HG", "9 to 5: The Musical at ECTC", "9/11 Day of Honor & Live Music", "AJ's Grayton Brunch & Live Music", "AJ's Tin Cup Classic", "Alex Napier", "Alys Beach Crafted", "Barktoberfest", "Baytowne Beer Festival", "Baytowne Beer Festival Backyard Bash", "Baytowne Boomin' Tuesday", "Baytowne International Talk Like a Pirate Day", "Baytowne NYE Countdown", "Baytowne Scallywag Sunday", "Baytowne Thursdaze Light Show", "Baytowne Wednesday Night Concert Series", "Ben Buzga", "Bingo Brunch at Scratch Biscuit Kitchen", "Bingo Nights Rooftop Heights at Hotel Effie", "Biophilia Center Back to Nature", "Biophilia Center Creature Feature", "Biophilia Center Summerfest", "Black Creek String Band", "Blast on the Bay", "Boukou Groove", "Breakfast with Santa at Fish Out of Water", "Brent Varner", "Brett Stafford", "Brook Washor", "Brooke Washor", "Brunch & Music", "Bryan Bludworth", "Bubbles & Beauty at The Pearl Hotel", "Bubbles Sip N' Shop at WaterColor Package Store", "Bubbly Baytowne", "Burgers, Bourbon and Beer", "Cade Pierce", "Cadillac Willy", "Caf\u00e9 Thirty-A Christmas Charity Ball", "Caring & Sharing Fall Fashion Show", "Casey Kearney", "Cat Ridgeway Band", "Catalyst Dance Band", "Central Square Records: Gracie Abrams Release Party", "Chris Johnson", "Christon Birge Duo", "Coconut Radio", "Come From Away at ECTC", "Corey Hall", "Corey Hall Trio", "David Dunavent", "Dear Jack, Dear Louise at ECTC", "Derek Givans", "Destin Seafood Festival", "Dion Jones", "Dion Jones & The Neon Tears", "DJ", "DJ 30A", "Dueling Pianos", "Duncan Crittenden", "ECTC Children's Theater at Seaside", "Eden Gardens Christmas Candlelight Open House & Luminaries", "Ellie Biscuit 20 &10-Mile Trail Race", "Emerald Coast Foundation's Children's Charity Poker Run", "Emerald Coast Storytellers Anniversary", "Emily Bass", "Eric Stockton Band", "Festival of the Arts", "Fore Her Golf Outing", "Fore Her Pink Run at Baytowne", "Forgotten Music Festival", "Free Bingo at Stinky's Bait Shack", "Frozen: The Musical at ECTC", "Gage Cowart", "Gilleran's Island", "Grayton Locals Market", "Grit and Grace: Holding Our Own", "Groovin' on the Green", "Gulf Coast Jam", "Harbor Nights at HarborWalk", "HarborWalk Coastal Country Concert", "HarborWalk Saturday Social", "Harrison Prentice", "Havana Nights  at The Pearl Hotel", "Hemingway Day at The Pearl Hotel", "Here Comes the Sun Summer Concert Series at Rosemary Beach", "High Aces", "Huck & Lilly", "Ike Bartley", "In the Woods 30A 50K", "Jake & Aimee", "Jared Harden", "Jared Herzog", "Jarred McConnell & High Aces", "Jim Couch", "Johnny Hayes", "Jonathan Puzan", "Josh Drake", "Karaoke Night", "Kevin Carson", "Labor Day Block Party at WaterColor Package Store", "Lake Powell Cleanup", "Lane Maury", "Lips Manly", "Live Music", "Live Music + DJ at The Village Door", "LIVE MUSIC Mondays", "Low Tide Junction", "Martin Lane", "Matt McCarty's Jazz Jam", "Meco", "Michael Johnson at Havana Beach Bar & Grill", "Mike Whitty & Friends", "Million Dollar Quarter Christmas at ECTC", "Mindy Smith", "Moon Crush: Joe Bonamassa's Sound Wave", "Moon Crush: Oldies", "Moon Crush: Pink Moon", "Moon Crush: Shinedown's Lunatic Ball", "Moon Crush: Styx & Friends", "Moon Crush: Tedeschi Trucks Sun, Sand and Soul", "New Cahoots", "Nick's Kids Catfish Tournament", "October Film Series at Eden Gardens State Park", "Operation Outdoor Freedom Trailfest", "Outro", "Pairing & Sharing Wine Dinner Benefit", "Panama City Songwriters Festival", "Paper Bear Screening at Seaside", "PCB Summer Concert Series", "Pensacola Seafood Festival", "Pickled Pickers", "Preston", "Pumpkin Carving & Costume Contest at Scratch Biscuit Kitchen", "Queens of the Tiles: Mahjong at Ovide", "Ranger Led Hike at Eden Gardens State Park", "Reid Fisher", "Remedy", "Rhino Jockeys + Matt Miller", "River Dan", "Rockin' In Paradise with Styx + Friends", "Ronni Kay", "Ronnie Presley", "Ronny Dean Garrett", "Sacred Heart Annual Charity Golf Classic", "Salt & Soul", "Salt Rock Revival", "Seabreeze Jazz Festival", "Seaside Halloweener Derby & Costume Contest", "Seaside Holiday Parade & Turn on the Town", "Seaside New Year's Eve Celebration", "Shack's Sunday Art Market", "Shinedown's Lunatic Ball Beach Weekend", "Sierra Riggs", "Soular Flair", "Sounds Like Summer: 30A Songwriters Showcase", "Sounds Like Summer: Children's Play", "Sounds Like Summer: Christmas in July", "Sounds of Seaside", "South Siders", "Spencer Maige", "Split Krickit", "Star Gazing at Eden Gardens State Park", "Stevie Monce", "Stinky's Brunch & Live Music", "Stranger Boy", "Sunshine Wranglers", "TBA", "The 39 Steps at ECTC", "The Kennedys", "The Market Shops Bloody Mary Festival", "The Next Big Thing Conference", "The Nutcracker at Seaside", "The Red Bar Jazz Band", "The Typos", "Tim Jackson's Storyteller Tour", "Trevor Finlay", "Voices of Valor at ECTC", "Wild Sea Turtle Wednesday at The Big Chill 30A", "Wine & Fries", "Wine & Song at NEAT", "Zack Miller", "Zoe Walega"];
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -1927,7 +1927,7 @@ var GCAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" widt
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
-  var q=document.getElementById('q').value.toLowerCase(),vf=document.getElementById('vf').value,af=document.getElementById('af').value,rf=document.getElementById('rf').value,w=we(),m=me();
+  var q=document.getElementById('q').value.toLowerCase(),rf=document.getElementById('rf').value,w=we(),m=me();
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var groups={},order=[],n=0,vv={},aa={};
@@ -1936,8 +1936,6 @@ function rr(){
     if(df==='today'&&dt!==T)inc=false;
     else if(df==='week'&&(dt<T||dt>w))inc=false;
     else if(df==='month'&&(dt<T||dt>m))inc=false;
-    if(vf&&v!==vf)inc=false;
-    if(af&&a!==af)inc=false;
     if(rf&&rg!==rf)inc=false;
     if(selVenues.size&&!selVenues.has(v))inc=false;
     if(selArtists.size&&!selArtists.has(a))inc=false;
@@ -1985,35 +1983,24 @@ function rr(){
   document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
 
-function bd(){
-  var w=we(),m=me(),curV=document.getElementById('vf').value,curA=document.getElementById('af').value,curR=document.getElementById('rf').value,vv={},aa={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    var dt=r.getAttribute('data-date')||'',v=r.getAttribute('data-venue')||'',a=r.getAttribute('data-performer')||'',rg=r.getAttribute('data-region')||'',fv=r.getAttribute('data-favorite')||'',pfv=r.getAttribute('data-performer-favorite')||'',inc=false;
-    if(df==='today'&&dt===T)inc=true;
-    else if(df==='week'&&dt>=T&&dt<=w)inc=true;
-    else if(df==='month'&&dt>=T&&dt<=m)inc=true;
-    else if(df==='all')inc=true;
-    if(!inc)return;
-    if(curR&&rg!==curR)return;
-    if(selVenues.size&&!selVenues.has(v))return;
-    if(selArtists.size&&!selArtists.has(a))return;
-    if((!curA||a===curA)&&v)vv[v]=1;
-    if((!curV||v===curV)&&a)aa[a]=1;
+function _allVenueNames(){return ALL_VENUES;}
+function _allArtistNames(){return ALL_ARTISTS;}
+function _favVenueSet(){return new Set(ALL_FAV_VENUES);}
+function _favArtistSet(){return new Set(ALL_FAV_ARTISTS);}
+function _favPanelHtml(names,selected,favSet,emptyLabel){
+  if(!names.length)return '<div class="favdd-empty">'+emptyLabel+'</div>';
+  var sorted=names.slice().sort(function(a,b){
+    var af=favSet.has(a),bf=favSet.has(b);
+    if(af!==bf)return af?-1:1;
+    var al=a.toLowerCase(),bl=b.toLowerCase();
+    return al<bl?-1:al>bl?1:0;
   });
-  var vs=document.getElementById('vf');vs.innerHTML='<option value="">All Venues</option>';
-  Object.keys(vv).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;if(v===curV)o.selected=true;vs.appendChild(o);});
-  var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
-  Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
-}
-function _favVenueNames(){return ALL_FAV_VENUES;}
-function _favArtistNames(){return ALL_FAV_ARTISTS;}
-function _favPanelHtml(names,selected){
-  if(!names.length)return '<div class="favdd-empty">No favorites yet</div>';
   var allSelected=selected.size===names.length;
   var selectAll='<button type="button" class="favdd-selectall">'+(allSelected?'Deselect All':'Select All')+'</button><hr class="favdd-sep">';
-  var items=names.map(function(n){
+  var items=sorted.map(function(n){
     var checked=selected.has(n)?' checked':'';
-    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+_escAttr(n)+'</label>';
+    var star=favSet.has(n)?'<span class="fav-star" aria-hidden="true">★</span> ':'';
+    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+star+_escAttr(n)+'</label>';
   }).join('');
   return selectAll+items;
 }
@@ -2029,16 +2016,18 @@ function toggleFavDD(kind){
   var wasOpen=!panel.hidden;
   _closeFavDD();
   if(wasOpen)return;
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var names=kind==='venue'?_allVenueNames():_allArtistNames();
+  var favSet=kind==='venue'?_favVenueSet():_favArtistSet();
   var selected=kind==='venue'?selVenues:selArtists;
-  panel.innerHTML=_favPanelHtml(names,selected);
+  var emptyLabel=kind==='venue'?'No venues yet':'No artists yet';
+  panel.innerHTML=_favPanelHtml(names,selected,favSet,emptyLabel);
   panel.hidden=false;
   btn.setAttribute('aria-expanded','true');
 }
 function _updateFavBtnLabel(kind){
   var sel=kind==='venue'?selVenues:selArtists;
   var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
-  var base=kind==='venue'?'★ Venues':'★ Artists';
+  var base=kind==='venue'?'Venues':'Artists';
   btn.textContent=(sel.size?base+' ('+sel.size+')':base)+' ▾';
   btn.classList.toggle('on',sel.size>0);
   _saveFavSelections();
@@ -2053,7 +2042,7 @@ function sf(f){
   });
   var b=document.getElementById('b-'+f);
   if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
-  bd();rr();
+  rr();
 }
 function srt(k,th){
   var tb=document.getElementById('tb');
@@ -2072,8 +2061,6 @@ function srt(k,th){
 }
 function ca(){
   document.getElementById('q').value='';
-  document.getElementById('vf').value='';
-  document.getElementById('af').value='';
   document.getElementById('rf').value='';
   selVenues.clear();selArtists.clear();
   _updateFavBtnLabel('venue');_updateFavBtnLabel('artist');
@@ -2105,23 +2092,25 @@ document.addEventListener('change',function(e){
   var sel=kind==='venue'?selVenues:selArtists;
   if(e.target.checked)sel.add(e.target.value);else sel.delete(e.target.value);
   _updateFavBtnLabel(kind);
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var names=kind==='venue'?_allVenueNames():_allArtistNames();
   var saBtn=panel.querySelector('.favdd-selectall');
   if(saBtn)saBtn.textContent=(names.length&&sel.size===names.length)?'Deselect All':'Select All';
-  bd();rr();
+  rr();
 });
 document.addEventListener('click',function(e){
   var saBtn=e.target.closest('.favdd-selectall');
   if(saBtn){
     var panel=saBtn.closest('.favdd-panel');
     var kind=panel.id==='favVenuePanel'?'venue':'artist';
-    var names=kind==='venue'?_favVenueNames():_favArtistNames();
+    var names=kind==='venue'?_allVenueNames():_allArtistNames();
+    var favSet=kind==='venue'?_favVenueSet():_favArtistSet();
     var sel=kind==='venue'?selVenues:selArtists;
+    var emptyLabel=kind==='venue'?'No venues yet':'No artists yet';
     var allSelected=names.length>0&&sel.size===names.length;
     if(allSelected){sel.clear();}else{names.forEach(function(n){sel.add(n);});}
     _updateFavBtnLabel(kind);
-    panel.innerHTML=_favPanelHtml(names,sel);
-    bd();rr();
+    panel.innerHTML=_favPanelHtml(names,sel,favSet,emptyLabel);
+    rr();
     return;
   }
   if(e.target.closest('.favdd'))return;
