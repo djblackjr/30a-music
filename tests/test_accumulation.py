@@ -17,6 +17,7 @@ from app.database.db import (
     init_db,
     load_event_observations,
     load_events,
+    purge_non_music_events,
     purge_past_events,
     purge_source_observations,
     resolve_sowal_conflicts,
@@ -271,3 +272,45 @@ def test_resolve_sowal_conflicts_is_idempotent():
     resolve_sowal_conflicts(path=p)
     second = resolve_sowal_conflicts(path=p)
     assert second == {"conflicts_found": 0, "events_deleted": 0}
+
+
+# --- retroactive non-music cleanup -------------------------------------------
+
+def test_purge_non_music_events_deletes_farmers_markets_and_tours():
+    p = _db()
+    upsert_events(normalize_events([
+        _ev("sowal", performer="DeFuniak Springs Farmers Market", venue="Main Street Farmer's Market"),
+    ]), run_id="r1", path=p)
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Camp Helen State Park: Guided History Tour", venue="Camp Helen State Park"),
+    ]), run_id="r1", path=p)
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Jim Couch", venue="AJ's Grayton Beach"),
+    ]), run_id="r1", path=p)
+    assert len(load_events(path=p)) == 3
+
+    deleted = purge_non_music_events(path=p)
+    assert deleted == 2
+
+    remaining = load_events(path=p)
+    assert len(remaining) == 1
+    assert remaining[0]["performer"] == "Jim Couch"
+
+
+def test_purge_non_music_events_also_drops_their_observations():
+    p = _db()
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Cars of 30A at Alys Beach", venue=""),
+    ]), run_id="r1", path=p)
+    [ev] = load_events(path=p)
+    assert load_event_observations(ev["id"], path=p)
+
+    purge_non_music_events(path=p)
+    assert load_event_observations(ev["id"], path=p) == []
+
+
+def test_purge_non_music_events_is_a_no_op_when_nothing_matches():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", performer="Jim Couch")]), run_id="r1", path=p)
+    assert purge_non_music_events(path=p) == 0
+    assert len(load_events(path=p)) == 1

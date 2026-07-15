@@ -20,6 +20,7 @@ from app.crawlers.sowal import (
     SoWalCrawler,
     classify_performer,
     detect_category,
+    detect_non_music,
     extract_performer_from_description,
     is_generic_title,
     parse_lineup_date,
@@ -56,6 +57,54 @@ def test_detect_category():
     assert detect_category("Trivia Night") == "trivia"
     assert detect_category("Duncan Crittenden") is None
     assert detect_category("Live Music") is None
+
+
+# --- non-music community-calendar filtering ---------------------------------
+
+def test_detect_non_music():
+    assert detect_non_music("DeFuniak Springs Farmers Market") == "farmers_market"
+    assert detect_non_music("Seaside Farmers Market") == "farmers_market"
+    assert detect_non_music("Camp Helen State Park: Guided History Tour") == "guided_tour"
+    assert detect_non_music("Camp Helen State Park Ranger-Guided Nature Hike") == "guided_tour"
+    assert detect_non_music("Cars of 30A at Alys Beach") == "car_show"
+    assert detect_non_music("Duncan Crittenden") is None
+    assert detect_non_music("Live Music") is None
+    assert detect_non_music(None) is None
+
+
+def test_classify_non_music_excluded_even_with_a_named_looking_description():
+    # unlike DJ/karaoke, a farmers market's description was never going to
+    # name a musical act -- no description fallback attempted at all
+    c = classify_performer("DeFuniak Springs Farmers Market",
+                            "featuring live music by Jim Couch")
+    assert c["performer"] is None
+    assert c["performer_status"] == "category"
+    assert c["resolved"] is False
+    assert c["event_category"] == "farmers_market"
+    assert c["extraction_method"] == "non_music"
+
+
+def test_classify_guided_tour_excluded():
+    c = classify_performer("Camp Helen State Park: Guided History Tour")
+    assert c["performer"] is None
+    assert c["performer_status"] == "category"
+    assert c["event_category"] == "guided_tour"
+
+
+def test_classify_car_show_excluded():
+    c = classify_performer("Cars of 30A at Alys Beach")
+    assert c["performer"] is None
+    assert c["performer_status"] == "category"
+    assert c["event_category"] == "car_show"
+
+
+def test_classify_real_festival_with_no_single_named_act_is_not_flagged_non_music():
+    # "Moon Crush: Oldies" is a real multi-artist festival (Old Dominion,
+    # Darius Rucker, Flo Rida, ...) -- not a farmers-market-style listing.
+    # It has no single named act in the title, so it's neither "named" nor
+    # excluded as non-music; falls through to the whole-title-as-performer
+    # branch like any other title with no cue, same as before this change.
+    assert detect_non_music("Moon Crush: Oldies") is None
 
 
 # --- conservative description extraction -----------------------------------

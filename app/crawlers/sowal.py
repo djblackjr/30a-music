@@ -122,6 +122,19 @@ _CATEGORY_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("trivia",   re.compile(r"\btrivia\b", re.I)),
 ]
 
+# SoWal aggregates every Walton County community-calendar listing, not just
+# live music (farmers markets, state-park tours, car shows, ...) -- none of
+# these have a "named act", but they aren't generic-live-music titles either
+# (they contain real proper nouns), so without this check they fall through
+# to "whole title is the performer" and show up as if e.g. "DeFuniak Springs
+# Farmers Market" were a band. Narrow, curated list in the same spirit as
+# _CATEGORY_PATTERNS above -- not exhaustive, just what's been observed.
+_NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
+    ("farmers_market", re.compile(r"farmers?\s*market", re.I)),
+    ("guided_tour",    re.compile(r"guided\s+\w*\s*(tour|hike|walk)|ranger[- ]?guided|nature\s+hike|history\s+tour", re.I)),
+    ("car_show",       re.compile(r"\bcar\s+show\b|\bcars\s+of\s+30a\b", re.I)),
+]
+
 # Strong, unambiguous performer indicators in free text.
 _DESC_STRONG_RE = re.compile(
     r"\b(?:featuring|feat\.|ft\.|presents|performance by|music by)\s+(.+)", re.I
@@ -155,6 +168,15 @@ def detect_category(title_part: str | None) -> str | None:
     """Return dj/karaoke/open_mic/trivia if the title is such an event, else None."""
     s = title_part or ""
     for category, rx in _CATEGORY_PATTERNS:
+        if rx.search(s):
+            return category
+    return None
+
+
+def detect_non_music(title_part: str | None) -> str | None:
+    """Return a non-music category (farmers_market/guided_tour/car_show) or None."""
+    s = title_part or ""
+    for category, rx in _NON_MUSIC_PATTERNS:
         if rx.search(s):
             return category
     return None
@@ -211,8 +233,17 @@ def classify_performer(title: str | None, description: str = "") -> dict:
     extraction_method. A category event only becomes 'named' when a performer is
     explicitly present; a generic title only becomes 'named' when one is
     recovered from the description. Otherwise no fake performer is invented.
+
+    A detected non-music event (farmers market, guided tour, car show, ...)
+    is excluded outright -- unlike DJ/karaoke, its description was never
+    going to name a musical act, so there's no description fallback here.
     """
     perf_part, _venue = split_title(title)
+
+    non_music = detect_non_music(perf_part)
+    if non_music:
+        return {"performer": None, "performer_status": "category", "resolved": False,
+                "event_category": non_music, "extraction_method": "non_music"}
 
     category = detect_category(perf_part)
     if category:

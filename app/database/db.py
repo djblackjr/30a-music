@@ -598,6 +598,33 @@ def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int
     return len(ids)
 
 
+def purge_non_music_events(path: Path = DB_PATH) -> int:
+    """
+    One-time cleanup for events saved before app.crawlers.sowal learned to
+    exclude non-music community-calendar listings (farmers markets, guided
+    park tours, car shows, ...) -- see detect_non_music() in sowal.py. That
+    fix only stops NEW ones from being saved; this retroactively removes
+    rows already in the database whose performer (the whole event title,
+    since these have no named act) matches the same detector.
+
+    Safe to re-run; returns the number of events deleted.
+    """
+    from app.crawlers.sowal import detect_non_music
+
+    conn = get_connection(path)
+    rows = conn.execute("SELECT id, performer FROM events").fetchall()
+    ids = [row["id"] for row in rows if detect_non_music(row["performer"])]
+
+    if ids:
+        placeholders = ",".join("?" * len(ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
+        conn.commit()
+    conn.close()
+    logger.info("Purged %d non-music events", len(ids))
+    return len(ids)
+
+
 def resolve_sowal_conflicts(path: Path = DB_PATH) -> dict:
     """
     Policy: when a direct venue-site crawler (any source other than "sowal")
