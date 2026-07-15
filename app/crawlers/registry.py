@@ -107,6 +107,13 @@ try:
 except Exception as exc:
     logger.warning("[registry] Shunk Gulley crawler unavailable: %s", exc)
 
+try:
+    from app.crawlers.the_bay import TheBayCrawler
+    ALL_CRAWLERS.append(TheBayCrawler())
+    logger.info("[registry] The Bay crawler registered (eventcalendarapp.com feed)")
+except Exception as exc:
+    logger.warning("[registry] The Bay crawler unavailable: %s", exc)
+
 # Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose,
 # but the unit changed with the calendar-table-parsing crawler: max_events now
 # caps the number of DISTINCT TITLES that get an enrichment page fetch (venue
