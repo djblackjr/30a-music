@@ -146,6 +146,14 @@ try:
 except Exception as exc:  # ImportError or any init failure
     logger.warning("[registry] SoWal crawler unavailable: %s", exc)
 
+# SoWal detail crawler: targeted crawler for specific event detail pages.
+try:
+    from app.crawlers.sowal_detail import SoWalDetailCrawler
+    ALL_CRAWLERS.append(SoWalDetailCrawler())
+    logger.info("[registry] SoWal detail crawler registered")
+except Exception as exc:  # ImportError or any init failure
+    logger.warning("[registry] SoWal detail crawler unavailable: %s", exc)
+
 
 def run_all_crawlers() -> list[dict]:
     """Run every registered crawler and return the combined event list."""
