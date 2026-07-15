@@ -297,16 +297,8 @@ function _buildIcs(show){
     'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
 }
-function downloadIcs(show){
-  var blob=new Blob([_buildIcs(show)],{type:'text/calendar;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download=(show.artist||'event').replace(/[^\w-]+/g,'_')+'.ics';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+function _icsHref(show){
+  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(_buildIcs(show));
 }
 function rr(){
   var host=document.getElementById('results');
@@ -354,7 +346,7 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var cal='<a href="#" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'">📅</a>';
+        var cal='<a href="'+_icsHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small> '+cal+'</div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
@@ -443,12 +435,6 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();}
 document.addEventListener('click',function(e){
   var t=e.target.closest('.maplink');
   if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}
-});
-document.addEventListener('click',function(e){
-  var t=e.target.closest('.calink');
-  if(!t)return;
-  e.preventDefault();
-  downloadIcs({artist:t.getAttribute('data-artist')||'',venue:t.getAttribute('data-venue')||'',date:t.getAttribute('data-date')||'',time:t.getAttribute('data-time')||''});
 });
 document.addEventListener('click',function(e){
   if(e.target.closest('a')||e.target.closest('.maplink'))return;
