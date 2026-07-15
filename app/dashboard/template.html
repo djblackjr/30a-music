@@ -58,7 +58,8 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .scdet .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}
 
 .sc b{font-size:.92rem;line-height:1.25;}
-.sc small{opacity:.75;font-size:1.14rem;}
+.sc small{opacity:.75;font-size:.855rem;}
+.sc-time{display:inline-flex;align-items:center;white-space:nowrap;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
@@ -364,7 +365,7 @@ function rr(){
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
         var cal='<a href="'+_icsHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small> '+cal+'</div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });

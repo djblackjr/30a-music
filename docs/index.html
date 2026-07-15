@@ -58,7 +58,8 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .scdet .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}
 
 .sc b{font-size:.92rem;line-height:1.25;}
-.sc small{opacity:.75;font-size:1.14rem;}
+.sc small{opacity:.75;font-size:.855rem;}
+.sc-time{display:inline-flex;align-items:center;white-space:nowrap;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
@@ -148,7 +149,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build d53f379 · 2026-07-14 22:49</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build f2292d6 · 2026-07-14 22:57</p></div></header>
 <main class="page">
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
@@ -1969,7 +1970,7 @@ function rr(){
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
         var cal='<a href="'+_icsHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small> '+cal+'</div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
