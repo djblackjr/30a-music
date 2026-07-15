@@ -128,11 +128,20 @@ _CATEGORY_PATTERNS: list[tuple[str, "re.Pattern"]] = [
 # (they contain real proper nouns), so without this check they fall through
 # to "whole title is the performer" and show up as if e.g. "DeFuniak Springs
 # Farmers Market" were a band. Narrow, curated list in the same spirit as
-# _CATEGORY_PATTERNS above -- not exhaustive, just what's been observed.
+# _CATEGORY_PATTERNS above -- not exhaustive, just what's been observed. Each
+# addition here was verified against its actual SoWal description first (see
+# the "Moon Crush" / "Panama City Songwriters Festival" tests below for the
+# opposite case: real multi-artist music festivals with no single named act,
+# which must NOT be caught by these patterns).
 _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("farmers_market", re.compile(r"farmers?\s*market", re.I)),
     ("guided_tour",    re.compile(r"guided\s+\w*\s*(tour|hike|walk)|ranger[- ]?guided|nature\s+hike|history\s+tour", re.I)),
     ("car_show",       re.compile(r"\bcar\s+show\b|\bcars\s+of\s+30a\b", re.I)),
+    ("sporting_event", re.compile(r"\bironman\b|\btriathlon\b|\bmarathon\b|\b\d+k\s+run\b|\bfun run\b", re.I)),
+    ("air_show",       re.compile(r"\bair show\b", re.I)),
+    ("wine_festival",  re.compile(r"\bwine festival\b", re.I)),
+    ("film_festival",  re.compile(r"\bmountainfilm\b|\bfilm festival\b", re.I)),
+    ("eggfest",        re.compile(r"\beggs on the beach\b|\beggfest\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text.

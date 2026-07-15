@@ -67,9 +67,24 @@ def test_detect_non_music():
     assert detect_non_music("Camp Helen State Park: Guided History Tour") == "guided_tour"
     assert detect_non_music("Camp Helen State Park Ranger-Guided Nature Hike") == "guided_tour"
     assert detect_non_music("Cars of 30A at Alys Beach") == "car_show"
+    assert detect_non_music("IRONMAN Panama City Beach") == "sporting_event"
+    assert detect_non_music("NAS Pensacola U.S. Blue Angels Homecoming Air Show") == "air_show"
+    assert detect_non_music("Seeing Red Wine Festival: Battle of Somms") == "wine_festival"
+    assert detect_non_music("Seeing Red Wine Festival") == "wine_festival"
+    assert detect_non_music("Mountainfilm on Tour") == "film_festival"
+    assert detect_non_music("Eggs on the Beach") == "eggfest"
     assert detect_non_music("Duncan Crittenden") is None
     assert detect_non_music("Live Music") is None
     assert detect_non_music(None) is None
+
+
+def test_detect_non_music_does_not_catch_real_music_festivals_with_no_single_act():
+    # "Panama City Songwriters Festival" is real (SoWal description:
+    # "Featuring original songs by local, regional and national
+    # musicians... intimate music venues") -- same shape as "Moon Crush:
+    # Oldies" elsewhere in this file. Neither must be caught here.
+    assert detect_non_music("Panama City Songwriters Festival") is None
+    assert detect_non_music("Moon Crush: Oldies") is None
 
 
 def test_classify_non_music_excluded_even_with_a_named_looking_description():
