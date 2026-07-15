@@ -62,6 +62,8 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
+.calink{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;margin-left:2px;border-radius:50%;text-decoration:none;font-size:.85rem;line-height:1;vertical-align:middle;opacity:.8;}
+.calink:hover,.calink:focus-visible{background:rgba(255,255,255,.14);opacity:1;}
 .tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
 .leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
 .leg::-webkit-scrollbar{height:6px;}
@@ -272,6 +274,40 @@ function _startMins(str){
   return hh*60+mins;
 }
 function _dateFromKey(k){var p=k.split('-');return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));}
+function _escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function _icsEscape(s){return (s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function _icsDateTime(dateKey,mins){
+  var h=Math.floor(mins/60)%24,m=mins%60;
+  return dateKey.replace(/-/g,'')+'T'+String(h).padStart(2,'0')+String(m).padStart(2,'0')+'00';
+}
+function _buildIcs(show){
+  var startMin=_startMins(show.time);
+  if(startMin==null||startMin>=99999)startMin=12*60;
+  var endMin=startMin+120;
+  var parts=(show.time||'').split(/\s*-\s*/);
+  if(parts.length>1){
+    var em=_timeMins(parts[1]);
+    if(em!=null){if(em<startMin)em+=24*60;endMin=em;}
+  }
+  var uid='30amusic-'+show.date+'-'+startMin+'-'+Math.random().toString(36).slice(2,8)+'@30amusic';
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//30A Live Music//EN','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+stamp,
+    'DTSTART:'+_icsDateTime(show.date,startMin),'DTEND:'+_icsDateTime(show.date,endMin),
+    'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function downloadIcs(show){
+  var blob=new Blob([_buildIcs(show)],{type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=(show.artist||'event').replace(/[^\w-]+/g,'_')+'.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
@@ -318,7 +354,8 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        var cal='<a href="#" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'">📅</a>';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><small>'+_fmtTime(s.time)+'</small> '+cal+'</div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
@@ -406,6 +443,12 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMap();}
 document.addEventListener('click',function(e){
   var t=e.target.closest('.maplink');
   if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}
+});
+document.addEventListener('click',function(e){
+  var t=e.target.closest('.calink');
+  if(!t)return;
+  e.preventDefault();
+  downloadIcs({artist:t.getAttribute('data-artist')||'',venue:t.getAttribute('data-venue')||'',date:t.getAttribute('data-date')||'',time:t.getAttribute('data-time')||''});
 });
 document.addEventListener('click',function(e){
   if(e.target.closest('a')||e.target.closest('.maplink'))return;
