@@ -319,36 +319,26 @@ function _buildIcs(show){
     'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
 }
-function _icsHref(show){
-  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(_buildIcs(show));
-}
-function _gcalHref(show){
-  var tr=_showTimeRange(show);
-  var dates=_icsDateTime(show.date,tr.startMin)+'/'+_icsDateTime(show.date,tr.endMin);
-  var params=['action=TEMPLATE','text='+encodeURIComponent(show.artist+' at '+show.venue),
-    'dates='+dates,'location='+encodeURIComponent(show.venue||'')];
-  return 'https://calendar.google.com/calendar/render?'+params.join('&');
-}
-function _isAppleSafari(){
-  // Real Safari (macOS/iOS) intercepts a same-tab data:text/calendar
-  // navigation and shows its native "Add to Calendar" sheet -- confirmed
-  // working by the user on 2026-07-14. Chrome/Firefox on iOS run on
-  // WebKit too but report their own UA token and do NOT get the same
-  // interception, so they fall back to a Google Calendar link instead.
-  var ua=navigator.userAgent||'';
-  return /Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS|Chrome|Chromium|Android/.test(ua);
-}
-function _calHref(show){
-  return _isAppleSafari()?_icsHref(show):_gcalHref(show);
-}
-function _calAttrs(){
-  // target="_blank" is required for the Google Calendar fallback (a real
-  // https: URL that should open alongside the dashboard) but breaks
-  // Safari's data:text/calendar interception, which only recognises that
-  // scheme on a same-tab navigation. Keep Safari's link plain -- this is
-  // the exact bug that broke the native sheet once already (commit
-  // 8d25f76), do not reintroduce it.
-  return _isAppleSafari()?'':' target="_blank" rel="noopener"';
+function downloadIcs(show){
+  // A data:text/calendar href triggering Safari's native "Add to Calendar"
+  // sheet on tap was confirmed working on 2026-07-14, then confirmed
+  // broken -- even on a bare-minimum standalone test page with zero other
+  // JS/CSS involved -- on 2026-07-15, meaning Safari itself stopped
+  // performing that interception, not anything in this codebase. Rather
+  // than depend on that unverifiable, apparently-unreliable browser
+  // behavior, download a real .ics file instead: works identically in
+  // Safari, Chrome, and every other browser on every platform, since it's
+  // the OS (not the browser) that hands a downloaded .ics file to the
+  // Calendar app once tapped in Files/Downloads.
+  var blob=new Blob([_buildIcs(show)],{type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=(show.artist||'event').replace(/[^\w-]+/g,'_')+'.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
 function rr(){
   var host=document.getElementById('results');
@@ -396,7 +386,7 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink"'+_calAttrs()+' title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
+        var cal='<a href="#" class="calink" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div></div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
@@ -565,6 +555,12 @@ document.addEventListener('pointerdown',function(e){
 document.addEventListener('click',function(e){
   var t=e.target.closest('.maplink');
   if(t){e.preventDefault();_lastTrigger=t;openMap(t.getAttribute('data-embed'),t.getAttribute('data-ext'),t.getAttribute('data-vname'));}
+});
+document.addEventListener('click',function(e){
+  var t=e.target.closest('.calink');
+  if(!t)return;
+  e.preventDefault();
+  downloadIcs({artist:t.getAttribute('data-artist')||'',venue:t.getAttribute('data-venue')||'',date:t.getAttribute('data-date')||'',time:t.getAttribute('data-time')||''});
 });
 document.addEventListener('click',function(e){
   if(e.target.closest('a')||e.target.closest('.maplink'))return;
