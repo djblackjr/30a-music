@@ -63,7 +63,8 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
-.calink{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;padding:0 8px;margin-left:2px;border-radius:0;border:1px solid rgba(255,255,255,.3);text-decoration:none;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:#fff;line-height:1;vertical-align:middle;opacity:.85;}
+.calink{display:inline-flex;align-items:center;justify-content:center;width:32px;height:44px;margin-left:2px;border-radius:0;text-decoration:none;line-height:1;vertical-align:middle;opacity:.9;}
+.calink svg{display:block;width:17px;height:17px;}
 .calink:hover,.calink:focus-visible{background:rgba(255,255,255,.14);opacity:1;}
 .tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
 .leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
@@ -149,7 +150,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 10:55:12</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 11:07:08</p></div></header>
 <main class="page">
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
@@ -1927,6 +1928,11 @@ function _gcalHref(show){
     'dates='+dates,'location='+encodeURIComponent(show.venue||'')];
   return 'https://calendar.google.com/calendar/render?'+params.join('&');
 }
+// Small icon-style SVGs evoking each calendar app (not exact logo
+// reproductions) so the two options are visually distinct without relying
+// on emoji rendering, which was confirmed inconsistent across environments.
+var ICAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="#fff" stroke="#c7c7c7"/><rect x="3" y="5" width="18" height="5" rx="2" fill="#e8453c"/><rect x="3" y="8" width="18" height="2" fill="#e8453c"/><rect x="7" y="2.5" width="2" height="4.5" rx="1" fill="#9a9a9a"/><rect x="15" y="2.5" width="2" height="4.5" rx="1" fill="#9a9a9a"/></svg>';
+var GCAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" fill="#fff" stroke="#c7c7c7"/><rect x="6" y="6" width="5" height="5" fill="#4285F4"/><rect x="13" y="6" width="5" height="5" fill="#EA4335"/><rect x="6" y="13" width="5" height="5" fill="#FBBC05"/><rect x="13" y="13" width="5" height="5" fill="#34A853"/></svg>';
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
@@ -1973,8 +1979,8 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var icsLink='<a href="#" class="calink ics-link" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'" title="Download for Apple/other calendar apps" aria-label="Download '+_escAttr(s.artist)+' as a calendar file">iCal</a>';
-        var gcalLink='<a href="'+_gcalHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink gcal-link" target="_blank" rel="noopener" title="Add to Google Calendar" aria-label="Add '+_escAttr(s.artist)+' to Google Calendar">GCal</a>';
+        var icsLink='<a href="#" class="calink ics-link" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'" title="Download for Apple/other calendar apps" aria-label="Download '+_escAttr(s.artist)+' as a calendar file">'+ICAL_SVG+'</a>';
+        var gcalLink='<a href="'+_gcalHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink gcal-link" target="_blank" rel="noopener" title="Add to Google Calendar" aria-label="Add '+_escAttr(s.artist)+' to Google Calendar">'+GCAL_SVG+'</a>';
         var cal=icsLink+gcalLink;
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div></div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
