@@ -293,7 +293,6 @@ function _startMins(str){
 }
 function _dateFromKey(k){var p=k.split('-');return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));}
 function _escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function _icsEscape(s){return (s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
 function _icsDateTime(dateKey,mins){
   var h=Math.floor(mins/60)%24,m=mins%60;
   return dateKey.replace(/-/g,'')+'T'+String(h).padStart(2,'0')+String(m).padStart(2,'0')+'00';
@@ -309,46 +308,22 @@ function _showTimeRange(show){
   }
   return {startMin:startMin,endMin:endMin};
 }
-function _buildIcs(show){
-  var tr=_showTimeRange(show);
-  var uid='30amusic-'+show.date+'-'+tr.startMin+'-'+Math.random().toString(36).slice(2,8)+'@30amusic';
-  var stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//30A Live Music//EN','CALSCALE:GREGORIAN',
-    'BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+stamp,
-    'DTSTART:'+_icsDateTime(show.date,tr.startMin),'DTEND:'+_icsDateTime(show.date,tr.endMin),
-    'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
-    'END:VEVENT','END:VCALENDAR'].join('\r\n');
-}
-function _icsHref(show){
-  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(_buildIcs(show));
-}
-function _gcalHref(show){
+function _calHref(show){
+  // A data:text/calendar href used to trigger Safari's native "Add to
+  // Calendar" sheet on iOS, but that WebKit interception is no longer
+  // firing reliably (confirmed the tap itself lands correctly; Safari
+  // just doesn't intercept the navigation anymore) -- rather than depend
+  // on undocumented, unverifiable browser magic, every browser now gets
+  // the same Google Calendar template link, which is just a real https:
+  // URL and works consistently everywhere.
   var tr=_showTimeRange(show);
   var dates=_icsDateTime(show.date,tr.startMin)+'/'+_icsDateTime(show.date,tr.endMin);
   var params=['action=TEMPLATE','text='+encodeURIComponent(show.artist+' at '+show.venue),
     'dates='+dates,'location='+encodeURIComponent(show.venue||'')];
   return 'https://calendar.google.com/calendar/render?'+params.join('&');
 }
-function _isAppleSafari(){
-  // The data:text/calendar href only triggers a native "Add to Calendar"
-  // sheet in actual Safari (WebKit's own interception) -- Chrome/Firefox on
-  // iOS run on WebKit too but report their own UA token and do NOT get the
-  // same interception, so they'd otherwise just fail silently or download a
-  // raw .ics-shaped text blob. Route everything that isn't real Safari to a
-  // Google Calendar template link instead, which works everywhere.
-  var ua=navigator.userAgent||'';
-  return /Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS|Chrome|Chromium|Android/.test(ua);
-}
-function _calHref(show){
-  return _isAppleSafari()?_icsHref(show):_gcalHref(show);
-}
 function _calAttrs(){
-  // target="_blank" is required for the Google Calendar fallback (it's a
-  // real https: URL that should open alongside the dashboard, not replace
-  // it) but breaks Safari's data:text/calendar interception -- Safari only
-  // recognises that scheme as an "Add to Calendar" trigger on a same-tab
-  // navigation, not when forced into a new tab. Keep Safari's link plain.
-  return _isAppleSafari()?'':' target="_blank" rel="noopener"';
+  return ' target="_blank" rel="noopener"';
 }
 function rr(){
   var host=document.getElementById('results');
