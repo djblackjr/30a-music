@@ -81,15 +81,35 @@ _VARIANT_TO_CANONICAL: dict[str, str] = {
     variant.strip().lower(): canonical for canonical, variant in CANONICAL_FIXES
 }
 
+# Typographic character variants folded to their plain-ASCII equivalent before
+# any matching happens. GPT-4o Vision reads stylized flyer text and reports
+# "smart" quotes (e.g. "STINKY'S BAIT SHACK" with U+2019) while SoWal's plain
+# text uses a straight apostrophe (U+0027) -- same venue, different bytes,
+# which silently defeated identity_key matching and produced duplicate events.
+_TYPOGRAPHIC_FOLDS = {
+    "‘": "'", "’": "'", "ʼ": "'", "´": "'", "`": "'",
+    "“": '"', "”": '"',
+    "–": "-", "—": "-",
+}
+
+
+def _fold_typography(value: str) -> str:
+    for fancy, plain in _TYPOGRAPHIC_FOLDS.items():
+        value = value.replace(fancy, plain)
+    return value
+
 
 def canonicalize(value: str | None) -> str | None:
     """
     Return the canonical spelling for a performer/venue value.
-    Unknown values pass through unchanged (only trimmed).
+    Unknown values pass through unchanged, but always with typographic
+    quote/dash variants folded to plain ASCII (see _TYPOGRAPHIC_FOLDS) so two
+    sources describing the same venue/performer with different typography
+    still collapse to one identity.
     """
     if not value:
         return value
-    trimmed = value.strip()
+    trimmed = _fold_typography(value.strip())
     return _VARIANT_TO_CANONICAL.get(trimmed.lower(), trimmed)
 
 

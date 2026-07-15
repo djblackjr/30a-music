@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.normalize import normalize_events, ConfidenceAggregator
 from app.normalize.canonical import canonicalize
+from app.normalize.provenance import event_identity
 from app.normalize.times import apply_venue_default_time, normalize_time
 from app.normalize.confidence import (
     confidence_band,
@@ -29,6 +30,28 @@ def test_canonicalize_known_variant():
 
 def test_canonicalize_unknown_passthrough():
     assert canonicalize("Some New Artist") == "Some New Artist"
+
+
+def test_canonicalize_folds_smart_quotes_to_straight():
+    # GPT-4o Vision reads stylized flyer text and reports "smart" typographic
+    # quotes (e.g. U+2019) while SoWal's plain text uses a straight apostrophe
+    # -- same venue, different bytes, which broke identity_key matching and
+    # produced duplicate events (e.g. "Stinky's Bait Shack" vs "STINKY’S
+    # BAIT SHACK").
+    assert canonicalize("STINKY’S BAIT SHACK") == "STINKY'S BAIT SHACK"
+    assert canonicalize("Stinky’s Bait Shack") == "Stinky's Bait Shack"
+    assert canonicalize("“The Red Bar”") == '"The Red Bar"'
+    assert canonicalize("Foo – Bar") == "Foo - Bar"
+
+
+def test_identity_key_matches_across_quote_typography():
+    # Regression: a SoWal-sourced "Stinky's Bait Shack" (straight apostrophe)
+    # and a GPT-4o Vision-sourced "STINKY’S BAIT SHACK" (smart apostrophe)
+    # are the same venue and must produce the same identity_key so the
+    # events merge instead of duplicating.
+    sowal_ev = normalize_events([_raw("The Typos", "Stinky's Bait Shack", date="2026-07-20")])[0]
+    image_ev = normalize_events([_raw("The Typos", "STINKY’S BAIT SHACK", date="2026-07-20")])[0]
+    assert event_identity(sowal_ev) == event_identity(image_ev)
 
 
 def test_dion_jones_and_band_stay_distinct():
