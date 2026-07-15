@@ -298,7 +298,7 @@ function _icsDateTime(dateKey,mins){
   var h=Math.floor(mins/60)%24,m=mins%60;
   return dateKey.replace(/-/g,'')+'T'+String(h).padStart(2,'0')+String(m).padStart(2,'0')+'00';
 }
-function _buildIcs(show){
+function _showTimeRange(show){
   var startMin=_startMins(show.time);
   if(startMin==null||startMin>=99999)startMin=12*60;
   var endMin=startMin+120;
@@ -307,16 +307,40 @@ function _buildIcs(show){
     var em=_timeMins(parts[1]);
     if(em!=null){if(em<startMin)em+=24*60;endMin=em;}
   }
-  var uid='30amusic-'+show.date+'-'+startMin+'-'+Math.random().toString(36).slice(2,8)+'@30amusic';
+  return {startMin:startMin,endMin:endMin};
+}
+function _buildIcs(show){
+  var tr=_showTimeRange(show);
+  var uid='30amusic-'+show.date+'-'+tr.startMin+'-'+Math.random().toString(36).slice(2,8)+'@30amusic';
   var stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//30A Live Music//EN','CALSCALE:GREGORIAN',
     'BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+stamp,
-    'DTSTART:'+_icsDateTime(show.date,startMin),'DTEND:'+_icsDateTime(show.date,endMin),
+    'DTSTART:'+_icsDateTime(show.date,tr.startMin),'DTEND:'+_icsDateTime(show.date,tr.endMin),
     'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
 }
 function _icsHref(show){
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(_buildIcs(show));
+}
+function _gcalHref(show){
+  var tr=_showTimeRange(show);
+  var dates=_icsDateTime(show.date,tr.startMin)+'/'+_icsDateTime(show.date,tr.endMin);
+  var params=['action=TEMPLATE','text='+encodeURIComponent(show.artist+' at '+show.venue),
+    'dates='+dates,'location='+encodeURIComponent(show.venue||'')];
+  return 'https://calendar.google.com/calendar/render?'+params.join('&');
+}
+function _isAppleSafari(){
+  // The data:text/calendar href only triggers a native "Add to Calendar"
+  // sheet in actual Safari (WebKit's own interception) -- Chrome/Firefox on
+  // iOS run on WebKit too but report their own UA token and do NOT get the
+  // same interception, so they'd otherwise just fail silently or download a
+  // raw .ics-shaped text blob. Route everything that isn't real Safari to a
+  // Google Calendar template link instead, which works everywhere.
+  var ua=navigator.userAgent||'';
+  return /Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS|Chrome|Chromium|Android/.test(ua);
+}
+function _calHref(show){
+  return _isAppleSafari()?_icsHref(show):_gcalHref(show);
 }
 function rr(){
   var host=document.getElementById('results');
@@ -364,7 +388,7 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var cal='<a href="'+_icsHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
+        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" target="_blank" rel="noopener" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
@@ -518,13 +542,15 @@ document.addEventListener('click',function(e){
   if(e.target.closest('.favdd'))return;
   _closeFavDD();
 });
-document.addEventListener('touchend',function(e){
+document.addEventListener('pointerdown',function(e){
   // iOS Safari/Chrome only synthesize a bubbling `click` on elements that
   // already look interactive (buttons, links, form controls) -- a tap on a
   // plain card or background div often never fires one, so the click-based
-  // outside-close listener above silently never runs on a phone. Mirror its
-  // guard here on the touch event itself so an outside tap closes the panel
-  // immediately, independent of whether a click follows.
+  // outside-close listener above silently never runs on a phone. `pointerdown`
+  // fires for touch (and mouse) the instant a finger contacts the screen, so
+  // it isn't at risk of a real tap's small amount of finger movement getting
+  // reclassified as a scroll/drag mid-gesture (which turns a `touchend` into
+  // a `touchcancel` that a touchend-only listener would silently never see).
   if(e.target.closest('.favdd'))return;
   _closeFavDD();
 });
