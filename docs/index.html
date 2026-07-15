@@ -1833,13 +1833,29 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">788</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 11:19:08</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-15 11:39:04</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
 var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
+var FAV_STORE_KEY='30amusic_fav_selections';
+function _loadFavSelections(){
+  try{
+    var raw=localStorage.getItem(FAV_STORE_KEY);
+    if(!raw)return;
+    var obj=JSON.parse(raw);
+    (obj.venues||[]).forEach(function(v){selVenues.add(v);});
+    (obj.artists||[]).forEach(function(a){selArtists.add(a);});
+  }catch(e){/* localStorage unavailable (private mode, quota, etc) -- just start empty */}
+}
+function _saveFavSelections(){
+  try{
+    localStorage.setItem(FAV_STORE_KEY,JSON.stringify({venues:Array.from(selVenues),artists:Array.from(selArtists)}));
+  }catch(e){/* same as above */}
+}
+_loadFavSelections();
 var ALL_FAV_VENUES=["AJ's Grayton Beach", "Crackings", "Local Catch Bar & Grill", "North Beach Social", "Papa Surf", "Red Fish Taco", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "The Bay", "The Pavilion at Watersound Town Center", "The Red Bar"];
 var ALL_FAV_ARTISTS=["Casey Kearney", "Dion Jones", "Dion Jones and the Neon Tears", "Forrest Williams", "Queens Handsome", "Queens Ransom", "Stevie Monce", "The Typos", "Will Thompson"];
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -2055,6 +2071,7 @@ function _updateFavBtnLabel(kind){
   var base=kind==='venue'?'★ Venues':'★ Artists';
   btn.textContent=(sel.size?base+' ('+sel.size+')':base)+' ▾';
   btn.classList.toggle('on',sel.size>0);
+  _saveFavSelections();
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
@@ -2181,5 +2198,6 @@ document.addEventListener('keydown',function(e){
   var open=det.classList.toggle('open');
   row.setAttribute('aria-expanded',open?'true':'false');
 });
+_updateFavBtnLabel('venue');_updateFavBtnLabel('artist');
 sf('today');
 </script></body></html>
