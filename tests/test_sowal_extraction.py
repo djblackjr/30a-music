@@ -78,6 +78,22 @@ def test_detect_non_music():
     assert detect_non_music(None) is None
 
 
+def test_detect_non_music_newly_added_patterns():
+    # Real listings that slipped through as blank-venue dashboard entries
+    # before these patterns were added/widened.
+    assert detect_non_music("Pensacola Beach Airshow: US Navy Blue Angels") == "air_show"
+    assert detect_non_music("30A Thanksgiving Day Run") == "sporting_event"
+    assert detect_non_music("Walton County Fair") == "county_fair"
+    assert detect_non_music("Harvest Wine & Food Festival: Celebrity Winemakers Dinners") == "wine_festival"
+    assert detect_non_music("Harvest Wine & Food Festival: Harvest After Dark") == "wine_festival"
+    assert detect_non_music("Rosemary Beach Uncorked") == "wine_tasting"
+    assert detect_non_music("Seaside Prize") == "award_ceremony"
+    # Real music events that must NOT be caught by the widened patterns.
+    assert detect_non_music("Here Comes the Sun Summer Concert Series at Rosemary Beach") is None
+    assert detect_non_music("Rockin' In Paradise with Styx + Friends") is None
+    assert detect_non_music("Shinedown's Lunatic Ball Beach Weekend") is None
+
+
 def test_detect_non_music_does_not_catch_real_music_festivals_with_no_single_act():
     # "Panama City Songwriters Festival" is real (SoWal description:
     # "Featuring original songs by local, regional and national

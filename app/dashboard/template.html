@@ -422,8 +422,8 @@ function rr(){
       shows.forEach(function(s,i){
         var star=s.favorite?'<span class="fav-star" aria-hidden="true">★</span> ':'<span></span>';
         var astar=s.performerFavorite?'<span class="fav-star" aria-hidden="true">★</span> ':'';
-        var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
-        if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
+        var v=s.vdisp?'<span class="'+s.vcls+'">'+star+s.vdisp+'</span>':'';
+        if(v&&s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
         var icsLink='<a href="#" class="calink ics-link" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'" title="Download for Apple/other calendar apps" aria-label="Download '+_escAttr(s.artist)+' as a calendar file">'+ICAL_SVG+'</a>';
         var gcalLink='<a href="'+_gcalHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink gcal-link" target="_blank" rel="noopener" title="Add to Google Calendar" aria-label="Add '+_escAttr(s.artist)+' to Google Calendar">'+GCAL_SVG+'</a>';

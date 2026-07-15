@@ -137,11 +137,23 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("farmers_market", re.compile(r"farmers?\s*market", re.I)),
     ("guided_tour",    re.compile(r"guided\s+\w*\s*(tour|hike|walk)|ranger[- ]?guided|nature\s+hike|history\s+tour", re.I)),
     ("car_show",       re.compile(r"\bcar\s+show\b|\bcars\s+of\s+30a\b", re.I)),
-    ("sporting_event", re.compile(r"\bironman\b|\btriathlon\b|\bmarathon\b|\b\d+k\s+run\b|\bfun run\b", re.I)),
-    ("air_show",       re.compile(r"\bair show\b", re.I)),
-    ("wine_festival",  re.compile(r"\bwine festival\b", re.I)),
+    # "day run" catches holiday/charity races named e.g. "Thanksgiving Day Run",
+    # "Turkey Day Run", "Memorial Day Run" -- a common naming convention this
+    # crawler was missing (confirmed via a real "30A Thanksgiving Day Run"
+    # listing that slipped through as a blank-venue event on the dashboard).
+    ("sporting_event", re.compile(r"\bironman\b|\btriathlon\b|\bmarathon\b|\b\d+k\s+run\b|\bfun run\b|\bday\s+run\b", re.I)),
+    # Widened to also match "Airshow" as one word (was "air show" only,
+    # missing "Pensacola Beach Airshow: US Navy Blue Angels").
+    ("air_show",       re.compile(r"\bair\s*show\b", re.I)),
+    # Widened to also catch "Wine & Food Festival" / "Wine and Food Festival"
+    # variants (was "wine festival" only, missing "Harvest Wine & Food
+    # Festival: ..." listings).
+    ("wine_festival",  re.compile(r"\bwine\s*(?:&|and)?\s*food\s+festival\b|\bwine\s+festival\b", re.I)),
     ("film_festival",  re.compile(r"\bmountainfilm\b|\bfilm festival\b", re.I)),
     ("eggfest",        re.compile(r"\beggs on the beach\b|\beggfest\b", re.I)),
+    ("county_fair",    re.compile(r"\bcounty\s+fair\b", re.I)),
+    ("wine_tasting",   re.compile(r"\buncorked\b", re.I)),
+    ("award_ceremony", re.compile(r"\bseaside prize\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text.
