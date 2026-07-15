@@ -1,9 +1,6 @@
 name: Update Music Events
 
 on:
-  push:
-    paths:
-      - 'images/inbox/**'
   schedule:
     - cron: '0 12 * * *'  # Every day at noon UTC (7am/8am Central, depending on DST)
   workflow_dispatch:  # Allow manual trigger
