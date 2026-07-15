@@ -46,9 +46,9 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .tn-hint{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}.tn-sub{text-transform:none;font-weight:500;opacity:.62;letter-spacing:0;}
 .tn-empty{opacity:.7;padding:6px 2px;}
 .sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);overflow:hidden;display:flex;flex-direction:column;}
-.sc-row{padding:12px 14px;display:flex;flex:1;justify-content:space-between;align-items:flex-start;gap:8px 10px;cursor:pointer;}
+.sc-row{padding:12px 14px;display:flex;flex-direction:column;flex:1;gap:4px;cursor:pointer;}
 .sc-row>div{min-width:0;}
-.sc-row>:last-child{align-self:flex-end;margin-left:auto;}
+.sc-meta{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;}
 .sc-row .vt,.sc-row .maplink{max-width:100%;white-space:normal;}
 .sc-row:focus-visible{outline:2px solid var(--teal-light);outline-offset:-2px;}
 .scdet{display:none;background:#fff;color:#334155;padding:10px 14px;font-size:.8rem;border-top:1px solid rgba(255,255,255,.15);}
@@ -63,7 +63,7 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
-.calink{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;margin-left:2px;border-radius:50%;text-decoration:none;font-size:1.275rem;line-height:1;vertical-align:middle;opacity:.8;}
+.calink{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;margin-left:2px;border-radius:50%;text-decoration:none;font-size:.956rem;line-height:1;vertical-align:middle;opacity:.8;}
 .calink:hover,.calink:focus-visible{background:rgba(255,255,255,.14);opacity:1;}
 .tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
 .leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
@@ -397,7 +397,7 @@ function rr(){
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
         var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink"'+_calAttrs()+' title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div></div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
