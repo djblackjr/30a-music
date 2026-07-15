@@ -149,7 +149,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 0087b02 · 2026-07-15 09:21</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 6531480 · 2026-07-15 09:25</p></div></header>
 <main class="page">
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
@@ -1868,6 +1868,7 @@ function _startMins(str){
 }
 function _dateFromKey(k){var p=k.split('-');return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));}
 function _escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function _icsEscape(s){return (s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
 function _icsDateTime(dateKey,mins){
   var h=Math.floor(mins/60)%24,m=mins%60;
   return dateKey.replace(/-/g,'')+'T'+String(h).padStart(2,'0')+String(m).padStart(2,'0')+'00';
@@ -1883,22 +1884,46 @@ function _showTimeRange(show){
   }
   return {startMin:startMin,endMin:endMin};
 }
-function _calHref(show){
-  // A data:text/calendar href used to trigger Safari's native "Add to
-  // Calendar" sheet on iOS, but that WebKit interception is no longer
-  // firing reliably (confirmed the tap itself lands correctly; Safari
-  // just doesn't intercept the navigation anymore) -- rather than depend
-  // on undocumented, unverifiable browser magic, every browser now gets
-  // the same Google Calendar template link, which is just a real https:
-  // URL and works consistently everywhere.
+function _buildIcs(show){
+  var tr=_showTimeRange(show);
+  var uid='30amusic-'+show.date+'-'+tr.startMin+'-'+Math.random().toString(36).slice(2,8)+'@30amusic';
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//30A Live Music//EN','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+stamp,
+    'DTSTART:'+_icsDateTime(show.date,tr.startMin),'DTEND:'+_icsDateTime(show.date,tr.endMin),
+    'SUMMARY:'+_icsEscape(show.artist+' at '+show.venue),'LOCATION:'+_icsEscape(show.venue),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function _icsHref(show){
+  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(_buildIcs(show));
+}
+function _gcalHref(show){
   var tr=_showTimeRange(show);
   var dates=_icsDateTime(show.date,tr.startMin)+'/'+_icsDateTime(show.date,tr.endMin);
   var params=['action=TEMPLATE','text='+encodeURIComponent(show.artist+' at '+show.venue),
     'dates='+dates,'location='+encodeURIComponent(show.venue||'')];
   return 'https://calendar.google.com/calendar/render?'+params.join('&');
 }
+function _isAppleSafari(){
+  // Real Safari (macOS/iOS) intercepts a same-tab data:text/calendar
+  // navigation and shows its native "Add to Calendar" sheet -- confirmed
+  // working by the user on 2026-07-14. Chrome/Firefox on iOS run on
+  // WebKit too but report their own UA token and do NOT get the same
+  // interception, so they fall back to a Google Calendar link instead.
+  var ua=navigator.userAgent||'';
+  return /Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS|Chrome|Chromium|Android/.test(ua);
+}
+function _calHref(show){
+  return _isAppleSafari()?_icsHref(show):_gcalHref(show);
+}
 function _calAttrs(){
-  return ' target="_blank" rel="noopener"';
+  // target="_blank" is required for the Google Calendar fallback (a real
+  // https: URL that should open alongside the dashboard) but breaks
+  // Safari's data:text/calendar interception, which only recognises that
+  // scheme on a same-tab navigation. Keep Safari's link plain -- this is
+  // the exact bug that broke the native sheet once already (commit
+  // 8d25f76), do not reintroduce it.
+  return _isAppleSafari()?'':' target="_blank" rel="noopener"';
 }
 function rr(){
   var host=document.getElementById('results');
