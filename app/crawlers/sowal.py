@@ -524,7 +524,7 @@ class SoWalCrawler:
         page_year = int(page_date[:4]) if page_date else None
 
         # 1) Lineup / series page: one observation per (performer, date) row.
-        lineup = self._parse_lineup(soup, venue, page_year, url, title)
+        lineup = self._parse_lineup(self._content_root(soup), venue, page_year, url, title)
         if lineup:
             return lineup
 
@@ -541,6 +541,31 @@ class SoWalCrawler:
             performer_status=c["performer_status"],
             resolved=c["resolved"], event_category=c["event_category"],
         )]
+
+    @staticmethod
+    def _content_root(soup):
+        """
+        Scope element for in-page table parsing.
+
+        Event pages render in a three-column panel layout: the real content
+        (title, When/Time/Where, description) sits under the ancestor of the
+        <h1> whose id is 'bohr-three-col-list-one', while an adjacent
+        'bohr-three-col-list-two' column carries an unrelated "Explore SoWal"
+        widget — a stack of single-row <table class="views-table"> elements
+        listing this same series' other upcoming dates with no date cell of
+        their own. Scanning the whole page for <tr> (as a naive lineup parse
+        would) misreads that widget as a multi-row lineup table and emits a
+        garbage "unresolved, date=None" observation per widget row. Falls
+        back to the whole page when the wrapper isn't present (e.g. the plain
+        HTML fixtures used in tests).
+        """
+        h1 = soup.find("h1")
+        if not h1:
+            return soup
+        for parent in h1.parents:
+            if (parent.get("id") or "").startswith("bohr-three-col-list-"):
+                return parent
+        return soup
 
     def _parse_lineup(
         self, soup, venue: str | None, page_year: int | None, url: str, title: str

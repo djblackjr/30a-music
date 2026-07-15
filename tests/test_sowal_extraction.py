@@ -281,6 +281,44 @@ def test_lineup_row_without_confident_date_marked_unresolved():
     assert unresolved[0]["date"] is None and unresolved[0]["resolved"] is False
 
 
+# SoWal detail pages render in a three-column panel layout: real content sits
+# under id="bohr-three-col-list-one", while an adjacent id="bohr-three-col-
+# list-two" column carries an "Explore SoWal" widget -- a stack of single-row
+# <table class="views-table"> elements listing the same series' other
+# upcoming dates, each with no date cell of its own. Scanning the whole page
+# for <tr> misreads that widget as a multi-row lineup and manufactures a
+# garbage "unresolved, date=None" observation per widget row (one single real
+# event turned into many duplicates).
+_SIDEBAR_WIDGET_HTML = """
+<html><body>
+  <div id="bohr-three-col-list-one">
+    <h1>30Avenue Summer Concert Series @ 30Avenue</h1>
+    <p>When: Wednesday, July 15, 2026</p>
+    <p>Time: 6:00 pm to 9:00 pm</p>
+    <p>Where: 30Avenue</p>
+  </div>
+  <div id="bohr-three-col-list-two">
+    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+  </div>
+</body></html>
+"""
+
+
+def test_content_root_excludes_sidebar_widget():
+    soup = BeautifulSoup(_SIDEBAR_WIDGET_HTML, "lxml")
+    root = SoWalCrawler._content_root(soup)
+    assert root.get("id") == "bohr-three-col-list-one"
+    assert root.find_all("tr") == []
+
+
+def test_content_root_falls_back_to_whole_page_without_column_wrapper():
+    html = "<html><body><h1>Series @ Venue</h1><table><tr><td>x</td></tr></table></body></html>"
+    soup = BeautifulSoup(html, "lxml")
+    assert SoWalCrawler._content_root(soup) is soup
+
+
 # --- partitioning -----------------------------------------------------------
 
 def test_partition_observations():
