@@ -39,8 +39,19 @@ a flyer, or a screenshot from a venue website.
 
 Extract EVERY live music event you can see. For each event return a JSON object with:
   - artist      (string, required) — performer name exactly as shown
-  - venue       (string)           — venue name if visible, else null
-  - date        (string)           — ISO 8601 date YYYY-MM-DD if determinable, else null
+  - venue       (string)           — venue name if visible, else null. If the flyer body
+                                      itself never names the venue, use the Instagram
+                                      username/account name shown in the screenshot's UI
+                                      chrome (e.g. "@northbeachsocial" or "northbeachsocial")
+                                      as the venue instead of leaving this null.
+  - date        (string)           — ISO 8601 date YYYY-MM-DD if determinable, else null.
+                                      Resolve compact date formats too, e.g. a heading
+                                      "JULY" combined with row labels "7.1", "7.2", "7/3"
+                                      means July 1, July 2, July 3 of the year shown (or
+                                      the current year from today's date below if no year
+                                      is shown). Always attempt this combination rather
+                                      than leaving date null when a month is identifiable
+                                      anywhere in the image.
   - day_of_week (string)           — e.g. "Monday", "Friday" if shown without a full date
   - time_start  (string)           — e.g. "6PM", "8:30PM", null if not shown
   - stage       (string)           — e.g. "Main Stage", "Courtyard Stage", null if not shown
@@ -91,7 +102,14 @@ def _call_gpt4o(image_path: Path) -> list[dict]:
 
     response = client.chat.completions.create(
         model=VISION_MODEL,
-        max_tokens=2000,
+        # 2000 was too small for a dense calendar-grid flyer (a full month
+        # across one venue can run 30+ events, ~150-200 tokens of JSON
+        # each) -- the response would get cut off mid-object, producing
+        # invalid JSON and silently landing on 0 events. Confirmed via
+        # finish_reason: a real multi-week grid needed ~2100 output tokens;
+        # 4000 leaves comfortable headroom without materially raising cost
+        # (GPT-4o output pricing is per token actually used, not the cap).
+        max_tokens=4000,
         messages=[
             {
                 "role": "user",
@@ -108,6 +126,13 @@ def _call_gpt4o(image_path: Path) -> list[dict]:
             }
         ],
     )
+
+    if response.choices[0].finish_reason == "length":
+        logger.warning(
+            "%s: GPT-4o response hit the max_tokens cap and was truncated -- "
+            "raise max_tokens further if this recurs (an unusually dense image)",
+            image_path.name,
+        )
 
     raw = response.choices[0].message.content.strip()
 

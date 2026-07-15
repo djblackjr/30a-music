@@ -8,10 +8,50 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.images.importer import _coerce_confidence, _normalise
+from app.images.importer import _call_gpt4o, _coerce_confidence, _normalise
 from app.normalize import normalize_events
 
 IMG = Path("Shelbys_schedule.png")
+
+
+class _FakeMessage:
+    def __init__(self, content):
+        self.content = content
+
+
+class _FakeChoice:
+    def __init__(self, content, finish_reason):
+        self.message = _FakeMessage(content)
+        self.finish_reason = finish_reason
+
+
+class _FakeResponse:
+    def __init__(self, content="[]", finish_reason="stop"):
+        self.choices = [_FakeChoice(content, finish_reason)]
+
+
+class _FakeCompletions:
+    def __init__(self, response, captured):
+        self._response = response
+        self._captured = captured
+
+    def create(self, **kwargs):
+        self._captured.update(kwargs)
+        return self._response
+
+
+class _FakeOpenAIClient:
+    def __init__(self, response, captured, api_key=None):
+        self.chat = type("_Chat", (), {"completions": _FakeCompletions(response, captured)})()
+
+
+def _patch_openai(monkeypatch, response):
+    """Stub out the `openai` package's client so _call_gpt4o makes no network call."""
+    captured = {}
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    import openai
+    monkeypatch.setattr(openai, "OpenAI", lambda api_key=None: _FakeOpenAIClient(response, captured))
+    return captured
 
 
 # --- confidence coercion ---------------------------------------------------
@@ -65,3 +105,31 @@ def test_model_confidence_feeds_extraction_confidence():
     assert scored[0]["confidence"] == 0.8
     assert scored[0]["source_count"] == 1
     assert scored[0]["observations"][0]["extraction_confidence"] == 1.0
+
+
+# --- _call_gpt4o request shape (no real network call) -----------------------
+# Regression coverage for a real bug: max_tokens=2000 truncated GPT-4o's JSON
+# response mid-object for a dense calendar-grid flyer (a full month at one
+# venue can be 30+ events), which silently produced 0 events instead of an
+# error. Confirmed live against a real image before raising the cap.
+
+def test_call_gpt4o_requests_enough_max_tokens_for_dense_grids(monkeypatch, tmp_path):
+    captured = _patch_openai(monkeypatch, _FakeResponse())
+    img = tmp_path / "test.png"
+    img.write_bytes(b"fake-image-bytes")
+
+    _call_gpt4o(img)
+
+    assert captured["max_tokens"] >= 4000
+
+
+def test_call_gpt4o_warns_when_response_is_truncated(monkeypatch, tmp_path, caplog):
+    _patch_openai(monkeypatch, _FakeResponse(finish_reason="length"))
+    img = tmp_path / "test.png"
+    img.write_bytes(b"fake-image-bytes")
+
+    import logging
+    with caplog.at_level(logging.WARNING):
+        _call_gpt4o(img)
+
+    assert "truncated" in caplog.text
