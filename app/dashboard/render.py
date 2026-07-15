@@ -15,7 +15,6 @@ import csv
 import html
 import json
 import logging
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -301,21 +300,23 @@ def _health(events: list[dict], path: Path) -> dict:
 
 def _build_marker() -> str:
     """
-    Short git SHA + generation timestamp, baked server-side into the HTML at
-    generate() time. Unlike the client-side "Updated <today>" badge (which
-    always shows the VIEWER's current date regardless of page staleness),
-    this is fixed at build time — the one thing in the page a screenshot can
-    use to prove whether the browser is showing current or cached content.
+    Generation timestamp, baked server-side into the HTML at generate()
+    time. Unlike the client-side "Updated <today>" badge (which always
+    shows the VIEWER's current date regardless of page staleness), this is
+    fixed at build time — the one thing in the page a screenshot can use to
+    prove whether the browser is showing current or cached content.
+
+    Deliberately NOT a git SHA: generate() always runs before the resulting
+    file is committed, so `git rev-parse HEAD` at generation time is the
+    PARENT of the commit this file ends up in, never its own hash (a commit
+    cannot embed its own hash in its own tree). A SHA here reliably looks
+    one commit stale and is misleading rather than useful for staleness
+    checks -- burned real debugging time chasing a phantom CDN cache issue
+    before this was diagnosed. The timestamp has no such self-reference
+    problem and is sufficient on its own.
     """
-    try:
-        sha = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, timeout=5, check=True,
-        ).stdout.strip()
-    except Exception:
-        sha = "unknown"
-    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    return f"Build {sha} · {stamp}"
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return f"Build {stamp}"
 
 
 def _json_for_script(value) -> str:
