@@ -229,6 +229,19 @@ def test_render_includes_region_and_favorites_filter_controls():
     assert "function _favArtistNames()" in html
 
 
+def test_favorites_panel_includes_select_all_toggle():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    # _favPanelHtml() renders a Select All / Deselect All button above the
+    # checklist, and a click handler toggles the whole set at once rather
+    # than requiring one tap per favorite.
+    assert 'class="favdd-selectall"' in html
+    assert "Select All" in html
+    assert "Deselect All" in html
+    assert "closest('.favdd-selectall')" in html
+
+
 def test_results_rebuild_on_favorites_selection_and_clear():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},

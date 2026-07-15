@@ -90,6 +90,9 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .favdd-item:hover{background:var(--cream);}
 .favdd-item input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--navy);}
 .favdd-empty{padding:8px 6px;color:var(--muted);font-size:.82rem;}
+.favdd-selectall{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 6px;font-size:.85rem;font-weight:700;color:var(--teal);cursor:pointer;border-radius:var(--radius-sm);}
+.favdd-selectall:hover{background:var(--cream);}
+.favdd-sep{border:none;border-top:1px solid var(--border);margin:4px 0;}
 @media(max-width:680px){
   .dr{flex-direction:column;}
   .br{flex-wrap:wrap;overflow-x:visible;}
@@ -397,10 +400,13 @@ function _favVenueNames(){return ALL_FAV_VENUES;}
 function _favArtistNames(){return ALL_FAV_ARTISTS;}
 function _favPanelHtml(names,selected){
   if(!names.length)return '<div class="favdd-empty">No favorites yet</div>';
-  return names.map(function(n){
+  var allSelected=selected.size===names.length;
+  var selectAll='<button type="button" class="favdd-selectall">'+(allSelected?'Deselect All':'Select All')+'</button><hr class="favdd-sep">';
+  var items=names.map(function(n){
     var checked=selected.has(n)?' checked':'';
     return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+_escAttr(n)+'</label>';
   }).join('');
+  return selectAll+items;
 }
 function _closeFavDD(){
   document.getElementById('favVenuePanel').hidden=true;
@@ -489,9 +495,25 @@ document.addEventListener('change',function(e){
   var sel=kind==='venue'?selVenues:selArtists;
   if(e.target.checked)sel.add(e.target.value);else sel.delete(e.target.value);
   _updateFavBtnLabel(kind);
+  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var saBtn=panel.querySelector('.favdd-selectall');
+  if(saBtn)saBtn.textContent=(names.length&&sel.size===names.length)?'Deselect All':'Select All';
   bd();rr();
 });
 document.addEventListener('click',function(e){
+  var saBtn=e.target.closest('.favdd-selectall');
+  if(saBtn){
+    var panel=saBtn.closest('.favdd-panel');
+    var kind=panel.id==='favVenuePanel'?'venue':'artist';
+    var names=kind==='venue'?_favVenueNames():_favArtistNames();
+    var sel=kind==='venue'?selVenues:selArtists;
+    var allSelected=names.length>0&&sel.size===names.length;
+    if(allSelected){sel.clear();}else{names.forEach(function(n){sel.add(n);});}
+    _updateFavBtnLabel(kind);
+    panel.innerHTML=_favPanelHtml(names,sel);
+    bd();rr();
+    return;
+  }
   if(e.target.closest('.favdd'))return;
   _closeFavDD();
 });
