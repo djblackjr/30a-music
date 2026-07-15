@@ -342,6 +342,14 @@ function _isAppleSafari(){
 function _calHref(show){
   return _isAppleSafari()?_icsHref(show):_gcalHref(show);
 }
+function _calAttrs(){
+  // target="_blank" is required for the Google Calendar fallback (it's a
+  // real https: URL that should open alongside the dashboard, not replace
+  // it) but breaks Safari's data:text/calendar interception -- Safari only
+  // recognises that scheme as an "Add to Calendar" trigger on a same-tab
+  // navigation, not when forced into a new tab. Keep Safari's link plain.
+  return _isAppleSafari()?'':' target="_blank" rel="noopener"';
+}
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
@@ -388,7 +396,7 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" target="_blank" rel="noopener" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
+        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink"'+_calAttrs()+' title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';

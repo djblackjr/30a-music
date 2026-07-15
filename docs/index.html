@@ -149,7 +149,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 0c4c4f1 · 2026-07-14 23:07</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 8d25f76 · 2026-07-14 23:43</p></div></header>
 <main class="page">
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
@@ -1947,6 +1947,14 @@ function _isAppleSafari(){
 function _calHref(show){
   return _isAppleSafari()?_icsHref(show):_gcalHref(show);
 }
+function _calAttrs(){
+  // target="_blank" is required for the Google Calendar fallback (it's a
+  // real https: URL that should open alongside the dashboard, not replace
+  // it) but breaks Safari's data:text/calendar interception -- Safari only
+  // recognises that scheme as an "Add to Calendar" trigger on a same-tab
+  // navigation, not when forced into a new tab. Keep Safari's link plain.
+  return _isAppleSafari()?'':' target="_blank" rel="noopener"';
+}
 function rr(){
   var host=document.getElementById('results');
   if(!host)return;
@@ -1993,7 +2001,7 @@ function rr(){
         var v='<span class="'+s.vcls+'">'+star+s.vdisp+'</span>';
         if(s.embed)v='<a href="#" class="maplink" data-embed="'+s.embed+'" data-ext="'+s.ext+'" data-vname="'+s.venue+'">'+v+'</a>';
         var cid='d-'+gi+'-'+i;
-        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink" target="_blank" rel="noopener" title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
+        var cal='<a href="'+_calHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink"'+_calAttrs()+' title="Add to calendar" aria-label="Add '+_escAttr(s.artist)+' to calendar">📅</a>';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div><b>'+astar+s.artist+'</b><br><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span></div>'+v+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
