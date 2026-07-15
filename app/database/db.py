@@ -598,6 +598,63 @@ def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int
     return len(ids)
 
 
+def resolve_sowal_conflicts(path: Path = DB_PATH) -> dict:
+    """
+    Policy: when a direct venue-site crawler (any source other than "sowal")
+    and the sowal aggregator report DIFFERENT performers at the exact same
+    (venue, date, time_start), that's almost always one real slot described
+    two ways -- not two real bookings (e.g. SoWal's "Wrestle with Jimmy" vs.
+    AJ's own site's "Jarred McConnell & High Aces", both Fri/Sat 9pm at AJ's
+    Grayton Beach). The venue's own site wins: the sowal-only event is
+    dropped, the site-sourced event is kept.
+
+    Only triggers on an exact (venue, date, time_start) match with DIFFERENT
+    performers -- same-performer corroboration across sources already merges
+    into one event via identity_key and never reaches this function.
+
+    Safe to re-run. Returns {"conflicts_found", "events_deleted"}.
+    """
+    conn = get_connection(path)
+    groups = conn.execute("""
+        SELECT LOWER(venue) AS v, date, time_start, GROUP_CONCAT(id) AS ids
+        FROM events
+        WHERE venue IS NOT NULL AND date IS NOT NULL AND time_start IS NOT NULL
+        GROUP BY v, date, time_start
+        HAVING COUNT(*) > 1
+    """).fetchall()
+
+    conflicts = 0
+    deleted_ids: list[int] = []
+    for group in groups:
+        ids = [int(i) for i in group["ids"].split(",")]
+        placeholders = ",".join("?" * len(ids))
+        sources_by_event: dict[int, set] = {}
+        for row in conn.execute(
+            f"SELECT DISTINCT event_id, source FROM event_observations WHERE event_id IN ({placeholders})",
+            ids,
+        ).fetchall():
+            sources_by_event.setdefault(row["event_id"], set()).add(row["source"])
+
+        sowal_only = [eid for eid, srcs in sources_by_event.items() if srcs == {"sowal"}]
+        has_site_source = any(srcs - {"sowal"} for srcs in sources_by_event.values())
+        if sowal_only and has_site_source:
+            conflicts += 1
+            deleted_ids.extend(sowal_only)
+
+    if deleted_ids:
+        placeholders = ",".join("?" * len(deleted_ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", deleted_ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", deleted_ids)
+        conn.commit()
+
+    conn.close()
+    logger.info(
+        "Resolved %d sowal/site time-slot conflicts, deleted %d sowal-only events",
+        conflicts, len(deleted_ids),
+    )
+    return {"conflicts_found": conflicts, "events_deleted": len(deleted_ids)}
+
+
 def purge_source_observations(source: str, path: Path = DB_PATH) -> dict:
     """
     Delete every observation from `source`, then drop any event left with

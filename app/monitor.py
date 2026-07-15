@@ -14,6 +14,7 @@ from app.database.db import (
     load_events,
     purge_past_events,
     record_run,
+    resolve_sowal_conflicts,
     upsert_events,
 )
 from app.excel.exporter import generate_report
@@ -37,7 +38,7 @@ def run_pipeline() -> dict:
     init_db()
 
     # 2. Run crawlers
-    logger.info("Step 1/8 — Running crawlers")
+    logger.info("Step 1/9 — Running crawlers")
     crawler_events = run_all_crawlers()
     logger.info("Crawlers returned %d events", len(crawler_events))
 
@@ -57,7 +58,7 @@ def run_pipeline() -> dict:
         crawler_events = passthrough + partitioned["named"]
 
     # 3. Image inbox
-    logger.info("Step 2/8 — Processing image inbox")
+    logger.info("Step 2/9 — Processing image inbox")
     inbox_images = [
         f for f in INBOX_DIR.iterdir()
         if INBOX_DIR.exists() and f.suffix.lower() in SUPPORTED_EXTS
@@ -67,14 +68,14 @@ def run_pipeline() -> dict:
     logger.info("Images processed: %d files, %d events", len(inbox_images), len(image_events))
 
     # 4. Combine + normalise
-    logger.info("Step 3/8 — Normalising events")
+    logger.info("Step 3/9 — Normalising events")
     all_raw    = crawler_events + image_events
     normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
     # 5. Upsert by identity — observations accumulate onto existing events, so a
     #    second source corroborates rather than creating a duplicate.
-    logger.info("Step 4/8 — Upserting events (accumulating observations)")
+    logger.info("Step 4/9 — Upserting events (accumulating observations)")
     result = upsert_events(normalised, run_id=run_id)
     saved  = result["saved"]
     record_run(run_id=run_id, events_saved=saved)
@@ -83,7 +84,7 @@ def run_pipeline() -> dict:
     #    NOTE: a run is a PARTIAL view (one crawl), not a full snapshot of reality,
     #    so a source simply not re-observing an event does NOT mean it was removed.
     #    Removal is therefore never inferred here.
-    logger.info("Step 5/8 — Reconciling")
+    logger.info("Step 5/9 — Reconciling")
     changes = {
         "new":       result["new"],
         "changed":   result["changed"],
@@ -98,20 +99,31 @@ def run_pipeline() -> dict:
         },
     }
 
-    # 7. Drop events whose date has already passed. Unlike "removed" above,
+    # 7. Policy: when a venue's own site crawler and the sowal aggregator
+    #    report different performers at the exact same (venue, date, time),
+    #    that's one real slot described two ways, not two bookings -- the
+    #    site's own data wins and the sowal-only event is dropped.
+    logger.info("Step 6/9 — Resolving sowal/site time-slot conflicts")
+    conflict_result = resolve_sowal_conflicts()
+    logger.info(
+        "Resolved %d conflicts, dropped %d sowal-only events",
+        conflict_result["conflicts_found"], conflict_result["events_deleted"],
+    )
+
+    # 8. Drop events whose date has already passed. Unlike "removed" above,
     #    this isn't inferred from crawl absence — a past date is a fact, not
     #    a guess — so it's safe to delete outright rather than just hide.
-    logger.info("Step 6/8 — Purging past events")
+    logger.info("Step 7/9 — Purging past events")
     purged = purge_past_events()
     logger.info("Purged %d past events", purged)
 
-    # 8. Generate Excel
-    logger.info("Step 7/8 — Generating Excel report")
+    # 9. Generate Excel
+    logger.info("Step 8/9 — Generating Excel report")
     all_events  = load_events()          # canonical events (one row per identity)
     report_path = generate_report(all_events, changes, run_id)
 
-    # 9. Generate the dashboard from current knowledge (union across runs)
-    logger.info("Step 8/8 — Generating dashboard")
+    # 10. Generate the dashboard from current knowledge (union across runs)
+    logger.info("Step 9/9 — Generating dashboard")
     try:
         from app.dashboard.render import generate as generate_dashboard
         dashboard_path = generate_dashboard()
@@ -125,6 +137,7 @@ def run_pipeline() -> dict:
         "image_files":     len(inbox_images),
         "image_events":    len(image_events),
         "events_saved":    saved,
+        "sowal_conflicts_resolved": conflict_result["events_deleted"],
         "purged_past":     purged,
         "new_or_changed":  changes["summary"]["total_delta"],
         "report_path":     str(report_path),

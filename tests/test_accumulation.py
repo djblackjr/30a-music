@@ -19,6 +19,7 @@ from app.database.db import (
     load_events,
     purge_past_events,
     purge_source_observations,
+    resolve_sowal_conflicts,
     upsert_events,
 )
 from app.normalize import normalize_events
@@ -191,3 +192,82 @@ def test_purge_source_is_a_no_op_for_an_absent_source():
     result = purge_source_observations("does_not_exist", path=p)
     assert result == {"observations_deleted": 0, "events_deleted": 0, "events_recomputed": 0}
     assert len(load_events(path=p)) == 1
+
+
+# --- sowal vs. venue-site time-slot conflicts -------------------------------
+
+def test_resolve_sowal_conflicts_keeps_site_source_drops_sowal():
+    p = _db()
+    # same venue/date/time, different performer names, different sources --
+    # SoWal's "Wrestle with Jimmy" vs. AJ's own site's "Jarred McConnell & High Aces"
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Wrestle with Jimmy", time_start="9:00 pm"),
+    ]), run_id="r1", path=p)
+    upsert_events(normalize_events([
+        _ev("ajs_grayton", performer="Jarred McConnell & High Aces", time_start="9:00 pm"),
+    ]), run_id="r1", path=p)
+    assert len(load_events(path=p)) == 2
+
+    result = resolve_sowal_conflicts(path=p)
+    assert result == {"conflicts_found": 1, "events_deleted": 1}
+
+    remaining = load_events(path=p)
+    assert len(remaining) == 1
+    assert remaining[0]["performer"] == "Jarred McConnell & High Aces"
+
+
+def test_resolve_sowal_conflicts_ignores_different_times():
+    p = _db()
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Sierra Riggs", time_start="4:00 pm"),
+    ]), run_id="r1", path=p)
+    upsert_events(normalize_events([
+        _ev("ajs_grayton", performer="Jarred McConnell & High Aces", time_start="9:00 pm"),
+    ]), run_id="r1", path=p)
+
+    result = resolve_sowal_conflicts(path=p)
+    assert result == {"conflicts_found": 0, "events_deleted": 0}
+    assert len(load_events(path=p)) == 2
+
+
+def test_resolve_sowal_conflicts_leaves_sowal_only_group_alone():
+    p = _db()
+    # two DIFFERENT sowal-only events at the same time -- no site source
+    # involved, so this isn't a "site wins" conflict; leave both alone
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Band One", time_start="9:00 pm"),
+    ]), run_id="r1", path=p)
+    upsert_events(normalize_events([
+        _ev("sowal", performer="Band Two", time_start="9:00 pm"),
+    ]), run_id="r1", path=p)
+
+    result = resolve_sowal_conflicts(path=p)
+    assert result == {"conflicts_found": 0, "events_deleted": 0}
+    assert len(load_events(path=p)) == 2
+
+
+def test_resolve_sowal_conflicts_does_not_touch_same_performer_corroboration():
+    p = _db()
+    # same performer from both sources -> already merged into one event via
+    # identity_key well before this function runs; nothing to resolve
+    upsert_events(normalize_events([_ev("sowal", performer="Jim Couch", time_start="4:00 pm")]),
+                   run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("ajs_grayton", performer="Jim Couch", time_start="4:00 pm")]),
+                   run_id="r1", path=p)
+    assert len(load_events(path=p)) == 1
+
+    result = resolve_sowal_conflicts(path=p)
+    assert result == {"conflicts_found": 0, "events_deleted": 0}
+    assert len(load_events(path=p)) == 1
+
+
+def test_resolve_sowal_conflicts_is_idempotent():
+    p = _db()
+    upsert_events(normalize_events([_ev("sowal", performer="Wrestle with Jimmy", time_start="9:00 pm")]),
+                   run_id="r1", path=p)
+    upsert_events(normalize_events([_ev("ajs_grayton", performer="Jarred McConnell & High Aces", time_start="9:00 pm")]),
+                   run_id="r1", path=p)
+
+    resolve_sowal_conflicts(path=p)
+    second = resolve_sowal_conflicts(path=p)
+    assert second == {"conflicts_found": 0, "events_deleted": 0}
