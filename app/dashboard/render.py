@@ -13,6 +13,7 @@ metrics — nothing else.
 """
 import csv
 import html
+import json
 import logging
 import subprocess
 from datetime import datetime
@@ -120,6 +121,25 @@ def _venue_favorite(venue: str | None, meta: dict[str, dict]) -> bool:
     return bool((meta.get((venue or "").strip().lower()) or {}).get("favorite"))
 
 
+def _favorite_venue_names(csv_path: Path = VENUE_GROUPS_CSV) -> list[str]:
+    """
+    Every venue marked favorite=Y in venue_groups.csv, original casing, sorted.
+    Unlike the per-event data-favorite attribute (only present on rows that
+    have an upcoming show), this is the full favorites roster regardless of
+    whether a favorite currently has anything scheduled -- so the ★ Venues
+    picker can list all of them, not just the ones with a booking right now.
+    """
+    if not csv_path.exists():
+        return []
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        names = [
+            (row.get("venue") or "").strip()
+            for row in csv.DictReader(f)
+            if (row.get("favorite") or "").strip().upper() == "Y" and (row.get("venue") or "").strip()
+        ]
+    return sorted(names, key=str.lower)
+
+
 def _load_performer_meta(csv_path: Path = ARTISTS_CSV) -> dict[str, bool]:
     """
     Read artists.csv into {performer_lower: favorite_bool}. Same
@@ -139,6 +159,21 @@ def _load_performer_meta(csv_path: Path = ARTISTS_CSV) -> dict[str, bool]:
 
 def _performer_favorite(performer: str | None, meta: dict[str, bool]) -> bool:
     return bool(meta.get((performer or "").strip().lower()))
+
+
+def _favorite_performer_names(csv_path: Path = ARTISTS_CSV) -> list[str]:
+    """Every performer marked favorite=Y in artists.csv, original casing, sorted.
+    Same "full roster regardless of current bookings" reasoning as
+    _favorite_venue_names() -- see its docstring."""
+    if not csv_path.exists():
+        return []
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        names = [
+            (row.get("performer") or "").strip()
+            for row in csv.DictReader(f)
+            if (row.get("favorite") or "").strip().upper() == "Y" and (row.get("performer") or "").strip()
+        ]
+    return sorted(names, key=str.lower)
 
 
 def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
@@ -283,6 +318,12 @@ def _build_marker() -> str:
     return f"Build {sha} · {stamp}"
 
 
+def _json_for_script(value) -> str:
+    """JSON-encode for embedding inside an inline <script> tag -- escapes '</'
+    so a name containing it can't prematurely close the script element."""
+    return json.dumps(value).replace("</", "<\\/")
+
+
 def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
              path: Path = DB_PATH) -> Path:
     """Render the dashboard for current knowledge (or a specific run) into out_path."""
@@ -301,6 +342,8 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("CONFLICTS_PLACEHOLDER", str(h["conflicts"]))
         .replace("SOURCES_PLACEHOLDER", str(h["sources"]))
         .replace("BUILD_PLACEHOLDER", _build_marker())
+        .replace("FAV_VENUES_PLACEHOLDER", _json_for_script(_favorite_venue_names()))
+        .replace("FAV_ARTISTS_PLACEHOLDER", _json_for_script(_favorite_performer_names()))
     )
     out_path.write_text(out, encoding="utf-8")
     logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))

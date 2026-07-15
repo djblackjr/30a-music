@@ -255,6 +255,8 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
 var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
+var ALL_FAV_VENUES=FAV_VENUES_PLACEHOLDER;
+var ALL_FAV_ARTISTS=FAV_ARTISTS_PLACEHOLDER;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -391,25 +393,8 @@ function bd(){
   var as=document.getElementById('af');as.innerHTML='<option value="">All Artists</option>';
   Object.keys(aa).sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;if(a===curA)o.selected=true;as.appendChild(o);});
 }
-var _favVenueNamesCache=null,_favArtistNamesCache=null;
-function _favVenueNames(){
-  if(_favVenueNamesCache)return _favVenueNamesCache;
-  var set={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    if(r.getAttribute('data-favorite')==='Y'){var v=r.getAttribute('data-venue');if(v)set[v]=1;}
-  });
-  _favVenueNamesCache=Object.keys(set).sort();
-  return _favVenueNamesCache;
-}
-function _favArtistNames(){
-  if(_favArtistNamesCache)return _favArtistNamesCache;
-  var set={};
-  document.querySelectorAll('#tb tr').forEach(function(r){if(r.classList.contains('exp'))return;
-    if(r.getAttribute('data-performer-favorite')==='Y'){var a=r.getAttribute('data-performer');if(a)set[a]=1;}
-  });
-  _favArtistNamesCache=Object.keys(set).sort();
-  return _favArtistNamesCache;
-}
+function _favVenueNames(){return ALL_FAV_VENUES;}
+function _favArtistNames(){return ALL_FAV_ARTISTS;}
 function _favPanelHtml(names,selected){
   if(!names.length)return '<div class="favdd-empty">No favorites yet</div>';
   return names.map(function(n){

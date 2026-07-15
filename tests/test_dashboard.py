@@ -149,6 +149,47 @@ def test_performer_favorite_missing_csv_defaults_everything_to_false():
     assert render._performer_favorite("Jim Couch", meta) is False
 
 
+def test_favorite_performer_names_lists_every_favorite_sorted_regardless_of_bookings(tmp_path):
+    # the roster must include a favorite with zero current shows -- this is
+    # the exact bug the ★ Artists dropdown had (only listed names that had
+    # an upcoming <tr> row, silently dropping favorites with nothing booked)
+    csv_file = tmp_path / "artists.csv"
+    csv_file.write_text(
+        "performer,favorite\nZoe Walega,Y\nAn Act With No Shows,Y\nOther Act,N\nNo Flag,\n",
+        encoding="utf-8",
+    )
+    names = render._favorite_performer_names(csv_file)
+    assert names == ["An Act With No Shows", "Zoe Walega"]   # sorted, case-insensitive
+
+
+def test_favorite_performer_names_missing_csv_returns_empty_list():
+    assert render._favorite_performer_names(Path("/tmp/does_not_exist_artists.csv")) == []
+
+
+def test_favorite_venue_names_lists_every_favorite_sorted(tmp_path):
+    csv_file = tmp_path / "venue_groups.csv"
+    csv_file.write_text(
+        "venue,group,favorite\nZebra Lounge,West 30A,Y\nAJ's Grayton Beach,West 30A,Y\nOther Place,West 30A,N\n",
+        encoding="utf-8",
+    )
+    names = render._favorite_venue_names(csv_file)
+    assert names == ["AJ's Grayton Beach", "Zebra Lounge"]   # sorted, case-insensitive
+
+
+def test_favorite_venue_names_missing_csv_returns_empty_list():
+    assert render._favorite_venue_names(Path("/tmp/does_not_exist_venue_groups.csv")) == []
+
+
+def test_render_embeds_full_favorites_rosters_as_js_arrays(tmp_path):
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert "var ALL_FAV_VENUES=" in html
+    assert "var ALL_FAV_ARTISTS=" in html
+    assert "FAV_VENUES_PLACEHOLDER" not in html
+    assert "FAV_ARTISTS_PLACEHOLDER" not in html
+
+
 def test_render_rows_carry_data_performer_favorite():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
