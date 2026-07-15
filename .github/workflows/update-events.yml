@@ -2,7 +2,12 @@ name: Update Music Events
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Every day at noon UTC (7am/8am Central, depending on DST)
+    # GitHub explicitly warns that schedules on the hour (minute 0) hit peak
+    # queue congestion and can be delayed for hours or dropped entirely --
+    # confirmed happening here: the original Friday cron never fired via
+    # `schedule` even once (only manual/push runs show up in the history).
+    # Offsetting to :17 avoids the top-of-hour pileup.
+    - cron: '17 12 * * *'  # Every day ~7am/8am Central, depending on DST
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
