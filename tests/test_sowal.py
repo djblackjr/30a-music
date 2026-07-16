@@ -7,6 +7,8 @@ No network calls.
 import sys
 from pathlib import Path
 
+from bs4 import BeautifulSoup
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.crawlers.sowal import SoWalCrawler, parse_time, parse_when, split_title
@@ -71,6 +73,27 @@ def test_parse_time_range():
 def test_parse_time_single():
     text = "Time:\n7:00 pm\nWhere:\nSomewhere"
     assert parse_time(text) == ("7:00 pm", None)
+
+
+# --- calendar-row parsing ----------------------------------------------------
+# Regression coverage for a real bug: a malformed row on a live "More Events"
+# widget had its <a> wrap a whole trailing paragraph instead of just its
+# title, producing a 500+ character "title" that was literally the venue's
+# full body description and got saved to the DB as a performer name.
+
+def test_parse_calendar_rows_skips_malformed_oversized_title():
+    huge_title = "Six Piece Suits " + ("Come out to HarborWalk Village along the Destin Harbor. " * 10)
+    html = f"""
+    <table class="views-table">
+      <caption>July 23, 2026</caption>
+      <tr><td>6:00 pm</td><td><a href="/event/malformed">{huge_title}</a></td><td>Venue</td></tr>
+      <tr><td>7:00 pm</td><td><a href="/event/fine">A Real Title</a></td><td>Venue</td></tr>
+    </table>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    rows = SoWalCrawler()._parse_calendar_rows(soup)
+    assert len(rows) == 1
+    assert rows[0]["title"] == "A Real Title"
 
 
 # --- registration ----------------------------------------------------------

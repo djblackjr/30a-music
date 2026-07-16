@@ -560,6 +560,13 @@ class SoWalCrawler:
     def _absolutize(href: str) -> str:
         return "https://sowal.com" + href if href.startswith("/") else href
 
+    # A genuine SoWal event title is always a short phrase. Seen live: a
+    # malformed row (an <a> that swallowed a whole following paragraph
+    # instead of just its title text) produced a 500+ character "title"
+    # that was literally the venue's full body description -- reject
+    # anything that long rather than trust it as a title.
+    _MAX_TITLE_LEN = 120
+
     def _parse_calendar_rows(self, soup) -> list[dict]:
         """
         Parse the listing's date-grouped calendar tables into raw rows.
@@ -583,12 +590,19 @@ class SoWalCrawler:
                 a = tds[1].find("a", href=True)
                 if not a:
                     continue
+                title_text = a.get_text(strip=True)
+                if not title_text or len(title_text) > self._MAX_TITLE_LEN:
+                    logger.warning(
+                        "[SoWalCrawler] Skipping malformed calendar row (title %d chars): %r...",
+                        len(title_text), title_text[:80],
+                    )
+                    continue
                 time_start, time_end = _cell_time(tds[0].get_text(" ", strip=True))
                 rows.append({
                     "date": date_val,
                     "time_start": time_start,
                     "time_end": time_end,
-                    "title": a.get_text(strip=True),
+                    "title": title_text,
                     "url": self._absolutize(a["href"]),
                 })
         return rows
