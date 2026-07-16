@@ -108,18 +108,58 @@ def _fold_typography(value: str) -> str:
     return value
 
 
+# Vision sometimes reports a performer/venue fully in caps ("BROOKE WASHOR")
+# where SoWal's own text (or a cleaner read of the same image on a different
+# day) gives normal title case ("Brooke Washor") -- a lighter general
+# companion to the hand-curated CANONICAL_FIXES table above, which only
+# catches variants someone has already noticed and added. Only fires when
+# the WHOLE value is uppercase, so it can never touch an already-correctly-
+# cased name. Short all-caps tokens common in this dataset are preserved
+# rather than title-cased into "Dj"/"Tj"/"Aj".
+_PRESERVE_UPPER_TOKENS = {"DJ", "TJ", "AJ"}
+
+# str.title() mis-capitalizes the letter right after an apostrophe
+# ("STINKY'S" -> "Stinky'S" -- wrong, should stay "Stinky's"), since it
+# treats the apostrophe as a fresh word boundary. Patch the common
+# contraction/possessive suffixes back down; a genuine new-word case like
+# "O'BRIEN" -> "O'Brien" is already correct and untouched by these.
+_TITLE_CASE_APOSTROPHE_FIXES = {
+    "'S": "'s", "'T": "'t", "'D": "'d", "'M": "'m", "'Ll": "'ll", "'Re": "'re", "'Ve": "'ve",
+}
+
+
+def _fold_all_caps(value: str) -> str:
+    if not value.isupper():
+        return value
+    words = []
+    for w in value.split(" "):
+        if w in _PRESERVE_UPPER_TOKENS:
+            words.append(w)
+            continue
+        titled = w.title()
+        for wrong, right in _TITLE_CASE_APOSTROPHE_FIXES.items():
+            titled = titled.replace(wrong, right)
+        words.append(titled)
+    return " ".join(words)
+
+
 def canonicalize(value: str | None) -> str | None:
     """
     Return the canonical spelling for a performer/venue value.
-    Unknown values pass through unchanged, but always with typographic
-    quote/dash variants folded to plain ASCII (see _TYPOGRAPHIC_FOLDS) so two
-    sources describing the same venue/performer with different typography
-    still collapse to one identity.
+    A known variant (CANONICAL_FIXES) always wins. Otherwise, typographic
+    quote/dash variants are folded to plain ASCII (see _TYPOGRAPHIC_FOLDS)
+    and an all-caps value is title-cased (see _fold_all_caps) so sources
+    describing the same venue/performer with different typography or
+    capitalisation still collapse to one identity. Any other unknown value
+    passes through unchanged.
     """
     if not value:
         return value
     trimmed = _fold_typography(value.strip())
-    return _VARIANT_TO_CANONICAL.get(trimmed.lower(), trimmed)
+    known = _VARIANT_TO_CANONICAL.get(trimmed.lower())
+    if known:
+        return known
+    return _fold_all_caps(trimmed)
 
 
 # Venue-aware performer aliases: the same short name refers to a different act

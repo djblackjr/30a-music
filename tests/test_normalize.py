@@ -37,11 +37,40 @@ def test_canonicalize_folds_smart_quotes_to_straight():
     # quotes (e.g. U+2019) while SoWal's plain text uses a straight apostrophe
     # -- same venue, different bytes, which broke identity_key matching and
     # produced duplicate events (e.g. "Stinky's Bait Shack" vs "STINKY’S
-    # BAIT SHACK").
-    assert canonicalize("STINKY’S BAIT SHACK") == "STINKY'S BAIT SHACK"
+    # BAIT SHACK"). The all-caps input also gets title-cased by the same
+    # pass (see test_canonicalize_all_caps_is_title_cased below), so both
+    # forms now collapse to the identical, fully-corrected spelling.
+    assert canonicalize("STINKY’S BAIT SHACK") == "Stinky's Bait Shack"
     assert canonicalize("Stinky’s Bait Shack") == "Stinky's Bait Shack"
     assert canonicalize("“The Red Bar”") == '"The Red Bar"'
     assert canonicalize("Foo – Bar") == "Foo - Bar"
+
+
+def test_canonicalize_all_caps_is_title_cased():
+    # Vision sometimes reports a performer fully in caps ("BROOKE WASHOR")
+    # on one call and normal title case ("Brooke Washor") on another --
+    # confirmed live, the same source image gave both across two days --
+    # so both must collapse to one identity rather than duplicating.
+    assert canonicalize("BROOKE WASHOR") == "Brooke Washor"
+
+
+def test_canonicalize_all_caps_preserves_short_known_tokens():
+    # "TJ" must not become "Tj".
+    assert canonicalize("TJ & BRAD") == "TJ & Brad"
+
+
+def test_canonicalize_all_caps_fixes_possessive_apostrophe():
+    # str.title() alone would wrongly give "Stinky'S" -- the apostrophe
+    # looks like a fresh word boundary to it.
+    assert canonicalize("STINKY'S BAIT SHACK") == "Stinky's Bait Shack"
+
+
+def test_canonicalize_all_caps_leaves_new_word_after_apostrophe_alone():
+    assert canonicalize("O'BRIEN") == "O'Brien"
+
+
+def test_canonicalize_mixed_case_untouched_by_all_caps_fold():
+    assert canonicalize("Some New Artist") == "Some New Artist"
 
 
 def test_canonicalize_instagram_handle_venue_variants():
