@@ -756,13 +756,13 @@ def recompute_aggregates(path: Path = DB_PATH) -> int:
         if not obs:
             continue
         agg = aggregate_observations(obs)
-        primary = agg["primary"]
+        resolved = agg["resolved_fields"]
         conn.execute(
             """UPDATE events SET time_start = ?, time_end = ?, stage = ?,
                                  confidence = ?, confidence_reason = ?, source_count = ?,
                                  verification_count = ?, conflict_flag = ?, conflict_reason = ?
                 WHERE id = ?""",
-            (primary.get("time_start"), primary.get("time_end"), primary.get("stage"),
+            (resolved.get("time_start"), resolved.get("time_end"), resolved.get("stage"),
              agg["confidence"], agg["confidence_reason"], agg["source_count"],
              agg["verification_count"], agg["conflict_flag"], agg["conflict_reason"], row["id"]),
         )

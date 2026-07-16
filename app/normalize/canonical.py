@@ -28,10 +28,19 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Boukou Groove", "BOUKOU GROOVE"),
     ("Harrison Prentice", "HARRISON PRENTICE"),
     ("Red Fish Taco", "RED FISH TACO"),
+    # GPT-4o Vision isn't deterministic call-to-call: re-processing the exact
+    # same screenshot on a different day produced "Papa Surf" one run and the
+    # bare Instagram handle "papasurfburgerbar" the next (see VISION_PROMPT's
+    # "use the Instagram username" fallback in app/images/importer.py) --
+    # same real venue, so both must collapse to one identity.
+    ("Red Fish Taco", "redfishtaco"),
     ("Papa Surf", "Papa Surf Burger Bar"),
     ("Papa Surf", "PAPA SURF BURGER BAR"),
     ("Papa Surf", "Papa Surf Burger Bar 30A"),
+    ("Papa Surf", "papasurfburgerbar"),
+    ("Shelby's Beach Bar", "shelbysbeachbar"),
     ("North Beach Social", "NORTH BEACH SOCIAL"),
+    ("North Beach Social", "northbeachsocial"),
     ("North Beach Social", "North Beach Social 1"),
     ("North Beach Social", "North Beach Social 2"),
     ("North Beach Social", "July Live Music Lineup"),

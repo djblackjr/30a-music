@@ -44,6 +44,22 @@ def test_canonicalize_folds_smart_quotes_to_straight():
     assert canonicalize("Foo – Bar") == "Foo - Bar"
 
 
+def test_canonicalize_instagram_handle_venue_variants():
+    # GPT-4o Vision isn't deterministic call-to-call: re-processing the exact
+    # same screenshot on a different day produced "Papa Surf" one run and the
+    # bare Instagram handle "papasurfburgerbar" the next (the VISION_PROMPT's
+    # "use the Instagram username" fallback) -- same real venue, must collapse.
+    assert canonicalize("papasurfburgerbar") == "Papa Surf"
+    assert canonicalize("redfishtaco") == "Red Fish Taco"
+    assert canonicalize("shelbysbeachbar") == "Shelby's Beach Bar"
+
+
+def test_identity_key_matches_for_instagram_handle_venue():
+    nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
+    handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]
+    assert event_identity(nice) == event_identity(handle)
+
+
 def test_identity_key_matches_across_quote_typography():
     # Regression: a SoWal-sourced "Stinky's Bait Shack" (straight apostrophe)
     # and a GPT-4o Vision-sourced "STINKY’S BAIT SHACK" (smart apostrophe)
