@@ -167,3 +167,61 @@ def test_sowal_time_change_is_changed():
     assert result["summary"]["changed"] == 1
     assert result["summary"]["new"] == 0
     assert result["summary"]["removed"] == 0
+
+
+# --- full fetch(): enrichment still fires for a known recurring series -----
+# Regression: split_title's ' at Venue' fallback resolves the venue half of
+# a title like "Here Comes the Sun ... at Rosemary Beach" from the bare
+# title alone -- but needs_enrichment used to treat a non-None venue as
+# "already resolved enough" and skip the enrichment fetch entirely, so the
+# performer half (still just the "whole title is the performer" catch-all
+# guess) was saved straight to the DB with no chance for resolve_performer's
+# RECURRING_SERIES_TITLES protection to ever run. Confirmed live: this
+# produced a real duplicate on the dashboard (a stale "Scratch 2020,
+# venue=None" row next to the correct "Scratch 2020, venue=Rosemary Beach").
+
+_LISTING_HTML_ROSEMARY = """
+<html><body>
+  <table class="views-table">
+    <caption>Wednesday, July 15, 2026</caption>
+    <tr><td>7:00 pm</td>
+        <td><a href="/event/here-comes-the-sun-summer-concert-series-at-rosemary-beach-4">Here Comes the Sun Summer Concert Series at Rosemary Beach</a></td></tr>
+  </table>
+</body></html>
+"""
+
+_ENRICHMENT_HTML_ROSEMARY = """
+<html><body>
+  <h1>Here Comes the Sun Summer Concert Series at Rosemary Beach</h1>
+  <p>When: Wednesday, July 15, 2026</p>
+  <p>Time: 7:00 pm to 8:30 pm</p>
+  <p>Wednesdays in Rosemary Beach mean music. June 3: Sons of Saints July 15: Scratch 2020 July 22: Killer Robot Army</p>
+</body></html>
+"""
+
+
+class _FakeResp:
+    def __init__(self, text):
+        self.text = text
+        self.status_code = 200
+
+    def raise_for_status(self):
+        pass
+
+
+def test_fetch_still_enriches_known_series_with_at_split_venue(monkeypatch):
+    import requests
+
+    def fake_get(url, headers=None, timeout=None):
+        if "events" in url and "event/" not in url:
+            return _FakeResp(_LISTING_HTML_ROSEMARY)
+        return _FakeResp(_ENRICHMENT_HTML_ROSEMARY)
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    events = SoWalCrawler(policy=CrawlPolicy(request_delay=0)).fetch()
+    perfs = {e["performer"] for e in events}
+
+    # The real, prose-lineup-resolved act -- not the fake series-title guess.
+    assert "Scratch 2020" in perfs
+    assert "Here Comes the Sun Summer Concert Series" not in perfs

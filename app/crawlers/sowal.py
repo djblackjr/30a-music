@@ -554,9 +554,23 @@ class SoWalCrawler:
         # unresolved/category performer, or a missing venue) need a page
         # fetch — one representative URL per distinct title, not per date
         # instance, since recurring rows share the same title/venue/description.
+        #
+        # A known recurring series (RECURRING_SERIES_TITLES) ALWAYS needs
+        # enrichment too, even once split_title's ' at Venue' fallback gives
+        # it a non-None venue from the bare title alone: that fallback split
+        # is what turns "Here Comes the Sun Summer Concert Series at
+        # Rosemary Beach" into a resolvable venue, but the performer half is
+        # still the untrustworthy "whole title is the performer" catch-all
+        # -- resolve_performer()'s protection against that only runs inside
+        # the enrichment reclassification below, so skipping enrichment here
+        # would silently save the series name as a fake performer again.
         candidates: dict[str, str] = {}
         for row in classified:
-            needs_enrichment = row["performer_status"] in ("unresolved", "category") or row["venue"] is None
+            needs_enrichment = (
+                row["performer_status"] in ("unresolved", "category")
+                or row["venue"] is None
+                or row["title"] in RECURRING_SERIES_TITLES
+            )
             if needs_enrichment and row["title"] not in candidates:
                 candidates[row["title"]] = row["url"]
 
@@ -584,11 +598,18 @@ class SoWalCrawler:
 
             enriched = enrichment.get(title)
             if enriched:
-                # A "named" result reached via the title-only catch-all with no
-                # '@ Venue' split is a guess, not a resolved artist (e.g.
-                # "Baytowne Wednesday Night Concert Series") -- worth
-                # re-checking against the now-fetched description too.
-                title_guess_unverified = extraction_method == "title" and venue is None
+                # A "named" result reached via the title-only catch-all is a
+                # guess, not a resolved artist (e.g. "Baytowne Wednesday
+                # Night Concert Series") -- worth re-checking against the
+                # now-fetched description too. Also true for a known
+                # recurring series even when it has a non-None venue: split_
+                # title's ' at Venue' fallback can resolve the venue half of
+                # a title like "Here Comes the Sun ... at Rosemary Beach"
+                # while the performer half is still just the untrustworthy
+                # catch-all guess.
+                title_guess_unverified = extraction_method == "title" and (
+                    venue is None or title in RECURRING_SERIES_TITLES
+                )
                 if venue is None and enriched["venue"]:
                     venue = enriched["venue"]
                 if performer_status in ("unresolved", "category") or title_guess_unverified:
