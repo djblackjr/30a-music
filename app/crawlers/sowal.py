@@ -773,6 +773,29 @@ class SoWalCrawler:
         if not title:
             return more_events
         time_start, time_end = parse_time(text)
+
+        # 2a) Prose lineup covering MULTIPLE dates, not just this page's own
+        # (e.g. "Here Comes the Sun" describes 10 Wednesdays, June 3 - August
+        # 5, but the page's own date is only one of them): every entry shares
+        # this page's one stated time, so emit one observation per date
+        # instead of discarding all but the page's own -- confirmed live,
+        # this recovered July 22 ("Killer Robot Army") and 8 other dates that
+        # were being parsed and silently thrown away.
+        lineup_entries = parse_prose_lineup(description, page_year)
+        if lineup_entries:
+            obs = []
+            for entry_date, name in lineup_entries.items():
+                ec = _classify_prose_lineup_entry(name)
+                obs.append(self._assemble(
+                    performer=ec["performer"], venue=venue, date=entry_date,
+                    time_start=time_start, time_end=time_end, url=url,
+                    title_raw=title, description_raw=description,
+                    extraction_method=ec["extraction_method"],
+                    performer_status=ec["performer_status"],
+                    resolved=ec["resolved"], event_category=ec["event_category"],
+                ))
+            return obs + more_events
+
         c = resolve_performer(title, description, page_date, page_year)
 
         # 3) Flyer-image fallback: some pages (e.g. a venue's "JULY LIVE

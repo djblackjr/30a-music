@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.crawlers.sowal import (
     RECURRING_SERIES_TITLES,
+    SoWalCrawler,
     classify_performer,
     parse_prose_lineup,
     resolve_performer,
@@ -234,3 +235,53 @@ def test_resolve_performer_leaves_real_named_titles_alone():
     assert c["performer"] == "Jordan Chase"
     assert c["performer_status"] == "named"
     assert c["extraction_method"] == "title"
+
+
+# --- parse_event_observations: emit EVERY prose-lineup date, not just the --
+# --- page's own -------------------------------------------------------------
+# Regression: a prose lineup describing multiple dates (e.g. "Here Comes the
+# Sun" covers 10 Wednesdays, June 3 - August 5) only ever produced ONE
+# observation -- whichever date matched the page's own -- silently discarding
+# every other date parse_prose_lineup had already correctly parsed. Confirmed
+# live: this recovered July 22 ("Killer Robot Army") among others.
+
+class _FakePageResponse:
+    def __init__(self, text):
+        self.text = text
+        self.status_code = 200
+        self.content = b""
+
+    def raise_for_status(self):
+        pass
+
+
+_MULTI_DATE_PAGE_HTML = f"""
+<html><body>
+  <h1>Here Comes the Sun Summer Concert Series at Rosemary Beach</h1>
+  <p>When: Wednesday, July 15, 2026</p>
+  <p>Time: 7:00 pm to 8:30 pm</p>
+  <p>{_HERE_COMES_THE_SUN_DESC}</p>
+</body></html>
+"""
+
+
+def test_parse_event_observations_emits_every_prose_lineup_date(monkeypatch):
+    import requests
+    page_url = "https://sowal.com/event/here-comes-the-sun-summer-concert-series-at-rosemary-beach-4"
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _FakePageResponse(_MULTI_DATE_PAGE_HTML))
+
+    obs = SoWalCrawler().parse_event_observations(page_url)
+    by_date = {o["date"]: o for o in obs}
+
+    # The page's own date, and others the page never directly "was".
+    assert by_date["2026-07-15"]["performer"] == "Scratch 2020"
+    assert by_date["2026-06-03"]["performer"] == "Sons of Saints"
+    assert by_date["2026-07-22"]["performer"] == "Killer Robot Army"
+    assert by_date["2026-07-29"]["performer"] == "Run Katie Run"
+
+    # Every entry shares the page's one stated time and venue (from the
+    # trailing " at Venue" title fallback -- no '@' or 'Where:' on this page).
+    for o in obs:
+        assert o["time_start"] == "7:00 pm"
+        assert o["time_end"] == "8:30 pm"
+        assert o["venue"] == "Rosemary Beach"
