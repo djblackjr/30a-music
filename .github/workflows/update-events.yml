@@ -10,6 +10,14 @@ on:
     - cron: '17 12 * * *'  # Every day ~7am/8am Central, depending on DST
   workflow_dispatch:  # Allow manual trigger
 
+permissions:
+  # Default GITHUB_TOKEN is read-only unless declared otherwise; without this
+  # the pipeline step succeeds but "git push" 403s, silently leaving the live
+  # dashboard on the previous day's build. Confirmed via the Actions API: the
+  # one schedule-triggered run that ever fired (2026-07-16) built fine and
+  # failed only on the commit/push step.
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
