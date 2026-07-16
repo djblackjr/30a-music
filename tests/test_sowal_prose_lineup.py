@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.crawlers.sowal import (
+    RECURRING_SERIES_TITLES,
     classify_performer,
     parse_prose_lineup,
     resolve_performer,
@@ -184,13 +185,36 @@ def test_resolve_performer_tba_entry_is_unresolved_not_fake_performer():
 
 
 def test_resolve_performer_no_match_for_date_outside_lineup():
+    # A date beyond what Baytowne's own July lineup blurb covers, e.g. reached
+    # via the main crawler's enrichment for a September calendar row. No
+    # "see the lineup" pointer phrase exists on this page at all -- but
+    # Baytowne is a known ambiguous recurring series (RECURRING_SERIES_TITLES),
+    # so the bare title is still never trusted as a performer without a
+    # matching prose-lineup entry for THIS specific date.
     c = resolve_performer(
         "Baytowne Wednesday Night Concert Series", _BAYTOWNE_DESC, "2026-09-01", 2026
     )
-    # Falls through to the pointer-phrase check; Baytowne's description has
-    # no "see the lineup" pointer, so the (wrong) title guess is unchanged --
-    # documents the current limit of this fix, not a claim it's fully fixed.
+    assert c["performer"] is None
+    assert c["performer_status"] == "unresolved"
+
+
+def test_baytowne_has_no_pointer_phrase_but_is_a_known_series():
+    # Confirms *why* the test above needs RECURRING_SERIES_TITLES: the
+    # pointer-phrase signal alone genuinely finds nothing on this page.
+    from app.crawlers.sowal import _points_to_external_lineup
+    assert "Baytowne Wednesday Night Concert Series" in RECURRING_SERIES_TITLES
+    assert _points_to_external_lineup(_BAYTOWNE_DESC) is False
+
+
+def test_resolve_performer_unaffected_for_titles_not_in_known_series():
+    # A made-up ambiguous-looking title that ISN'T on the list keeps the
+    # existing (pointer-phrase-only) behavior -- this fix is deliberately
+    # scoped to verified cases, not a blanket "no @ means unresolved" rule.
+    c = resolve_performer(
+        "Some Other Weekly Thing", "No lineup or pointer phrase here at all.", "2026-09-01", 2026
+    )
     assert c["extraction_method"] == "title"
+    assert c["performer"] == "Some Other Weekly Thing"
 
 
 # --- resolve_performer: no prose lineup, but an explicit pointer phrase -----

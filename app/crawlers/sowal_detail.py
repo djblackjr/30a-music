@@ -29,7 +29,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.crawlers.policy import CrawlPolicy
-from app.crawlers.sowal import SoWalCrawler
+from app.crawlers.sowal import RECURRING_SERIES_TITLES, SoWalCrawler
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +42,10 @@ class SoWalDetailCrawler(SoWalCrawler):
     # Recurring venues/series whose detail page unlocks extraction the main
     # listing's calendar rows can't (a flyer image, or a prose lineup) --
     # matched by exact title (case/whitespace-insensitive) against a fresh
-    # listing crawl every run. Easily customizable; can be sourced from
-    # config/env/DB.
-    TITLE_PATTERNS = [
-        "Live Music @ Crackings",
-        "Live Music @ Old Florida Fish House",
-        "30Avenue Summer Concert Series",
-        "Here Comes the Sun Summer Concert Series at Rosemary Beach",
-        "Baytowne Wednesday Night Concert Series",
-        "Harbor Nights at HarborWalk",
-    ]
+    # listing crawl every run. Same list resolve_performer() uses to know
+    # which bare titles are never trustworthy as a performer name on their
+    # own (single source of truth -- see RECURRING_SERIES_TITLES).
+    TITLE_PATTERNS = list(RECURRING_SERIES_TITLES)
 
     def __init__(self, policy: CrawlPolicy | None = None):
         super().__init__(policy or CrawlPolicy(request_delay=0.5))

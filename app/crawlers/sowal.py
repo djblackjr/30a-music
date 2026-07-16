@@ -345,6 +345,27 @@ _LINEUP_POINTER_RE = re.compile(
     r"\b(?:see|check out)\s+(?:the\s+)?(?:full\s+|music\s+|complete\s+)?line[\s-]?up\b", re.I
 )
 
+# Recurring venues/series verified (this session) to have no single-act
+# meaning of their own: classify_performer's "whole title is the performer"
+# catch-all would otherwise save the series/program name itself as if it
+# were a real act. Trusted only when confirmed by an exact per-date
+# prose-lineup match (or, by the caller, a flyer image) -- a bare title
+# match on this list is never enough on its own. This closes a real gap the
+# pointer-phrase check alone missed: Baytowne's description has no "see the
+# lineup" pointer phrase at all, so a calendar date outside its own visible
+# lineup (e.g. a September instance, reached via the main crawler's
+# enrichment) fell through to the wrong title guess every run. Shared with
+# SoWalDetailCrawler.TITLE_PATTERNS, which uses the same list to discover
+# each series' current detail-page URL.
+RECURRING_SERIES_TITLES = frozenset({
+    "Live Music @ Crackings",
+    "Live Music @ Old Florida Fish House",
+    "30Avenue Summer Concert Series",
+    "Here Comes the Sun Summer Concert Series at Rosemary Beach",
+    "Baytowne Wednesday Night Concert Series",
+    "Harbor Nights at HarborWalk",
+})
+
 
 # A real lineup entry ("Casey Kearney Band", "Will Thompson Band: Tribute to
 # Tom Petter & Journey") is always a short phrase. The LAST entry in a
@@ -411,12 +432,14 @@ def resolve_performer(
     title: str | None, description: str, target_date: str | None, page_year: int | None = None
 ) -> dict:
     """
-    classify_performer(), refined with the two prose-lineup signals above.
+    classify_performer(), refined with the prose-lineup and known-series
+    signals above.
 
     An exact per-date match from an inline prose lineup always wins (it's
     more specific than any title-based guess). Otherwise, a title that was
     only resolved via the "whole title is the performer" catch-all is
-    downgraded to unresolved when the page explicitly points to a lineup we
+    downgraded to unresolved when it's a known ambiguous recurring series
+    (RECURRING_SERIES_TITLES) or the page explicitly points to a lineup we
     couldn't find in text -- callers can then fall back to e.g. flyer-image
     extraction instead of saving the series name as a fake performer.
     """
@@ -427,7 +450,8 @@ def resolve_performer(
         if name:
             return _classify_prose_lineup_entry(name)
 
-    if c["extraction_method"] == "title" and _points_to_external_lineup(description):
+    is_known_series = (title or "").strip() in RECURRING_SERIES_TITLES
+    if c["extraction_method"] == "title" and (is_known_series or _points_to_external_lineup(description)):
         return {"performer": None, "performer_status": "unresolved", "resolved": False,
                 "event_category": "live_music", "extraction_method": "unresolved"}
 
