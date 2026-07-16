@@ -593,6 +593,52 @@ class SoWalCrawler:
                 })
         return rows
 
+    def _parse_more_events_widget(
+        self, soup, own_date: str | None, default_venue: str | None
+    ) -> list[dict]:
+        """
+        Event pages often carry a "More Events at <venue/series>" widget
+        below the main content (Drupal view 'date_calendar_lists'): one
+        `<table class="views-table">` per date, in the exact same
+        caption-plus-rows shape as the main listing's calendar tables, each
+        row linking to its own distinct event node for that date. Reuses
+        _parse_calendar_rows, which already knows this shape.
+
+        This widget was initially mistaken for junk (see
+        _in_calendar_widget) because its per-table <caption> dates went
+        unread; on a page with several distinct show titles at one venue
+        (e.g. Old Florida Fish House: "Dueling Pianos", "Jake & Aimee"),
+        it's real, useful, otherwise-unreachable data.
+
+        Classifies each row from its title alone, with no further page
+        fetch (kept cheap): a genuine "Act @ Venue" title resolves
+        normally, but a repeated series title with no ' @ Venue' split
+        (e.g. "30Avenue Summer Concert Series" appearing on every row) hits
+        the same fake-performer pattern resolve_performer() guards against
+        on the page's own title -- with no per-row description available to
+        recover a real name from, that row is skipped rather than saving a
+        fabricated performer.
+        """
+        obs = []
+        for row in self._parse_calendar_rows(soup):
+            if row["date"] == own_date:
+                continue  # the page's own instance, already covered elsewhere
+
+            title = row["title"]
+            _perf, split_venue = split_title(title)
+            c = classify_performer(title, "")
+            if c["extraction_method"] == "title" and split_venue is None:
+                continue
+
+            obs.append(self._assemble(
+                performer=c["performer"], venue=split_venue or default_venue, date=row["date"],
+                time_start=row["time_start"], time_end=row["time_end"], url=row["url"],
+                title_raw=title, description_raw="",
+                extraction_method=c["extraction_method"], performer_status=c["performer_status"],
+                resolved=c["resolved"], event_category=c["event_category"],
+            ))
+        return obs
+
     def _fetch_enrichment(self, url: str) -> dict | None:
         """Fetch one representative event page for a title: its venue + description."""
         try:
@@ -643,14 +689,18 @@ class SoWalCrawler:
         page_date = parse_when(when)
         page_year = int(page_date[:4]) if page_date else None
 
+        # "More Events at X": a separate set of dates this page links forward
+        # to, independent of whichever path below resolves THIS page's own date.
+        more_events = self._parse_more_events_widget(soup, page_date, venue)
+
         # 1) Lineup / series page: one observation per (performer, date) row.
         lineup = self._parse_lineup(soup, venue, page_year, url, title)
         if lineup:
-            return lineup
+            return lineup + more_events
 
         # 2) Single observation from the title (+ description fallback).
         if not title:
-            return []
+            return more_events
         time_start, time_end = parse_time(text)
         c = resolve_performer(title, description, page_date, page_year)
 
@@ -662,7 +712,7 @@ class SoWalCrawler:
         if c["performer_status"] in ("unresolved", "category"):
             flyer_obs = self._parse_flyer_image(soup, venue, url, title)
             if flyer_obs:
-                return flyer_obs
+                return flyer_obs + more_events
 
         return [self._assemble(
             performer=c["performer"], venue=venue, date=page_date,
@@ -671,7 +721,7 @@ class SoWalCrawler:
             extraction_method=c["extraction_method"],
             performer_status=c["performer_status"],
             resolved=c["resolved"], event_category=c["event_category"],
-        )]
+        )] + more_events
 
     # -- flyer-image fallback (GPT-4o Vision) --------------------------------
 
