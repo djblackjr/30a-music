@@ -67,13 +67,34 @@ _TIME_LABEL_RE  = re.compile(r"Time:\s*(.+)")
 _BARE_TIME_RE   = re.compile(r"(\d{1,2}:\d{2}\s*[ap]m)", re.I)
 
 
+# Fallback delimiter when there's no '@': "Here Comes the Sun Summer Concert
+# Series at Rosemary Beach" -> ('Here Comes the Sun Summer Concert Series',
+# 'Rosemary Beach'). Splits on the LAST ' at ' (a trailing "... at Venue" is
+# the common construction). Guarded against misreading a showtime as a venue
+# ("Trivia at 7pm") -- rejected when the trailing part looks like a clock time.
+_AT_SPLIT_RE = re.compile(r"\s+at\s+", re.I)
+_TIME_LIKE_RE = re.compile(r"^\d{1,2}(:\d{2})?\s*(am|pm)?$", re.I)
+
+
 def split_title(title: str | None) -> tuple[str, str | None]:
-    """'Performer @ Venue' -> ('Performer', 'Venue'); no ' @ ' -> (title, None)."""
+    """
+    'Performer @ Venue' -> ('Performer', 'Venue').
+    No '@' but a trailing ' at Venue' -> same split (see _AT_SPLIT_RE).
+    Neither -> (title, None).
+    """
     if not title:
         return "", None
     if " @ " in title:
         performer, venue = title.split(" @ ", 1)
         return performer.strip(), venue.strip() or None
+
+    matches = list(_AT_SPLIT_RE.finditer(title))
+    if matches:
+        last = matches[-1]
+        performer, venue = title[:last.start()].strip(), title[last.end():].strip()
+        if performer and venue and not _TIME_LIKE_RE.match(venue):
+            return performer, venue
+
     return title.strip(), None
 
 

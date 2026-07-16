@@ -56,6 +56,23 @@ def test_split_title_no_venue():
     assert split_title("Open Mic Night") == ("Open Mic Night", None)
 
 
+def test_split_title_falls_back_to_trailing_at():
+    # No '@' on this page's title -- verified live it has no 'Where:' label
+    # either, so this trailing "... at Venue" is the only venue signal at all.
+    assert split_title("Here Comes the Sun Summer Concert Series at Rosemary Beach") == (
+        "Here Comes the Sun Summer Concert Series", "Rosemary Beach")
+
+
+def test_split_title_at_split_uses_last_occurrence():
+    assert split_title("Live at Leeds at The Bay") == ("Live at Leeds", "The Bay")
+
+
+def test_split_title_at_split_rejects_a_showtime():
+    # "Trivia at 7pm" should not be misread as a venue named "7pm".
+    assert split_title("Trivia at 7pm") == ("Trivia at 7pm", None)
+    assert split_title("Trivia at 7:30 PM") == ("Trivia at 7:30 PM", None)
+
+
 def test_parse_when_full_format():
     assert parse_when("Saturday, July 11, 2026") == "2026-07-11"
 
