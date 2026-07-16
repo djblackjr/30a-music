@@ -40,9 +40,12 @@ app/crawlers/registry.py. Named observations flow through app/normalize before
 save; unresolved/category observations are partitioned out first.
 """
 import logging
+import os
 import re
+import tempfile
 import time
 from datetime import datetime
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -533,6 +536,17 @@ class SoWalCrawler:
             return []
         time_start, time_end = parse_time(text)
         c = classify_performer(title, description)
+
+        # 3) Flyer-image fallback: some pages (e.g. a venue's "JULY LIVE
+        # MUSIC" poster) publish the whole lineup as a single JPG with no
+        # surrounding text at all, so title/description extraction never had
+        # anything to find. Only worth the network + Vision-API round trip
+        # once text extraction has already come up empty.
+        if c["performer_status"] in ("unresolved", "category"):
+            flyer_obs = self._parse_flyer_image(soup, venue, url, title)
+            if flyer_obs:
+                return flyer_obs
+
         return [self._assemble(
             performer=c["performer"], venue=venue, date=page_date,
             time_start=time_start, time_end=time_end, url=url,
@@ -541,6 +555,86 @@ class SoWalCrawler:
             performer_status=c["performer_status"],
             resolved=c["resolved"], event_category=c["event_category"],
         )]
+
+    # -- flyer-image fallback (GPT-4o Vision) --------------------------------
+
+    # SoWal's body-image template class for a full-width embedded photo/flyer.
+    _FLYER_IMAGE_CLASS = "image-_bohr-body-image-full-width"
+
+    @classmethod
+    def _find_flyer_image_url(cls, soup) -> str | None:
+        """Locate an embedded flyer/poster image in the page body, if any."""
+        img = soup.find("img", class_=cls._FLYER_IMAGE_CLASS)
+        if not img or not img.get("src"):
+            return None
+        return cls._absolutize(img["src"])
+
+    def _download_flyer(self, img_url: str) -> Path | None:
+        try:
+            response = requests.get(img_url, headers=self.HEADERS, timeout=20)
+            response.raise_for_status()
+        except Exception as exc:
+            logger.warning("[SoWalCrawler] Failed to fetch flyer image %s: %s", img_url, exc)
+            return None
+
+        ext = Path(img_url.split("?")[0]).suffix or ".jpg"
+        fd, tmp_name = tempfile.mkstemp(suffix=ext)
+        with os.fdopen(fd, "wb") as f:
+            f.write(response.content)
+        return Path(tmp_name)
+
+    def _parse_flyer_image(self, soup, venue: str | None, url: str, title: str) -> list[dict]:
+        """
+        Run an embedded flyer image through the same GPT-4o Vision importer used
+        for manually-dropped screenshots (app/images/importer.py), returning one
+        observation per performer/date the model reads off the poster.
+
+        Requires OPENAI_API_KEY; returns [] (no exception) when it's unset or
+        the page has no such image, so callers fall back to the existing
+        text-only "unresolved" observation exactly as before this fallback
+        existed. No local-OCR path here — Apple Vision's parser (app/images/
+        ocr.py) is positional/two-column, tuned for a different screenshot
+        layout, and wouldn't make sense of a stylised calendar poster.
+        """
+        if not os.getenv("OPENAI_API_KEY"):
+            return []
+
+        img_url = self._find_flyer_image_url(soup)
+        if not img_url:
+            return []
+
+        tmp_path = self._download_flyer(img_url)
+        if not tmp_path:
+            return []
+
+        try:
+            from app.images.importer import _call_gpt4o, _normalise
+            raw = _call_gpt4o(tmp_path)
+            normalised = _normalise(raw, tmp_path)
+        except Exception as exc:
+            logger.warning("[SoWalCrawler] Flyer image Vision extraction failed for %s: %s", img_url, exc)
+            return []
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+        if not normalised:
+            return []
+
+        logger.info(
+            "[SoWalCrawler] Flyer image at %s yielded %d event(s) via GPT-4o Vision",
+            img_url, len(normalised),
+        )
+
+        obs = []
+        for ev in normalised:
+            obs.append(self._assemble(
+                performer=ev["performer"], venue=venue or ev["venue"], date=ev["date"],
+                time_start=ev["time_start"], time_end=ev["time_end"], url=url,
+                title_raw=title, description_raw=f"flyer image: {img_url}",
+                extraction_method="flyer_image", performer_status="named",
+                resolved=True, event_category="live_music",
+            ))
+        return obs
 
     @staticmethod
     def _content_root(soup):
