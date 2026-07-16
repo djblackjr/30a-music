@@ -290,6 +290,117 @@ def classify_performer(title: str | None, description: str = "") -> dict:
             "event_category": "live_music", "extraction_method": "title"}
 
 
+# ---------------------------------------------------------------------------
+# Prose lineup handling
+#
+# A recurring-series title with no ' @ Venue' split (e.g. "Baytowne Wednesday
+# Night Concert Series", "30Avenue Summer Concert Series", "Harbor Nights at
+# HarborWalk") describes a PROGRAM, not a single act -- but is_generic_title
+# can't tell, because the venue's own proper noun (Baytowne, 30Avenue,
+# HarborWalk) breaks the "every token is a generic word" check, so
+# classify_performer falls through to its "whole title is the performer"
+# catch-all and invents a fake performer out of the series name.
+#
+# Two independent signals recover the real per-date answer:
+#   - the description often embeds the actual lineup as inline prose, e.g.
+#     "July 15th: The Aces Band" -- parse_prose_lineup() + resolve_performer()
+#     below match that against the target date.
+#   - failing that, a page that explicitly says "see the full lineup below"
+#     is telling us the real answer is off-page (usually a flyer image) --
+#     _points_to_external_lineup() flags this so callers can downgrade a
+#     title-guessed "named" result to unresolved rather than trust it.
+# ---------------------------------------------------------------------------
+
+_MONTH_NAMES = (
+    r"January|February|March|April|May|June|July|"
+    r"August|September|October|November|December"
+)
+_PROSE_LINEUP_ENTRY_RE = re.compile(
+    rf"\b({_MONTH_NAMES})\s+(\d{{1,2}})(?:st|nd|rd|th)?\s*:\s*"
+    rf"(.+?)(?=\b(?:{_MONTH_NAMES})\s+\d{{1,2}}(?:st|nd|rd|th)?\s*:|$)",
+    re.I,
+)
+_LINEUP_POINTER_RE = re.compile(
+    r"\b(?:see|check out)\s+(?:the\s+)?(?:full\s+|music\s+|complete\s+)?line[\s-]?up\b", re.I
+)
+
+
+def parse_prose_lineup(description: str | None, year: int | None) -> dict[str, str]:
+    """
+    Parse an inline 'Month Day[st/nd/rd/th]: Name' lineup embedded directly in
+    a description's prose (as opposed to a table), e.g. "July 15th: The Aces
+    Band". Returns {iso_date: name_text}. Best-effort: an entry whose own
+    name text happens to contain something resembling the next-entry boundary
+    (rare, seen once as "...Gage Cowart THURSDAY, July 2, Western Green: Will
+    Thompson Band...") may absorb extra text, but that only corrupts entries
+    this function isn't asked to match against.
+    """
+    if not description or year is None:
+        return {}
+    entries: dict[str, str] = {}
+    for m in _PROSE_LINEUP_ENTRY_RE.finditer(description):
+        month, day, name = m.group(1), m.group(2), m.group(3).strip(" -—")
+        if not name:
+            continue
+        try:
+            date_val = datetime.strptime(f"{month} {day} {year}", "%B %d %Y").date().isoformat()
+        except ValueError:
+            continue
+        entries[date_val] = name
+    return entries
+
+
+def _points_to_external_lineup(description: str | None) -> bool:
+    """True when the page explicitly defers to a lineup we haven't found in text."""
+    return bool(_LINEUP_POINTER_RE.search(description or ""))
+
+
+def _classify_prose_lineup_entry(name: str) -> dict:
+    """Classify one 'Month Day: <name>' entry the same way classify_performer would."""
+    category = detect_category(name)
+    if category:
+        performer = extract_performer_from_description(name)
+        if performer:
+            return {"performer": performer, "performer_status": "named", "resolved": True,
+                    "event_category": category, "extraction_method": "prose_lineup"}
+        return {"performer": None, "performer_status": "category", "resolved": False,
+                "event_category": category, "extraction_method": "prose_lineup"}
+
+    if is_generic_title(name) or name.strip().upper() in ("TBA", "TBD"):
+        return {"performer": None, "performer_status": "unresolved", "resolved": False,
+                "event_category": "live_music", "extraction_method": "prose_lineup"}
+
+    return {"performer": name, "performer_status": "named", "resolved": True,
+            "event_category": "live_music", "extraction_method": "prose_lineup"}
+
+
+def resolve_performer(
+    title: str | None, description: str, target_date: str | None, page_year: int | None = None
+) -> dict:
+    """
+    classify_performer(), refined with the two prose-lineup signals above.
+
+    An exact per-date match from an inline prose lineup always wins (it's
+    more specific than any title-based guess). Otherwise, a title that was
+    only resolved via the "whole title is the performer" catch-all is
+    downgraded to unresolved when the page explicitly points to a lineup we
+    couldn't find in text -- callers can then fall back to e.g. flyer-image
+    extraction instead of saving the series name as a fake performer.
+    """
+    c = classify_performer(title, description)
+
+    if target_date:
+        name = parse_prose_lineup(description, page_year).get(target_date)
+        if name:
+            return _classify_prose_lineup_entry(name)
+
+    if c["extraction_method"] == "title" and _points_to_external_lineup(description):
+        return {"performer": None, "performer_status": "unresolved", "resolved": False,
+                "event_category": "live_music", "extraction_method": "unresolved"}
+
+    return c
+
+
 def _cell_time(cell: str) -> tuple[str | None, str | None]:
     """Time from a lineup cell: an 'X to Y' range, else a single bare time."""
     m = _TIME_RANGE_RE.search(cell)
@@ -416,10 +527,16 @@ class SoWalCrawler:
 
             enriched = enrichment.get(title)
             if enriched:
+                # A "named" result reached via the title-only catch-all with no
+                # '@ Venue' split is a guess, not a resolved artist (e.g.
+                # "Baytowne Wednesday Night Concert Series") -- worth
+                # re-checking against the now-fetched description too.
+                title_guess_unverified = extraction_method == "title" and venue is None
                 if venue is None and enriched["venue"]:
                     venue = enriched["venue"]
-                if performer_status in ("unresolved", "category"):
-                    c = classify_performer(title, enriched["description"])
+                if performer_status in ("unresolved", "category") or title_guess_unverified:
+                    page_year = int(row["date"][:4]) if row["date"] else None
+                    c = resolve_performer(title, enriched["description"], row["date"], page_year)
                     performer, performer_status = c["performer"], c["performer_status"]
                     resolved, event_category, extraction_method = (
                         c["resolved"], c["event_category"], c["extraction_method"],
@@ -535,7 +652,7 @@ class SoWalCrawler:
         if not title:
             return []
         time_start, time_end = parse_time(text)
-        c = classify_performer(title, description)
+        c = resolve_performer(title, description, page_date, page_year)
 
         # 3) Flyer-image fallback: some pages (e.g. a venue's "JULY LIVE
         # MUSIC" poster) publish the whole lineup as a single JPG with no
