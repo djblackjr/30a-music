@@ -325,22 +325,34 @@ _LINEUP_POINTER_RE = re.compile(
 )
 
 
+# A real lineup entry ("Casey Kearney Band", "Will Thompson Band: Tribute to
+# Tom Petter & Journey") is always a short phrase. The LAST entry in a
+# lineup has no following "Month Day:" marker to stop the non-greedy capture
+# at, so when the venue's promotional blurb immediately follows the lineup
+# in the same description (the common case — confirmed live: Baytowne's
+# "July 29th: Shenanigans" swallowed the venue's entire following paragraph,
+# 800+ characters, straight into the DB as a performer name), the capture
+# runs to the end of the description instead of stopping at the entry.
+_MAX_PROSE_NAME_LEN = 80
+
+
 def parse_prose_lineup(description: str | None, year: int | None) -> dict[str, str]:
     """
     Parse an inline 'Month Day[st/nd/rd/th]: Name' lineup embedded directly in
     a description's prose (as opposed to a table), e.g. "July 15th: The Aces
-    Band". Returns {iso_date: name_text}. Best-effort: an entry whose own
-    name text happens to contain something resembling the next-entry boundary
-    (rare, seen once as "...Gage Cowart THURSDAY, July 2, Western Green: Will
-    Thompson Band...") may absorb extra text, but that only corrupts entries
-    this function isn't asked to match against.
+    Band". Returns {iso_date: name_text}. An entry whose captured text runs
+    implausibly long -- either the rare mid-list case where a name resembles
+    the next-entry boundary ("...Gage Cowart THURSDAY, July 2, Western
+    Green: Will Thompson Band..."), or the common last-entry case where
+    trailing prose follows the lineup with no next date to bound it -- is
+    dropped rather than trusted as a name.
     """
     if not description or year is None:
         return {}
     entries: dict[str, str] = {}
     for m in _PROSE_LINEUP_ENTRY_RE.finditer(description):
         month, day, name = m.group(1), m.group(2), m.group(3).strip(" -—")
-        if not name:
+        if not name or len(name) > _MAX_PROSE_NAME_LEN:
             continue
         try:
             date_val = datetime.strptime(f"{month} {day} {year}", "%B %d %Y").date().isoformat()

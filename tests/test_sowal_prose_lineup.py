@@ -116,6 +116,31 @@ def test_parse_prose_lineup_empty_without_year():
     assert parse_prose_lineup(_BAYTOWNE_DESC, None) == {}
 
 
+# Regression coverage for a real bug: the LAST entry in a lineup has no
+# following "Month Day:" marker to stop its non-greedy capture, so when the
+# venue's promotional blurb immediately follows the lineup (the common
+# case), the capture ran to the end of the description instead of stopping
+# at the entry -- confirmed live: Baytowne's "July 29th: Shenanigans"
+# swallowed the venue's entire trailing paragraph (800+ characters) straight
+# into the DB as a performer name.
+_BAYTOWNE_DESC_WITH_TRAILING_PROSE = _BAYTOWNE_DESC + (
+    " The Village of Baytowne Wharf is the heart and soul of Sandestin Golf "
+    "and Beach Resort. Featuring an array of boutiques, eateries, galleries "
+    "and nightlife -- not to mention a jam-packed schedule of outdoor "
+    "festivals and special events, it's easy to see why."
+)
+
+
+def test_parse_prose_lineup_drops_last_entry_swallowed_by_trailing_prose():
+    entries = parse_prose_lineup(_BAYTOWNE_DESC_WITH_TRAILING_PROSE, 2026)
+    # Earlier entries (bounded by a real next-entry marker) are unaffected.
+    assert entries["2026-07-15"] == "The Aces Band"
+    assert entries["2026-07-22"] == "Casey Kearney Band"
+    # The last entry, with no next marker to bound it, is dropped rather
+    # than trusted as an 800-character "performer name".
+    assert "2026-07-29" not in entries
+
+
 def test_parse_prose_lineup_empty_without_description():
     assert parse_prose_lineup(None, 2026) == {}
     assert parse_prose_lineup("no dates here", 2026) == {}
