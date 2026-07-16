@@ -281,42 +281,52 @@ def test_lineup_row_without_confident_date_marked_unresolved():
     assert unresolved[0]["date"] is None and unresolved[0]["resolved"] is False
 
 
-# SoWal detail pages render in a three-column panel layout: real content sits
-# under id="bohr-three-col-list-one", while an adjacent id="bohr-three-col-
-# list-two" column carries an "Explore SoWal" widget -- a stack of single-row
-# <table class="views-table"> elements listing the same series' other
-# upcoming dates, each with no date cell of its own. Scanning the whole page
-# for <tr> misreads that widget as a multi-row lineup and manufactures a
-# garbage "unresolved, date=None" observation per widget row (one single real
-# event turned into many duplicates).
-_SIDEBAR_WIDGET_HTML = """
+# SoWal's "Explore SoWal" recommendation widget (Drupal view ID
+# 'date_calendar_lists') is a stack of single-row <table class="views-table">
+# elements listing OTHER events on the site (e.g. this same series' other
+# upcoming dates), each with no date cell of its own. It was initially
+# mistaken for a page-position thing (it renders inside a "second column"
+# wrapper) -- but that same column also holds genuine event-detail panes on
+# some pages, so only the widget's own pane identity (its view/pane CSS
+# classes) reliably distinguishes it. Scanning the whole page for <tr>
+# misreads it as a multi-row lineup and manufactures a garbage "unresolved,
+# date=None" observation per widget row (one single real event turned into
+# many duplicates).
+_CALENDAR_WIDGET_HTML = """
 <html><body>
-  <div id="bohr-three-col-list-one">
-    <h1>30Avenue Summer Concert Series @ 30Avenue</h1>
-    <p>When: Wednesday, July 15, 2026</p>
-    <p>Time: 6:00 pm to 9:00 pm</p>
-    <p>Where: 30Avenue</p>
-  </div>
-  <div id="bohr-three-col-list-two">
-    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
-    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
-    <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+  <h1>30Avenue Summer Concert Series @ 30Avenue</h1>
+  <p>When: Wednesday, July 15, 2026</p>
+  <p>Time: 6:00 pm to 9:00 pm</p>
+  <p>Where: 30Avenue</p>
+  <div class="panel-pane pane-views-panes pane-date-calendar-lists-panel-pane-11">
+    <div class="view view-date-calendar-lists view-id-date_calendar_lists">
+      <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+      <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+      <table class="views-table"><tr><td>6:00 pm</td><td>30Avenue Summer Concert Series</td><td>30Avenue</td></tr></table>
+    </div>
   </div>
 </body></html>
 """
 
 
-def test_content_root_excludes_sidebar_widget():
-    soup = BeautifulSoup(_SIDEBAR_WIDGET_HTML, "lxml")
-    root = SoWalCrawler._content_root(soup)
-    assert root.get("id") == "bohr-three-col-list-one"
-    assert root.find_all("tr") == []
+def test_in_calendar_widget_true_for_widget_rows():
+    soup = BeautifulSoup(_CALENDAR_WIDGET_HTML, "lxml")
+    trs = soup.find_all("tr")
+    assert len(trs) == 3
+    assert all(SoWalCrawler._in_calendar_widget(tr) for tr in trs)
 
 
-def test_content_root_falls_back_to_whole_page_without_column_wrapper():
+def test_in_calendar_widget_false_for_ordinary_table():
     html = "<html><body><h1>Series @ Venue</h1><table><tr><td>x</td></tr></table></body></html>"
     soup = BeautifulSoup(html, "lxml")
-    assert SoWalCrawler._content_root(soup) is soup
+    tr = soup.find("tr")
+    assert SoWalCrawler._in_calendar_widget(tr) is False
+
+
+def test_parse_lineup_ignores_calendar_widget_rows():
+    soup = BeautifulSoup(_CALENDAR_WIDGET_HTML, "lxml")
+    obs = SoWalCrawler()._parse_lineup(soup, "30Avenue", 2026, "https://sowal.com/event/x", "Series")
+    assert obs == []
 
 
 # --- partitioning -----------------------------------------------------------
