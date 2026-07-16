@@ -535,6 +535,7 @@ def upsert_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> dict
             ).fetchall()]
             agg = aggregate_observations(all_obs)
             primary = agg["primary"]
+            resolved = agg["resolved_fields"]
 
             conn.execute(
                 """UPDATE events SET time_start = ?, time_end = ?, stage = ?, url = ?, source = ?,
@@ -543,8 +544,8 @@ def upsert_events(events: list[dict], run_id: str, path: Path = DB_PATH) -> dict
                                      run_id = ?
                     WHERE id = ?""",
                 (
-                    primary.get("time_start"), primary.get("time_end"), primary.get("stage"),
-                    primary.get("url") or before.get("url"), primary.get("source"),
+                    resolved.get("time_start"), resolved.get("time_end"), resolved.get("stage"),
+                    resolved.get("url") or before.get("url"), primary.get("source"),
                     agg["confidence"], agg["confidence_reason"], agg["source_count"],
                     agg["verification_count"], agg["conflict_flag"], agg["conflict_reason"],
                     run_id, event_id,

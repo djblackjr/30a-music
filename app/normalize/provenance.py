@@ -181,11 +181,36 @@ def _times_conflict(a: str | None, b: str | None) -> bool:
     return ma != mb
 
 
+# Mutable attributes that a lower-trust source can still fill in when the
+# primary (highest-confidence) observation simply never asserted them --
+# e.g. a manually-dropped screenshot supplies a `stage` the venue's own
+# crawled listing never mentioned. Only a GAP gets filled: a field the
+# primary source actually did provide is never overridden by a weaker one.
+_FILLABLE_FIELDS = ("time_start", "time_end", "stage", "url")
+
+
+def _coalesce_fields(observations: list[dict], primary: dict) -> dict:
+    """For each fillable field, use primary's value, else the best other observation's."""
+    ranked = sorted(observations, key=lambda o: o.get("confidence") or 0.0, reverse=True)
+    resolved = {}
+    for field in _FILLABLE_FIELDS:
+        value = primary.get(field)
+        if value in (None, ""):
+            for o in ranked:
+                candidate = o.get(field)
+                if candidate not in (None, ""):
+                    value = candidate
+                    break
+        resolved[field] = value
+    return resolved
+
+
 def aggregate_observations(observations: list[dict]) -> dict:
     """
     Aggregate ALL observations of one event (in-memory or loaded from the DB)
     into the canonical view: which observation leads, the aggregate confidence,
-    source/verification counts, and any conflict.
+    source/verification counts, any conflict, and gap-filled mutable fields
+    (see _coalesce_fields).
 
     Works on observation records, so it can be re-run whenever a new run adds an
     observation to an existing event (cross-run accumulation).
@@ -232,14 +257,17 @@ def aggregate_observations(observations: list[dict]) -> dict:
         "verification_count": len(sources_agree),
         "conflict_flag":      1 if has_conflict else 0,
         "conflict_reason":    conflict_reason,
+        "resolved_fields":    _coalesce_fields(observations, primary),
     }
 
 
 def merge_group(observations: list[dict]) -> dict:
     """
     Merge observations that share an identity into one canonical event.
-    Field values come from the highest-confidence observation; confidence is
-    aggregated; conflicts on time/stage are detected and penalised.
+    Field values come from the highest-confidence observation, except a gap
+    in a mutable field (time/stage/url) can still be filled by a weaker
+    source (see _coalesce_fields); confidence is aggregated; conflicts on
+    time/stage are detected and penalised.
     """
     agg = aggregate_observations(observations)
 
@@ -247,6 +275,7 @@ def merge_group(observations: list[dict]) -> dict:
     for k in ("confidence", "confidence_reason", "source_count",
               "verification_count", "conflict_flag", "conflict_reason"):
         event[k] = agg[k]
+    event.update(agg["resolved_fields"])
     event["observations"] = [_observation_record(o) for o in observations]
 
     # Drop per-observation-only fields from the canonical event.

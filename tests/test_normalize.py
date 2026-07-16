@@ -177,6 +177,41 @@ def test_normalize_canonicalises_in_pass():
     assert out[0]["performer"] == "Stevie Monce"
 
 
+# --- gap-filling: a weaker source can fill a field the primary left blank ---
+# sowal (trust 0.90) always outranks image:* (trust 0.80) as primary, so
+# without gap-filling a `stage` only the image observation reported would
+# never surface on the canonical event -- confirmed live against a real DB
+# before this fix existed.
+
+def test_gap_filling_weaker_source_fills_missing_stage():
+    out = normalize_events([
+        _raw("Artist A", "Venue X", source="sowal", stage=None),
+        _raw("Artist A", "Venue X", source="image:screenshot.png", stage="Main Stage"),
+    ])
+    assert len(out) == 1
+    assert out[0]["stage"] == "Main Stage"
+    # The higher-trust source still wins the confidence/primary selection.
+    assert out[0]["source_count"] == 2
+
+
+def test_gap_filling_never_overrides_a_value_primary_already_has():
+    out = normalize_events([
+        _raw("Artist A", "Venue X", source="sowal", stage="Patio Stage"),
+        _raw("Artist A", "Venue X", source="image:screenshot.png", stage="Main Stage"),
+    ])
+    assert len(out) == 1
+    # sowal's own stage value must not be clobbered by the weaker source.
+    assert out[0]["stage"] == "Patio Stage"
+
+
+def test_gap_filling_url_falls_back_to_a_weaker_source():
+    out = normalize_events([
+        _raw("Artist A", "Venue X", source="sowal", url=None),
+        _raw("Artist A", "Venue X", source="image:screenshot.png", url="https://example.com/flyer.png"),
+    ])
+    assert out[0]["url"] == "https://example.com/flyer.png"
+
+
 # --- confidence: two dimensions + effective score --------------------------
 
 def test_source_confidence_by_source():
