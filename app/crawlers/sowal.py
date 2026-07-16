@@ -781,7 +781,7 @@ class SoWalCrawler:
         # anything to find. Only worth the network + Vision-API round trip
         # once text extraction has already come up empty.
         if c["performer_status"] in ("unresolved", "category"):
-            flyer_obs = self._parse_flyer_image(soup, venue, url, title)
+            flyer_obs = self._parse_flyer_image(soup, venue, url, title, time_start, time_end)
             if flyer_obs:
                 return flyer_obs + more_events
 
@@ -821,11 +821,23 @@ class SoWalCrawler:
             f.write(response.content)
         return Path(tmp_name)
 
-    def _parse_flyer_image(self, soup, venue: str | None, url: str, title: str) -> list[dict]:
+    def _parse_flyer_image(
+        self, soup, venue: str | None, url: str, title: str,
+        fallback_time_start: str | None = None, fallback_time_end: str | None = None,
+    ) -> list[dict]:
         """
         Run an embedded flyer image through the same GPT-4o Vision importer used
         for manually-dropped screenshots (app/images/importer.py), returning one
         observation per performer/date the model reads off the poster.
+
+        Many flyers state one shared time for the whole series ("6PM til 9PM")
+        rather than repeating it next to every date, and the model doesn't
+        reliably attach that shared time to each individual row it reads
+        (confirmed live: 30Avenue's July flyer -- 15 of 31 rows came back with
+        no time at all, despite the page's own "Time: 6:00 pm to 9:00 pm"
+        field). fallback_time_start/end (typically parse_time() on the page's
+        own text) fills any row Vision left blank, without ever overriding a
+        time Vision DID read for a specific row.
 
         Requires OPENAI_API_KEY; returns [] (no exception) when it's unset or
         the page has no such image, so callers fall back to the existing
@@ -867,7 +879,8 @@ class SoWalCrawler:
         for ev in normalised:
             obs.append(self._assemble(
                 performer=ev["performer"], venue=venue or ev["venue"], date=ev["date"],
-                time_start=ev["time_start"], time_end=ev["time_end"], url=url,
+                time_start=ev["time_start"] or fallback_time_start,
+                time_end=ev["time_end"] or fallback_time_end, url=url,
                 title_raw=title, description_raw=f"flyer image: {img_url}",
                 extraction_method="flyer_image", performer_status="named",
                 resolved=True, event_category="live_music",

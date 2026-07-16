@@ -121,6 +121,48 @@ def test_parse_flyer_image_returns_named_observation(monkeypatch):
     assert obs[0]["extraction_method"] == "flyer_image"
 
 
+def test_parse_flyer_image_fills_missing_time_from_page_fallback(monkeypatch):
+    # Regression: 15 of 31 rows on the real 30Avenue July flyer came back
+    # from Vision with no time at all, despite the page's own "Time: 6:00 pm
+    # to 9:00 pm" field applying to the whole series -- confirmed live.
+    _patch_vision(monkeypatch, vision_json=(
+        '[{"artist": "Laura Lane", "venue": null, "date": "2026-07-15", '
+        '"confidence": 0.9}]'  # no time_start/time_end in the model's response
+    ))
+    import requests
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _FakeImageResponse())
+
+    soup = BeautifulSoup(_FLYER_HTML, "lxml")
+    obs = SoWalCrawler()._parse_flyer_image(
+        soup, "Crackings. - Grayton Beach",
+        "https://sowal.com/event/live-music-crackings-541", "Live Music @ Crackings",
+        fallback_time_start="6:00 pm", fallback_time_end="9:00 pm",
+    )
+
+    assert obs[0]["time_start"] == "6:00 pm"
+    assert obs[0]["time_end"] == "9:00 pm"
+
+
+def test_parse_flyer_image_never_overrides_a_time_start_vision_did_read(monkeypatch):
+    # _VISION_JSON's time_start ("9:30 am") must win over the fallback. Its
+    # time_end is irrelevant here: app.images.importer._normalise() always
+    # sets time_end to None regardless of what the raw JSON says (the Vision
+    # prompt never asks for one), so time_end always comes from the fallback
+    # for flyer-sourced observations -- covered by the test above.
+    _patch_vision(monkeypatch)
+    import requests
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _FakeImageResponse())
+
+    soup = BeautifulSoup(_FLYER_HTML, "lxml")
+    obs = SoWalCrawler()._parse_flyer_image(
+        soup, "Crackings. - Grayton Beach",
+        "https://sowal.com/event/live-music-crackings-541", "Live Music @ Crackings",
+        fallback_time_start="6:00 pm", fallback_time_end="9:00 pm",
+    )
+
+    assert obs[0]["time_start"] == "9:30 am"
+
+
 def test_parse_flyer_image_empty_when_vision_finds_nothing(monkeypatch):
     _patch_vision(monkeypatch, vision_json="[]")
     import requests
