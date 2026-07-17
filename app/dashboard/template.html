@@ -285,22 +285,6 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
 var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
-var FAV_STORE_KEY='30amusic_fav_selections';
-function _loadFavSelections(){
-  try{
-    var raw=localStorage.getItem(FAV_STORE_KEY);
-    if(!raw)return;
-    var obj=JSON.parse(raw);
-    (obj.venues||[]).forEach(function(v){selVenues.add(v);});
-    (obj.artists||[]).forEach(function(a){selArtists.add(a);});
-  }catch(e){/* localStorage unavailable (private mode, quota, etc) -- just start empty */}
-}
-function _saveFavSelections(){
-  try{
-    localStorage.setItem(FAV_STORE_KEY,JSON.stringify({venues:Array.from(selVenues),artists:Array.from(selArtists)}));
-  }catch(e){/* same as above */}
-}
-_loadFavSelections();
 var ALL_FAV_VENUES=FAV_VENUES_PLACEHOLDER;
 var ALL_FAV_ARTISTS=FAV_ARTISTS_PLACEHOLDER;
 var ALL_VENUES=ALL_VENUES_PLACEHOLDER;
@@ -538,7 +522,6 @@ function _updateFavBtnLabel(kind){
     btn.textContent=(count?cfg.base+' ('+count+')':cfg.base)+' ▾';
     btn.classList.toggle('on',count>0);
   });
-  _saveFavSelections();
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
