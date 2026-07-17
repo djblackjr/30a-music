@@ -442,6 +442,8 @@ def test_stat_counters_stay_four_across_on_mobile():
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # Total/Showing/Venues/Artists render as one row on every screen size --
-    # no narrow-viewport override dropping to a 2x2 grid.
+    # no narrow-viewport override dropping .stats to a 2x2 grid. (Other
+    # elements, like the .dr filter-button grid, legitimately use a 2-column
+    # layout -- this only guards .stats specifically.)
     assert ".stats{display:grid;grid-template-columns:repeat(4,1fr)" in html
-    assert "grid-template-columns:repeat(2,1fr)" not in html
+    assert html.count(".stats{") == 1
