@@ -21,7 +21,7 @@ a{color:var(--teal);text-decoration:none;}
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important;scroll-behavior:auto!important;}
 }
-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;padding:22px 16px 24px;box-shadow:var(--shadow-md);}
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;padding:22px 16px 24px;box-shadow:var(--shadow-md);} .hero-shell{margin:16px 0 12px;} .hero-panel{display:grid;grid-template-columns:1.3fr .8fr;gap:16px;background:linear-gradient(135deg,rgba(27,122,138,.18),rgba(245,158,11,.16));border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:20px;} .hero-kicker{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;} .hero-panel h2{font-size:1.35rem;line-height:1.25;margin-bottom:8px;color:var(--navy);} .hero-copy{font-size:.95rem;color:var(--muted);margin-bottom:12px;} .hero-actions{display:flex;gap:8px;flex-wrap:wrap;} .hero-side{background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;justify-content:center;} .hero-side-title{font-size:.73rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;} .hero-side-venue{font-size:1.05rem;font-weight:700;color:var(--navy);} .hero-side-meta{font-size:.9rem;color:var(--muted);margin-top:6px;} @media(max-width:800px){.hero-panel{grid-template-columns:1fr;}}
 .hd-inner{max-width:1100px;margin:0 auto;}
 header h1{font-size:1.9rem;font-weight:800;letter-spacing:-.01em;}
 header h1 .note{color:var(--amber);}
@@ -157,6 +157,24 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 .src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p></div></header>
 <main class="page">
+<div class="hero-shell">
+  <div class="hero-panel">
+    <div>
+      <p class="hero-kicker">Tonight’s best live music in 30A</p>
+      <h2>Browse nearby shows, venue highlights, and confidence-scored event picks.</h2>
+      <p class="hero-copy">This version combines the clarity of a live-music discovery app with the intelligence signals your pipeline already computes.</p>
+      <div class="hero-actions">
+        <button class="btn on" type="button" onclick="sf('today')">Explore tonight</button>
+        <button class="btn ghost" type="button" onclick="sf('week')">This week</button>
+      </div>
+    </div>
+    <div class="hero-side">
+      <div class="hero-side-title">Featured venue</div>
+      <div class="hero-side-venue">HERO_VENUE_PLACEHOLDER</div>
+      <div class="hero-side-meta">HERO_META_PLACEHOLDER</div>
+    </div>
+  </div>
+</div>
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">

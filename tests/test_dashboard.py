@@ -5,6 +5,7 @@ Tests for the dumb dashboard renderer: it renders precomputed DB values
 """
 import sys
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -65,7 +66,7 @@ def test_render_preserves_shell():
     assert "function srt(" in html
     assert 'class="tn"' in html       # emitted by rr() for each date group
     assert 'id="mm"' in html          # directions modal
-    assert "no unfilled placeholders", "PLACEHOLDER" not in html
+    assert "PLACEHOLDER" not in html, "no unfilled placeholders"
 
 
 def test_render_venue_links_to_google_maps():
@@ -231,6 +232,135 @@ def test_render_includes_region_and_venue_artist_filter_controls():
     assert "function _allArtistNames()" in html
     assert "function _favVenueSet()" in html
     assert "function _favArtistSet()" in html
+
+
+def test_render_includes_featured_hero_section():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert "Tonight’s best live music in 30A" in html
+    assert 'class="hero-panel"' in html
+    assert "Featured venue" in html
+
+
+# --- hero "Featured venue" card: real data, not the old hardcoded stub -----
+
+def _d(offset_days):
+    return (datetime.now() + timedelta(days=offset_days)).strftime("%Y-%m-%d")
+
+
+def _hero_chunk(html):
+    # The hero-side-venue/-meta divs sit right after the "Featured venue"
+    # label and nothing else on the page uses that class, so slicing there
+    # isolates the hero card's own text from the (also server-rendered)
+    # table rows for every other event further down the page.
+    return html.split('class="hero-side-venue"')[1][:300]
+
+
+def test_hero_features_the_soonest_upcoming_event_not_a_later_one():
+    html, _ = _render_to_temp([
+        {"performer": "Later Act", "venue": "Later Venue", "date": _d(5),
+         "time_start": "7PM", "source": "venue"},
+        {"performer": "Soonest Act", "venue": "Soonest Venue", "date": _d(1),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Soonest Venue" in chunk
+    assert "Later Venue" not in chunk
+
+
+def test_hero_prefers_higher_confidence_event_on_a_tied_date():
+    tied_date = _d(2)
+    html, _ = _render_to_temp([
+        # Neither venue is a favorite (no venue_groups.csv override here), so
+        # both land in the same favorite tier and confidence -- "venue"
+        # source is high-trust (0.95) vs. an unlisted source's 0.5 default
+        # trust -- is what should decide which one heads the hero card.
+        {"performer": "Unverified Act", "venue": "Unverified Venue", "date": tied_date,
+         "time_start": "6PM", "source": "some_random_blog"},
+        {"performer": "Verified Act", "venue": "Verified Venue", "date": tied_date,
+         "time_start": "8PM", "source": "venue"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Verified Venue" in chunk
+    assert "High confidence" in chunk
+
+
+def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alone(monkeypatch):
+    # _featured_event() calls _load_venue_meta()/_load_performer_meta() with
+    # no args, so patching the VENUE_GROUPS_CSV/ARTISTS_CSV module constants
+    # wouldn't work here -- those are only read once, as the functions'
+    # default *parameter* values, at import time. Patching the loader
+    # functions themselves is what actually redirects the call.
+    monkeypatch.setattr(render, "_load_venue_meta", lambda *a, **k: {
+        "combo venue": {"group": "West 30A", "favorite": True},
+        "artist-only venue": {"group": "West 30A", "favorite": False},
+        "venue-only venue": {"group": "West 30A", "favorite": True},
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "combo act": True,
+        "artist-only act": True,
+        "venue-only act": False,
+    })
+    tied_date = _d(3)
+    html, _ = _render_to_temp([
+        # Lower confidence than the other two, but the combo of favorite
+        # artist + favorite venue must still win the hero slot outright.
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": tied_date,
+         "time_start": "6PM", "source": "some_random_blog"},
+        {"performer": "Artist-Only Act", "venue": "Artist-Only Venue", "date": tied_date,
+         "time_start": "7PM", "source": "venue"},
+        {"performer": "Venue-Only Act", "venue": "Venue-Only Venue", "date": tied_date,
+         "time_start": "8PM", "source": "venue"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Combo Venue" in chunk
+    assert "Artist-Only Venue" not in chunk
+    assert "Venue-Only Venue" not in chunk
+
+
+def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
+    monkeypatch.setattr(render, "_load_venue_meta", lambda *a, **k: {
+        "artist-only venue": {"group": "West 30A", "favorite": False},
+        "venue-only venue": {"group": "West 30A", "favorite": True},
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "artist-only act": True,
+        "venue-only act": False,
+    })
+    tied_date = _d(3)
+    html, _ = _render_to_temp([
+        # Venue-Only has the higher confidence source, but a favorite artist
+        # (even at a non-favorite venue) outranks a favorite venue alone.
+        {"performer": "Venue-Only Act", "venue": "Venue-Only Venue", "date": tied_date,
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Artist-Only Act", "venue": "Artist-Only Venue", "date": tied_date,
+         "time_start": "7PM", "source": "some_random_blog"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Artist-Only Venue" in chunk
+    assert "Venue-Only Venue" not in chunk
+
+
+def test_hero_labels_todays_event_as_today():
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "Tonight Venue", "date": _d(0),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Tonight Venue" in chunk
+    assert "Today" in chunk
+
+
+def test_hero_falls_back_gracefully_with_no_upcoming_events():
+    # every event is past-dated -- _featured_event() must not crash or pick
+    # a stale show, and no HERO_*_PLACEHOLDER token should leak into the page.
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": _d(-30), "time_start": "6PM", "source": "venue"},
+    ])
+    assert "No shows scheduled" in html
+    assert "HERO_VENUE_PLACEHOLDER" not in html
+    assert "HERO_META_PLACEHOLDER" not in html
 
 
 def test_favorites_panel_includes_select_all_toggle():

@@ -310,6 +310,72 @@ def _health(events: list[dict], path: Path) -> dict:
     }
 
 
+def _confidence_label(score) -> str:
+    return {
+        "high": "High confidence",
+        "medium": "Medium confidence",
+        "low": "Low confidence",
+    }.get(confidence_band(score), "Confidence pending")
+
+
+def _featured_event(events: list[dict]) -> dict | None:
+    """
+    Pick one upcoming event to headline the hero card: soonest date first;
+    within that date, a favorite-artist + favorite-venue show outranks a
+    favorite-artist-only show, which outranks a favorite-venue-only show,
+    which outranks neither -- confidence and then id (insertion order) break
+    any remaining tie within the same favorite tier. Defensively re-filters
+    to today-or-later even though the pipeline already purges past-dated
+    events before render normally runs -- callers (like the test suite) may
+    pass unpurged data.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    upcoming = [e for e in events if (e.get("date") or "") >= today]
+    if not upcoming:
+        return None
+    soonest = min(e["date"] for e in upcoming)
+    same_day = [e for e in upcoming if e["date"] == soonest]
+    venue_meta = _load_venue_meta()
+    performer_meta = _load_performer_meta()
+
+    def rank(e):
+        venue_fav = _venue_favorite(e.get("venue"), venue_meta)
+        performer_fav = _performer_favorite(e.get("performer") or e.get("name"), performer_meta)
+        if performer_fav and venue_fav:
+            tier = 0
+        elif performer_fav:
+            tier = 1
+        elif venue_fav:
+            tier = 2
+        else:
+            tier = 3
+        conf = e.get("confidence")
+        conf = conf if isinstance(conf, (int, float)) else 0.0
+        return (tier, -conf, e.get("id") or 0)
+
+    return min(same_day, key=rank)
+
+
+def _hero_context(events: list[dict]) -> dict:
+    """
+    (venue, meta) strings for the hero card's featured-show side panel --
+    real data picked by _featured_event() rather than a static placeholder.
+    """
+    ev = _featured_event(events)
+    if not ev:
+        return {
+            "venue": "No shows scheduled",
+            "meta": "Check back soon for new listings.",
+        }
+    today = datetime.now().strftime("%Y-%m-%d")
+    when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
+    parts = [p for p in [when, ev.get("time_start"), _confidence_label(ev.get("confidence"))] if p]
+    return {
+        "venue": html.escape(_venue_display_name(ev.get("venue"))),
+        "meta": html.escape(" • ".join(parts)),
+    }
+
+
 def _build_marker() -> str:
     """
     Generation timestamp, baked server-side into the HTML at generate()
@@ -346,9 +412,12 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     events.sort(key=lambda e: ((e.get("date") or ""), e.get("id") or 0))
 
     h = _health(events, path)
+    hero = _hero_context(events)
     out = (
         template
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
+        .replace("HERO_VENUE_PLACEHOLDER", hero["venue"])
+        .replace("HERO_META_PLACEHOLDER", hero["meta"])
         .replace("TOTAL_PLACEHOLDER", str(h["total"]))
         .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
         .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))
