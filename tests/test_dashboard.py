@@ -78,51 +78,28 @@ def test_render_venue_links_to_google_maps():
     assert "Get directions to Chiringo" in html
 
 
-# --- venue region grouping + favorites (editable CSV, not code) -------------
+# --- venue favorites (editable flat CSV, not code) --------------------------
 
-def test_venue_group_known_venue(tmp_path):
+def test_venue_favorite_listed_and_defaults(tmp_path):
     csv_file = tmp_path / "venue_groups.csv"
-    csv_file.write_text("venue,group,favorite\nChiringo,West 30A,N\n", encoding="utf-8")
-    meta = render._load_venue_meta(csv_file)
-    assert render._venue_group("Chiringo", meta) == "West 30A"
-    assert render._venue_group("CHIRINGO", meta) == "West 30A"  # case-insensitive
+    csv_file.write_text("venue\nChiringo\n", encoding="utf-8")
+    favorites = render._load_favorite_venues(csv_file)
+    assert render._venue_favorite("Chiringo", favorites) is True
+    assert render._venue_favorite("chiringo", favorites) is True   # case-insensitive
+    assert render._venue_favorite("Other Place", favorites) is False  # not listed
+    assert render._venue_favorite(None, favorites) is False
 
 
-def test_venue_group_unlisted_or_blank_falls_back_to_other(tmp_path):
-    csv_file = tmp_path / "venue_groups.csv"
-    csv_file.write_text("venue,group,favorite\nSome Church,,N\n", encoding="utf-8")
-    meta = render._load_venue_meta(csv_file)
-    assert render._venue_group("Some Church", meta) == "Other"      # blank group in file
-    assert render._venue_group("Never Listed", meta) == "Other"     # not in file at all
-    assert render._venue_group(None, meta) == "Other"
+def test_venue_favorite_missing_csv_defaults_everything_to_false(tmp_path):
+    favorites = render._load_favorite_venues(tmp_path / "does_not_exist.csv")
+    assert favorites == set()
+    assert render._venue_favorite("Chiringo", favorites) is False
 
 
-def test_venue_group_missing_csv_defaults_everything_to_other(tmp_path):
-    meta = render._load_venue_meta(tmp_path / "does_not_exist.csv")
-    assert meta == {}
-    assert render._venue_group("Chiringo", meta) == "Other"
-
-
-def test_venue_favorite_yes_no_and_defaults(tmp_path):
-    csv_file = tmp_path / "venue_groups.csv"
-    csv_file.write_text(
-        "venue,group,favorite\nChiringo,West 30A,Y\nOther Place,West 30A,N\nNo Flag,West 30A,\n",
-        encoding="utf-8",
-    )
-    meta = render._load_venue_meta(csv_file)
-    assert render._venue_favorite("Chiringo", meta) is True
-    assert render._venue_favorite("chiringo", meta) is True   # case-insensitive
-    assert render._venue_favorite("Other Place", meta) is False
-    assert render._venue_favorite("No Flag", meta) is False   # blank cell -> not a favorite
-    assert render._venue_favorite("Never Listed", meta) is False
-    assert render._venue_favorite(None, meta) is False
-
-
-def test_render_rows_carry_data_region_and_favorite():
+def test_render_rows_carry_data_favorite():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
     ])
-    assert 'data-region="' in html
     assert 'data-favorite="' in html
 
 
@@ -167,10 +144,10 @@ def test_favorite_performer_names_missing_csv_returns_empty_list():
     assert render._favorite_performer_names(Path("/tmp/does_not_exist_artists.csv")) == []
 
 
-def test_favorite_venue_names_lists_every_favorite_sorted(tmp_path):
+def test_favorite_venue_names_lists_every_venue_in_file_sorted(tmp_path):
     csv_file = tmp_path / "venue_groups.csv"
     csv_file.write_text(
-        "venue,group,favorite\nZebra Lounge,West 30A,Y\nAJ's Grayton Beach,West 30A,Y\nOther Place,West 30A,N\n",
+        "venue\nZebra Lounge\nAJ's Grayton Beach\n",
         encoding="utf-8",
     )
     names = render._favorite_venue_names(csv_file)
@@ -203,35 +180,29 @@ def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
     # The Venues and Artists dropdowns are independent multi-selects that
-    # each narrow the results further when a choice is checked, same as the
-    # region single-select — a non-empty selection in BOTH requires the
-    # venue to be in the checked set AND the performer to be in the checked
-    # set (intersection), not either one (union).
+    # each narrow the results further when a choice is checked — a
+    # non-empty selection in BOTH requires the venue to be in the checked
+    # set AND the performer to be in the checked set (intersection), not
+    # either one (union).
     assert "if(selVenues.size&&!selVenues.has(v))inc=false;" in html
     assert "if(selArtists.size&&!selArtists.has(a))inc=false;" in html
 
 
-def test_render_includes_region_and_venue_artist_filter_controls():
+def test_render_includes_venue_artist_filter_controls():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    assert 'id="rf"' in html
-    assert "All Regions" in html
     assert 'id="favVenueBtn"' in html
     assert ">Venues ▾</button>" in html
     assert 'id="favArtistBtn"' in html
     assert ">Artists ▾</button>" in html
-    # each toggle button owns a checklist panel listing EVERY venue/artist
-    # (not just favorites -- this single control replaced the old pairing of
-    # a plain single-select "All Venues" dropdown alongside a separate
-    # favorites-only multi-select, which read as two different, confusing
-    # venue pickers). Favorites are starred and sorted first within the list.
+    # each toggle button owns a checklist panel listing only the venues/artists
+    # marked as favorites in venue_groups.csv / artists.csv -- separate
+    # dropdowns, favorites-only, not a combined "everything, starred" list.
     assert 'id="favVenuePanel"' in html
     assert 'id="favArtistPanel"' in html
-    assert "function _allVenueNames()" in html
-    assert "function _allArtistNames()" in html
-    assert "function _favVenueSet()" in html
-    assert "function _favArtistSet()" in html
+    assert "function _favVenueNames()" in html
+    assert "function _favArtistNames()" in html
 
 
 def test_render_includes_featured_hero_section():
@@ -272,10 +243,10 @@ def test_hero_features_the_soonest_upcoming_event_not_a_later_one():
 def test_hero_prefers_higher_confidence_event_on_a_tied_date():
     tied_date = _d(2)
     html, _ = _render_to_temp([
-        # Neither venue is a favorite (no venue_groups.csv override here), so
-        # both land in the same favorite tier and confidence -- "venue"
-        # source is high-trust (0.95) vs. an unlisted source's 0.5 default
-        # trust -- is what should decide which one heads the hero card.
+        # Neither venue is in venue_groups.csv, so both land in the same
+        # favorite tier and confidence -- "venue" source is high-trust (0.95)
+        # vs. an unlisted source's 0.5 default trust -- is what should decide
+        # which one heads the hero card.
         {"performer": "Unverified Act", "venue": "Unverified Venue", "date": tied_date,
          "time_start": "6PM", "source": "some_random_blog"},
         {"performer": "Verified Act", "venue": "Verified Venue", "date": tied_date,
@@ -287,15 +258,13 @@ def test_hero_prefers_higher_confidence_event_on_a_tied_date():
 
 
 def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alone(monkeypatch):
-    # _featured_event() calls _load_venue_meta()/_load_performer_meta() with
-    # no args, so patching the VENUE_GROUPS_CSV/ARTISTS_CSV module constants
-    # wouldn't work here -- those are only read once, as the functions'
-    # default *parameter* values, at import time. Patching the loader
-    # functions themselves is what actually redirects the call.
-    monkeypatch.setattr(render, "_load_venue_meta", lambda *a, **k: {
-        "combo venue": {"group": "West 30A", "favorite": True},
-        "artist-only venue": {"group": "West 30A", "favorite": False},
-        "venue-only venue": {"group": "West 30A", "favorite": True},
+    # _featured_event() calls _load_favorite_venues()/_load_performer_meta()
+    # with no args, so patching the VENUE_FAVORITES_CSV/ARTISTS_CSV module
+    # constants wouldn't work here -- those are only read once, as the
+    # functions' default *parameter* values, at import time. Patching the
+    # loader functions themselves is what actually redirects the call.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "combo venue", "venue-only venue",
     })
     monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
         "combo act": True,
@@ -320,9 +289,8 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
 
 
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
-    monkeypatch.setattr(render, "_load_venue_meta", lambda *a, **k: {
-        "artist-only venue": {"group": "West 30A", "favorite": False},
-        "venue-only venue": {"group": "West 30A", "favorite": True},
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "venue-only venue",
     })
     monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
         "artist-only act": True,
@@ -388,15 +356,6 @@ def test_results_rebuild_on_favorites_selection_and_clear():
     # both a checkbox change and Select All/Deselect All rebuild the results view
     assert "document.addEventListener('change',function(e){" in html
     assert "sf('today');" in html      # Clear resets to the default filter
-
-
-def test_results_also_filter_by_region():
-    html, _ = _render_to_temp([
-        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
-    ])
-    assert "rf&&rg!==rf" in html
-    # the region select rebuilds the results view too
-    assert 'onchange="rr()" aria-label="Filter by region"' in html
 
 
 def test_startup_filter_defaults_to_today():

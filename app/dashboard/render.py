@@ -33,15 +33,15 @@ logger = logging.getLogger(__name__)
 TEMPLATE = Path("app/dashboard/template.html")
 DEFAULT_OUT = Path("docs/index.html")
 
-# Editable venue -> region grouping, maintained by hand as a flat CSV (same
+# Editable favorite-venues roster, maintained by hand as a flat CSV (same
 # "flat file as source of truth" pattern as venues.txt/artists.txt) rather
-# than a code-edited table, so groupings can be corrected without touching
-# Python. Blank/unlisted venues fall back to "Other" — see _venue_group().
-VENUE_GROUPS_CSV = Path("app/dashboard/venue_groups.csv")
+# than a code-edited table. One venue name per line under a `venue` header —
+# presence in the file means favorite, there's no Y/N column. Unlisted
+# venues default to not-favorite — see _venue_favorite().
+VENUE_FAVORITES_CSV = Path("app/dashboard/venue_groups.csv")
 
-# Editable performer favorites, same flat-CSV pattern as VENUE_GROUPS_CSV but
-# without a group column — there's no regional grouping for performers, just
-# a curated favorite/not-favorite call. Unlisted performers default to N.
+# Editable performer favorites, same flat-CSV pattern as VENUE_FAVORITES_CSV.
+# Unlisted performers default to N.
 ARTISTS_CSV = Path("app/dashboard/artists.csv")
 
 # Venues with a dedicated colour in the template's .vt-* classes and map legend.
@@ -92,41 +92,33 @@ def _venue_display_name(venue: str | None) -> str:
     return VENUE_DISPLAY_NAME.get(v.lower(), v)
 
 
-def _load_venue_meta(csv_path: Path = VENUE_GROUPS_CSV) -> dict[str, dict]:
+def _load_favorite_venues(csv_path: Path = VENUE_FAVORITES_CSV) -> set[str]:
     """
-    Read venue_groups.csv into {venue_lower: {"group": str, "favorite": bool}}.
-    Missing file, an unlisted venue, or a blank cell all take the same default
-    (see _venue_group / _venue_favorite) — favorite defaults to False since
-    it's a curation call only a human can make, not something inferable.
+    Read venue_groups.csv into a set of lowercased favorite venue names.
+    Missing file or an unlisted venue both default to not-favorite — that's
+    a curation call only a human can make, not something inferable.
     """
     if not csv_path.exists():
-        return {}
+        return set()
     with csv_path.open(newline="", encoding="utf-8") as f:
         return {
-            (row.get("venue") or "").strip().lower(): {
-                "group": (row.get("group") or "").strip(),
-                "favorite": (row.get("favorite") or "").strip().upper() == "Y",
-            }
+            (row.get("venue") or "").strip().lower()
             for row in csv.DictReader(f)
             if (row.get("venue") or "").strip()
         }
 
 
-def _venue_group(venue: str | None, meta: dict[str, dict]) -> str:
-    return (meta.get((venue or "").strip().lower()) or {}).get("group") or "Other"
+def _venue_favorite(venue: str | None, favorites: set[str]) -> bool:
+    return (venue or "").strip().lower() in favorites
 
 
-def _venue_favorite(venue: str | None, meta: dict[str, dict]) -> bool:
-    return bool((meta.get((venue or "").strip().lower()) or {}).get("favorite"))
-
-
-def _favorite_venue_names(csv_path: Path = VENUE_GROUPS_CSV) -> list[str]:
+def _favorite_venue_names(csv_path: Path = VENUE_FAVORITES_CSV) -> list[str]:
     """
-    Every venue marked favorite=Y in venue_groups.csv, original casing, sorted.
-    Unlike the per-event data-favorite attribute (only present on rows that
-    have an upcoming show), this is the full favorites roster regardless of
-    whether a favorite currently has anything scheduled -- so the ★ Venues
-    picker can list all of them, not just the ones with a booking right now.
+    Every venue listed in venue_groups.csv, original casing, sorted. Unlike
+    the per-event data-favorite attribute (only present on rows that have an
+    upcoming show), this is the full favorites roster regardless of whether a
+    favorite currently has anything scheduled -- so the ★ Venues picker can
+    list all of them, not just the ones with a booking right now.
     """
     if not csv_path.exists():
         return []
@@ -134,7 +126,7 @@ def _favorite_venue_names(csv_path: Path = VENUE_GROUPS_CSV) -> list[str]:
         names = [
             (row.get("venue") or "").strip()
             for row in csv.DictReader(f)
-            if (row.get("favorite") or "").strip().upper() == "Y" and (row.get("venue") or "").strip()
+            if (row.get("venue") or "").strip()
         ]
     return sorted(names, key=str.lower)
 
@@ -142,9 +134,9 @@ def _favorite_venue_names(csv_path: Path = VENUE_GROUPS_CSV) -> list[str]:
 def _load_performer_meta(csv_path: Path = ARTISTS_CSV) -> dict[str, bool]:
     """
     Read artists.csv into {performer_lower: favorite_bool}. Same
-    "flat file as source of truth" pattern as _load_venue_meta — missing file
-    or an unlisted performer both default to not-favorite, since favoriting
-    is a curation call only a human can make.
+    "flat file as source of truth" pattern as _load_favorite_venues — missing
+    file or an unlisted performer both default to not-favorite, since
+    favoriting is a curation call only a human can make.
     """
     if not csv_path.exists():
         return {}
@@ -172,18 +164,6 @@ def _favorite_performer_names(csv_path: Path = ARTISTS_CSV) -> list[str]:
             for row in csv.DictReader(f)
             if (row.get("favorite") or "").strip().upper() == "Y" and (row.get("performer") or "").strip()
         ]
-    return sorted(names, key=str.lower)
-
-
-def _all_venue_names(events: list[dict]) -> list[str]:
-    """Every distinct venue name across all current events, original casing, sorted."""
-    names = {(e.get("venue") or "").strip() for e in events if (e.get("venue") or "").strip()}
-    return sorted(names, key=str.lower)
-
-
-def _all_performer_names(events: list[dict]) -> list[str]:
-    """Every distinct performer name across all current events, original casing, sorted."""
-    names = {(e.get("performer") or "").strip() for e in events if (e.get("performer") or "").strip()}
     return sorted(names, key=str.lower)
 
 
@@ -230,7 +210,7 @@ def _obs_html(o: dict) -> str:
 
 
 def _rows_html(events: list[dict], path: Path) -> str:
-    venue_meta = _load_venue_meta()
+    venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
     out = []
     for ev in events:
@@ -240,8 +220,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         venue_e = html.escape(venue)
         time_s = html.escape(ev.get("time_start") or "")
         date = ev.get("date") or ""
-        region = html.escape(_venue_group(venue, venue_meta))
-        favorite = _venue_favorite(venue, venue_meta)
+        favorite = _venue_favorite(venue, venue_favorites)
         fav_attr = "Y" if favorite else "N"
         performer_fav_attr = "Y" if _performer_favorite(performer_raw, performer_meta) else "N"
 
@@ -264,7 +243,7 @@ def _rows_html(events: list[dict], path: Path) -> str:
         out.append(
             f'<tr data-date="{date}" data-venue="{venue_e}" data-venue-display="{venue_display_e}" '
             f'data-performer="{performer}" '
-            f'data-region="{region}" data-favorite="{fav_attr}" '
+            f'data-favorite="{fav_attr}" '
             f'data-performer-favorite="{performer_fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
@@ -335,11 +314,11 @@ def _featured_event(events: list[dict]) -> dict | None:
         return None
     soonest = min(e["date"] for e in upcoming)
     same_day = [e for e in upcoming if e["date"] == soonest]
-    venue_meta = _load_venue_meta()
+    venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
 
     def rank(e):
-        venue_fav = _venue_favorite(e.get("venue"), venue_meta)
+        venue_fav = _venue_favorite(e.get("venue"), venue_favorites)
         performer_fav = _performer_favorite(e.get("performer") or e.get("name"), performer_meta)
         if performer_fav and venue_fav:
             tier = 0
@@ -426,8 +405,6 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("BUILD_PLACEHOLDER", _build_marker())
         .replace("FAV_VENUES_PLACEHOLDER", _json_for_script(_favorite_venue_names()))
         .replace("FAV_ARTISTS_PLACEHOLDER", _json_for_script(_favorite_performer_names()))
-        .replace("ALL_VENUES_PLACEHOLDER", _json_for_script(_all_venue_names(events)))
-        .replace("ALL_ARTISTS_PLACEHOLDER", _json_for_script(_all_performer_names(events)))
     )
     out_path.write_text(out, encoding="utf-8")
     logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))
