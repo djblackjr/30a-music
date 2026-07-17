@@ -167,6 +167,18 @@ def _favorite_performer_names(csv_path: Path = ARTISTS_CSV) -> list[str]:
     return sorted(names, key=str.lower)
 
 
+def _all_venue_names(events: list[dict]) -> list[str]:
+    """Every distinct venue name across all current events, original casing, sorted."""
+    names = {(e.get("venue") or "").strip() for e in events if (e.get("venue") or "").strip()}
+    return sorted(names, key=str.lower)
+
+
+def _all_performer_names(events: list[dict]) -> list[str]:
+    """Every distinct performer name across all current events, original casing, sorted."""
+    names = {(e.get("performer") or "").strip() for e in events if (e.get("performer") or "").strip()}
+    return sorted(names, key=str.lower)
+
+
 def _venue_maps_urls(venue: str | None) -> tuple[str | None, str | None]:
     """(embed_url, external_url) for the venue's Google Maps modal. No API key needed."""
     v = (venue or "").strip()
@@ -405,6 +417,8 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("BUILD_PLACEHOLDER", _build_marker())
         .replace("FAV_VENUES_PLACEHOLDER", _json_for_script(_favorite_venue_names()))
         .replace("FAV_ARTISTS_PLACEHOLDER", _json_for_script(_favorite_performer_names()))
+        .replace("ALL_VENUES_PLACEHOLDER", _json_for_script(_all_venue_names(events)))
+        .replace("ALL_ARTISTS_PLACEHOLDER", _json_for_script(_all_performer_names(events)))
     )
     out_path.write_text(out, encoding="utf-8")
     logger.info("Dashboard rendered to %s (%d events)", out_path, len(events))

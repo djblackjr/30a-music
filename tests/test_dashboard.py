@@ -192,17 +192,27 @@ def test_render_includes_venue_artist_filter_controls():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
     ])
-    assert 'id="favVenueBtn"' in html
+    # Two dropdowns each for venues and artists: an all-list one (every venue/
+    # artist, favorites starred and sorted first) and a favorites-only
+    # shortcut -- both filter the same underlying selVenues/selArtists Set.
+    assert 'id="allVenueBtn"' in html
     assert ">Venues ▾</button>" in html
-    assert 'id="favArtistBtn"' in html
+    assert 'id="favVenueBtn"' in html
+    assert ">Favorite Venues ▾</button>" in html
+    assert 'id="allArtistBtn"' in html
     assert ">Artists ▾</button>" in html
-    # each toggle button owns a checklist panel listing only the venues/artists
-    # marked as favorites in venue_groups.csv / artists.csv -- separate
-    # dropdowns, favorites-only, not a combined "everything, starred" list.
+    assert 'id="favArtistBtn"' in html
+    assert ">Favorite Artists ▾</button>" in html
+    assert 'id="allVenuePanel"' in html
     assert 'id="favVenuePanel"' in html
+    assert 'id="allArtistPanel"' in html
     assert 'id="favArtistPanel"' in html
     assert "function _favVenueNames()" in html
     assert "function _favArtistNames()" in html
+    assert "function _favVenueSet()" in html
+    assert "function _favArtistSet()" in html
+    # the all-list panels star favorites within the full roster
+    assert "favSet.has(n)" in html
 
 
 def test_render_includes_featured_hero_section():

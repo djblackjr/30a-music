@@ -178,12 +178,20 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <div class="fil">
 <input type="search" id="q" placeholder="Search artists or venues…" aria-label="Search artists or venues" oninput="rr()">
 <div class="dr">
+<div class="favdd" id="allVenueDD">
+<button class="btn" id="allVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">Venues ▾</button>
+<div class="favdd-panel" id="allVenuePanel" hidden></div>
+</div>
 <div class="favdd" id="favVenueDD">
-<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('venue')">Venues ▾</button>
+<button class="btn" id="favVenueBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('favVenue')">Favorite Venues ▾</button>
 <div class="favdd-panel" id="favVenuePanel" hidden></div>
 </div>
+<div class="favdd" id="allArtistDD">
+<button class="btn" id="allArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">Artists ▾</button>
+<div class="favdd-panel" id="allArtistPanel" hidden></div>
+</div>
 <div class="favdd" id="favArtistDD">
-<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">Artists ▾</button>
+<button class="btn" id="favArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('favArtist')">Favorite Artists ▾</button>
 <div class="favdd-panel" id="favArtistPanel" hidden></div>
 </div>
 </div>
@@ -299,6 +307,8 @@ function _saveFavSelections(){
 _loadFavSelections();
 var ALL_FAV_VENUES=FAV_VENUES_PLACEHOLDER;
 var ALL_FAV_ARTISTS=FAV_ARTISTS_PLACEHOLDER;
+var ALL_VENUES=ALL_VENUES_PLACEHOLDER;
+var ALL_ARTISTS=ALL_ARTISTS_PLACEHOLDER;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
@@ -453,11 +463,35 @@ function rr(){
   document.getElementById('cnt').textContent=n+' event'+(n!==1?'s':'');
 }
 
+// Four dropdowns share two underlying selection Sets: 'venue'/'favVenue'
+// both filter by selVenues, 'artist'/'favArtist' both filter by selArtists.
+// The all-list dropdowns show every venue/artist (favorites starred and
+// sorted first); the favorite-only dropdowns are a shortcut listing just
+// the favorites, unstarred since starring there would be redundant.
+var DD_CONFIG={
+  venue:{btn:'allVenueBtn',panel:'allVenuePanel',names:function(){return ALL_VENUES;},
+    favSet:_favVenueSet,sel:function(){return selVenues;},base:'Venues',empty:'No venues yet'},
+  favVenue:{btn:'favVenueBtn',panel:'favVenuePanel',names:_favVenueNames,
+    favSet:null,sel:function(){return selVenues;},base:'Favorite Venues',empty:'No favorite venues yet'},
+  artist:{btn:'allArtistBtn',panel:'allArtistPanel',names:function(){return ALL_ARTISTS;},
+    favSet:_favArtistSet,sel:function(){return selArtists;},base:'Artists',empty:'No artists yet'},
+  favArtist:{btn:'favArtistBtn',panel:'favArtistPanel',names:_favArtistNames,
+    favSet:null,sel:function(){return selArtists;},base:'Favorite Artists',empty:'No favorite artists yet'}
+};
 function _favVenueNames(){return ALL_FAV_VENUES;}
 function _favArtistNames(){return ALL_FAV_ARTISTS;}
-function _favPanelHtml(names,selected,emptyLabel){
+function _favVenueSet(){return new Set(ALL_FAV_VENUES);}
+function _favArtistSet(){return new Set(ALL_FAV_ARTISTS);}
+function _kindForPanelId(pid){
+  for(var k in DD_CONFIG){if(DD_CONFIG[k].panel===pid)return k;}
+}
+function _favPanelHtml(names,selected,favSet,emptyLabel){
   if(!names.length)return '<div class="favdd-empty">'+emptyLabel+'</div>';
   var sorted=names.slice().sort(function(a,b){
+    if(favSet){
+      var af=favSet.has(a),bf=favSet.has(b);
+      if(af!==bf)return af?-1:1;
+    }
     var al=a.toLowerCase(),bl=b.toLowerCase();
     return al<bl?-1:al>bl?1:0;
   });
@@ -465,35 +499,40 @@ function _favPanelHtml(names,selected,emptyLabel){
   var selectAll='<button type="button" class="favdd-selectall">'+(allSelected?'Deselect All':'Select All')+'</button><hr class="favdd-sep">';
   var items=sorted.map(function(n){
     var checked=selected.has(n)?' checked':'';
-    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+_escAttr(n)+'</label>';
+    var star=(favSet&&favSet.has(n))?'<span class="fav-star" aria-hidden="true">★</span> ':'';
+    return '<label class="favdd-item"><input type="checkbox" value="'+_escAttr(n)+'"'+checked+'> '+star+_escAttr(n)+'</label>';
   }).join('');
   return selectAll+items;
 }
 function _closeFavDD(){
-  document.getElementById('favVenuePanel').hidden=true;
-  document.getElementById('favArtistPanel').hidden=true;
-  document.getElementById('favVenueBtn').setAttribute('aria-expanded','false');
-  document.getElementById('favArtistBtn').setAttribute('aria-expanded','false');
+  for(var k in DD_CONFIG){
+    document.getElementById(DD_CONFIG[k].panel).hidden=true;
+    document.getElementById(DD_CONFIG[k].btn).setAttribute('aria-expanded','false');
+  }
 }
 function toggleFavDD(kind){
-  var panel=document.getElementById(kind==='venue'?'favVenuePanel':'favArtistPanel');
-  var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
+  var cfg=DD_CONFIG[kind];
+  var panel=document.getElementById(cfg.panel);
+  var btn=document.getElementById(cfg.btn);
   var wasOpen=!panel.hidden;
   _closeFavDD();
   if(wasOpen)return;
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
-  var selected=kind==='venue'?selVenues:selArtists;
-  var emptyLabel=kind==='venue'?'No favorite venues yet':'No favorite artists yet';
-  panel.innerHTML=_favPanelHtml(names,selected,emptyLabel);
+  var names=cfg.names();
+  var favSet=cfg.favSet?cfg.favSet():null;
+  var selected=cfg.sel();
+  panel.innerHTML=_favPanelHtml(names,selected,favSet,cfg.empty);
   panel.hidden=false;
   btn.setAttribute('aria-expanded','true');
 }
 function _updateFavBtnLabel(kind){
-  var sel=kind==='venue'?selVenues:selArtists;
-  var btn=document.getElementById(kind==='venue'?'favVenueBtn':'favArtistBtn');
-  var base=kind==='venue'?'Venues':'Artists';
-  btn.textContent=(sel.size?base+' ('+sel.size+')':base)+' ▾';
-  btn.classList.toggle('on',sel.size>0);
+  var family=(kind==='venue'||kind==='favVenue')?['venue','favVenue']:['artist','favArtist'];
+  family.forEach(function(k){
+    var cfg=DD_CONFIG[k];
+    var sel=cfg.sel();
+    var btn=document.getElementById(cfg.btn);
+    btn.textContent=(sel.size?cfg.base+' ('+sel.size+')':cfg.base)+' ▾';
+    btn.classList.toggle('on',sel.size>0);
+  });
   _saveFavSelections();
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
@@ -551,11 +590,12 @@ document.addEventListener('change',function(e){
   if(e.target.type!=='checkbox')return;
   var panel=e.target.closest('.favdd-panel');
   if(!panel)return;
-  var kind=panel.id==='favVenuePanel'?'venue':'artist';
-  var sel=kind==='venue'?selVenues:selArtists;
+  var kind=_kindForPanelId(panel.id);
+  var cfg=DD_CONFIG[kind];
+  var sel=cfg.sel();
   if(e.target.checked)sel.add(e.target.value);else sel.delete(e.target.value);
   _updateFavBtnLabel(kind);
-  var names=kind==='venue'?_favVenueNames():_favArtistNames();
+  var names=cfg.names();
   var saBtn=panel.querySelector('.favdd-selectall');
   if(saBtn)saBtn.textContent=(names.length&&sel.size===names.length)?'Deselect All':'Select All';
   rr();
@@ -564,14 +604,15 @@ document.addEventListener('click',function(e){
   var saBtn=e.target.closest('.favdd-selectall');
   if(saBtn){
     var panel=saBtn.closest('.favdd-panel');
-    var kind=panel.id==='favVenuePanel'?'venue':'artist';
-    var names=kind==='venue'?_favVenueNames():_favArtistNames();
-    var sel=kind==='venue'?selVenues:selArtists;
-    var emptyLabel=kind==='venue'?'No favorite venues yet':'No favorite artists yet';
+    var kind=_kindForPanelId(panel.id);
+    var cfg=DD_CONFIG[kind];
+    var names=cfg.names();
+    var favSet=cfg.favSet?cfg.favSet():null;
+    var sel=cfg.sel();
     var allSelected=names.length>0&&sel.size===names.length;
     if(allSelected){sel.clear();}else{names.forEach(function(n){sel.add(n);});}
     _updateFavBtnLabel(kind);
-    panel.innerHTML=_favPanelHtml(names,sel,emptyLabel);
+    panel.innerHTML=_favPanelHtml(names,sel,favSet,cfg.empty);
     rr();
     return;
   }
