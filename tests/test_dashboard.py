@@ -215,6 +215,28 @@ def test_render_includes_venue_artist_filter_controls():
     assert "favSet.has(n)" in html
 
 
+def test_shared_selection_count_scoped_to_each_panels_own_names():
+    # selVenues/selArtists are shared across a category's all-list and
+    # favorites-only dropdowns (checking a box in either affects the same
+    # filter), so a button's displayed count and its Select-All/Deselect-All
+    # state must be measured against ITS OWN name list, not the shared Set's
+    # raw .size -- otherwise "Select All" in the all-list dropdown makes the
+    # favorites-only button's badge show the full roster count too (e.g. an
+    # "Artists (247)" badge on a 9-artist favorites dropdown), and its
+    # "Deselect All" would wipe selections made via the other dropdown.
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert "function _namesSelectedCount(names,sel)" in html
+    assert "_namesSelectedCount(names,selected)===names.length" in html
+    assert "_namesSelectedCount(cfg.names(),cfg.sel())" in html
+    assert "_namesSelectedCount(names,sel)===names.length" in html
+    # Select-All/Deselect-All only ever adds/removes THIS panel's own names,
+    # never sel.clear() (which would nuke selections from the other dropdown)
+    assert "sel.clear()" not in html
+    assert "names.forEach(function(n){sel.delete(n);})" in html
+
+
 def test_render_includes_featured_hero_section():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},

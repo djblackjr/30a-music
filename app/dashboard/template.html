@@ -481,6 +481,15 @@ function _favArtistSet(){return new Set(ALL_FAV_ARTISTS);}
 function _kindForPanelId(pid){
   for(var k in DD_CONFIG){if(DD_CONFIG[k].panel===pid)return k;}
 }
+// selVenues/selArtists are shared between a category's all-list and
+// favorites-only dropdowns, so "how many of THIS panel's own names are
+// selected" is never just sel.size -- that would count selections made via
+// the other dropdown too. Always measure against the panel's own name list.
+function _namesSelectedCount(names,sel){
+  var n=0;
+  for(var i=0;i<names.length;i++){if(sel.has(names[i]))n++;}
+  return n;
+}
 function _favPanelHtml(names,selected,favSet,emptyLabel){
   if(!names.length)return '<div class="favdd-empty">'+emptyLabel+'</div>';
   var sorted=names.slice().sort(function(a,b){
@@ -491,7 +500,7 @@ function _favPanelHtml(names,selected,favSet,emptyLabel){
     var al=a.toLowerCase(),bl=b.toLowerCase();
     return al<bl?-1:al>bl?1:0;
   });
-  var allSelected=selected.size===names.length;
+  var allSelected=names.length>0&&_namesSelectedCount(names,selected)===names.length;
   var selectAll='<button type="button" class="favdd-selectall">'+(allSelected?'Deselect All':'Select All')+'</button><hr class="favdd-sep">';
   var items=sorted.map(function(n){
     var checked=selected.has(n)?' checked':'';
@@ -524,10 +533,10 @@ function _updateFavBtnLabel(kind){
   var family=(kind==='venue'||kind==='favVenue')?['venue','favVenue']:['artist','favArtist'];
   family.forEach(function(k){
     var cfg=DD_CONFIG[k];
-    var sel=cfg.sel();
+    var count=_namesSelectedCount(cfg.names(),cfg.sel());
     var btn=document.getElementById(cfg.btn);
-    btn.textContent=(sel.size?cfg.base+' ('+sel.size+')':cfg.base)+' ▾';
-    btn.classList.toggle('on',sel.size>0);
+    btn.textContent=(count?cfg.base+' ('+count+')':cfg.base)+' ▾';
+    btn.classList.toggle('on',count>0);
   });
   _saveFavSelections();
 }
@@ -593,7 +602,7 @@ document.addEventListener('change',function(e){
   _updateFavBtnLabel(kind);
   var names=cfg.names();
   var saBtn=panel.querySelector('.favdd-selectall');
-  if(saBtn)saBtn.textContent=(names.length&&sel.size===names.length)?'Deselect All':'Select All';
+  if(saBtn)saBtn.textContent=(names.length&&_namesSelectedCount(names,sel)===names.length)?'Deselect All':'Select All';
   rr();
 });
 document.addEventListener('click',function(e){
@@ -605,8 +614,8 @@ document.addEventListener('click',function(e){
     var names=cfg.names();
     var favSet=cfg.favSet?cfg.favSet():null;
     var sel=cfg.sel();
-    var allSelected=names.length>0&&sel.size===names.length;
-    if(allSelected){sel.clear();}else{names.forEach(function(n){sel.add(n);});}
+    var allSelected=names.length>0&&_namesSelectedCount(names,sel)===names.length;
+    if(allSelected){names.forEach(function(n){sel.delete(n);});}else{names.forEach(function(n){sel.add(n);});}
     _updateFavBtnLabel(kind);
     panel.innerHTML=_favPanelHtml(names,sel,favSet,cfg.empty);
     rr();
