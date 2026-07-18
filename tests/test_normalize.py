@@ -83,6 +83,18 @@ def test_canonicalize_instagram_handle_venue_variants():
     assert canonicalize("shelbysbeachbar") == "Shelby's Beach Bar"
 
 
+def test_canonicalize_papasurf_no_space_variant():
+    # Regression: re-ingesting the same Papa Surf calendar flyer on
+    # 2026-07-17 got "PapaSurf Burger Bar" (no space) back from Vision --
+    # a spelling _fold_all_caps() can't fix (not all-caps) and that wasn't
+    # yet in CANONICAL_FIXES, so it silently became a second, distinct venue
+    # identity and orphaned that day's events (including a Dion Jones show)
+    # off the real "Papa Surf" venue until someone happened to compare it
+    # against the dashboard by hand.
+    assert canonicalize("PapaSurf Burger Bar") == "Papa Surf"
+    assert canonicalize("PAPASURF BURGER BAR") == "Papa Surf"
+
+
 def test_identity_key_matches_for_instagram_handle_venue():
     nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
     handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]

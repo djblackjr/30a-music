@@ -38,6 +38,8 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Papa Surf", "PAPA SURF BURGER BAR"),
     ("Papa Surf", "Papa Surf Burger Bar 30A"),
     ("Papa Surf", "papasurfburgerbar"),
+    ("Papa Surf", "PapaSurf Burger Bar"),
+    ("Papa Surf", "PAPASURF BURGER BAR"),
     ("Shelby's Beach Bar", "shelbysbeachbar"),
     ("North Beach Social", "NORTH BEACH SOCIAL"),
     ("North Beach Social", "northbeachsocial"),
