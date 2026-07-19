@@ -75,6 +75,7 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Chautauqua Theater", "Florida Chautauqua Theatre"),
     ("The Village Door", "John Wehner's Village Door"),
     ("Havana Beach Bar", "Havana Beach Rooftop Bar"),
+    ("The Big Chill 30A", "The Big Chill"),
 
     # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
     ("Coconut Radio", "COCONUT RADIO"),

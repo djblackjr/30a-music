@@ -135,6 +135,9 @@ def test_detect_non_music_more_community_calendar_categories():
     # world") with no music, confirmed via its SoWal description.
     assert detect_non_music("Hemingway Day at The Pearl Hotel") == "hemingway_day"
     assert detect_non_music("Hemingway Day") == "hemingway_day"
+    # A South Walton Turtle Watch educational program, confirmed no music.
+    assert detect_non_music("Wild Sea Turtle Wednesday at The Big Chill 30A") == "nature_program"
+    assert detect_non_music("Wild Sea Turtle Wednesday") == "nature_program"
 
 
 def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():
@@ -152,6 +155,10 @@ def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music()
     # feature "live music by Weston Hines". Neither is a non-music category.
     assert detect_non_music("Wine & Song at NEAT") is None
     assert detect_non_music("Bubbles Sip N' Shop at WaterColor Package Store") is None
+    # A real band name in the "Here Comes the Sun Summer Concert Series" --
+    # confirmed via its SoWal listing, not guessed from "Run ... Run" reading
+    # like a charity 5K naming convention.
+    assert detect_non_music("Run Katie Run") is None
 
 
 def test_detect_non_music_does_not_catch_real_music_festivals_with_no_single_act():

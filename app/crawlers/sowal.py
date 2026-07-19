@@ -191,6 +191,8 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("locals_market",  re.compile(r"\blocals?\s+market\b", re.I)),
     ("kids_activity",  re.compile(r"\bkids.?\s+night\s+out\b|\bpumpkin\s+carving\b|\bcostume\s+contest\b|\bbreakfast with santa\b", re.I)),
     ("stargazing",     re.compile(r"\bstar\s*gazing\b", re.I)),
+    # An educational program hosted by South Walton Turtle Watch, no music.
+    ("nature_program", re.compile(r"\bwild sea turtle\b", re.I)),
     # A dining-only event ("menu items representing destinations around the
     # world") with no music at all -- not to be confused with any real
     # "Hemingway" *band* name, which this narrow full-phrase match avoids.

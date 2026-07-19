@@ -115,6 +115,17 @@ def test_identity_key_strips_redundant_at_venue_suffix_from_performer():
     assert suffixed["performer"] == "Wine & Song"
 
 
+def test_identity_key_matches_across_big_chill_venue_variants():
+    # Same real bug, compounded by a second variant: "The Big Chill" vs
+    # "The Big Chill 30A" are also different literal venue strings, so even
+    # after stripping the performer's redundant "at {venue}" suffix, the two
+    # crawls wouldn't collapse to one identity without this canonical fix
+    # too (confirmed via a real "Wild Sea Turtle Wednesday" duplicate).
+    nice = normalize_events([_raw("Some Act", "The Big Chill 30A", date="2026-07-29")])[0]
+    short = normalize_events([_raw("Some Act", "The Big Chill", date="2026-07-29")])[0]
+    assert event_identity(nice) == event_identity(short)
+
+
 def test_identity_key_matches_across_quote_typography():
     # Regression: a SoWal-sourced "Stinky's Bait Shack" (straight apostrophe)
     # and a GPT-4o Vision-sourced "STINKY’S BAIT SHACK" (smart apostrophe)
