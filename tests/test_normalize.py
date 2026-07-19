@@ -101,6 +101,20 @@ def test_identity_key_matches_for_instagram_handle_venue():
     assert event_identity(nice) == event_identity(handle)
 
 
+def test_identity_key_strips_redundant_at_venue_suffix_from_performer():
+    # Some SoWal crawl paths put "{performer} at {venue}" as the whole
+    # performer field (the venue's own listing title) while other passes
+    # for the same real event correctly separate them -- confirmed via a
+    # real duplicate ("Wine & Song" vs "Wine & Song at NEAT" both landing
+    # on the dashboard for the same weekly show). Both must collapse to one
+    # identity.
+    bare = normalize_events([_raw("Wine & Song", "NEAT", date="2026-07-21")])[0]
+    suffixed = normalize_events([_raw("Wine & Song at NEAT", "NEAT", date="2026-07-21")])[0]
+    assert event_identity(bare) == event_identity(suffixed)
+    assert bare["performer"] == "Wine & Song"
+    assert suffixed["performer"] == "Wine & Song"
+
+
 def test_identity_key_matches_across_quote_typography():
     # Regression: a SoWal-sourced "Stinky's Bait Shack" (straight apostrophe)
     # and a GPT-4o Vision-sourced "STINKY’S BAIT SHACK" (smart apostrophe)

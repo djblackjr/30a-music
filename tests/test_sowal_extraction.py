@@ -129,6 +129,12 @@ def test_detect_non_music_more_community_calendar_categories():
     # nights with scripted children's plays under one series title, so only
     # the play instances should match.
     assert detect_non_music("Sounds Like Summer: Children's Play") == "childrens_play"
+    assert detect_non_music("Star Gazing at Eden Gardens State Park") == "stargazing"
+    assert detect_non_music("Breakfast with Santa at Fish Out of Water") == "kids_activity"
+    # A dining-only event ("menu items representing destinations around the
+    # world") with no music, confirmed via its SoWal description.
+    assert detect_non_music("Hemingway Day at The Pearl Hotel") == "hemingway_day"
+    assert detect_non_music("Hemingway Day") == "hemingway_day"
 
 
 def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():
@@ -141,6 +147,11 @@ def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music()
     assert detect_non_music("30A BBQ Festival") is None
     assert detect_non_music("Barktoberfest") is None
     assert detect_non_music("Labor Day Block Party at WaterColor Package Store") is None
+    # "Wine & Song" rotates a different real named performer weekly (Marc
+    # Harris, Christy Larsen, ...); "Bubbles Sip N' Shop" is confirmed to
+    # feature "live music by Weston Hines". Neither is a non-music category.
+    assert detect_non_music("Wine & Song at NEAT") is None
+    assert detect_non_music("Bubbles Sip N' Shop at WaterColor Package Store") is None
 
 
 def test_detect_non_music_does_not_catch_real_music_festivals_with_no_single_act():

@@ -70,6 +70,18 @@ def build_observation(raw: dict) -> dict | None:
     venue = canonicalize((ev.get("venue") or "").strip()) or None
     ev["venue"] = venue
 
+    # Some SoWal crawl paths capture "{performer} at {venue}" as the whole
+    # performer field (the venue's own event-listing title) while other
+    # passes for the SAME real event correctly separate performer from
+    # venue -- without stripping this redundant suffix, the two produce
+    # different identity_keys and duplicate the event on the dashboard
+    # ("Wine & Song" vs "Wine & Song at NEAT" both landing as separate rows
+    # for the same real weekly show).
+    if venue:
+        suffix = f" at {venue}"
+        if performer.lower().endswith(suffix.lower()):
+            performer = canonicalize(performer[: -len(suffix)].strip()) or performer
+
     # venue-aware alias (e.g. "Dion Jones" @ Stinky's -> the full band)
     performer = apply_venue_alias(performer, venue)
     ev["performer"] = performer

@@ -189,7 +189,12 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     # golf movie) that doesn't contain the word "golf" itself.
     ("golf",           re.compile(r"\bgolf\b|\btin\s+cup\s+classic\b", re.I)),
     ("locals_market",  re.compile(r"\blocals?\s+market\b", re.I)),
-    ("kids_activity",  re.compile(r"\bkids.?\s+night\s+out\b|\bpumpkin\s+carving\b|\bcostume\s+contest\b", re.I)),
+    ("kids_activity",  re.compile(r"\bkids.?\s+night\s+out\b|\bpumpkin\s+carving\b|\bcostume\s+contest\b|\bbreakfast with santa\b", re.I)),
+    ("stargazing",     re.compile(r"\bstar\s*gazing\b", re.I)),
+    # A dining-only event ("menu items representing destinations around the
+    # world") with no music at all -- not to be confused with any real
+    # "Hemingway" *band* name, which this narrow full-phrase match avoids.
+    ("hemingway_day",  re.compile(r"\bhemingway day\b", re.I)),
     # Each verified against its actual SoWal description first, same as
     # everything above -- "the musical"/"nutcracker" catch staged theater
     # (Grease at Rosemary Beach, Ballet Pensacola's Nutcracker) that isn't
