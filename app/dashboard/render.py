@@ -347,23 +347,44 @@ def _featured_event(events: list[dict]) -> dict | None:
     return min(same_day, key=rank)
 
 
+def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:
+    """Badge row under the hero headline -- mirrors the same favorite tiers
+    _featured_event() ranked by, so the picked show visibly explains itself."""
+    badges = []
+    if performer_favorite:
+        badges.append('<span class="badge fav">★ Favorite artist</span>')
+    if venue_favorite:
+        badges.append('<span class="badge fav">★ Favorite venue</span>')
+    return "".join(badges)
+
+
 def _hero_context(events: list[dict]) -> dict:
     """
-    (venue, meta) strings for the hero card's featured-show side panel --
-    real data picked by _featured_event() rather than a static placeholder.
+    (performer, venue, meta, badges) strings for the hero card -- the
+    performer headlines the hero in large display type, the venue/meta back
+    it up in the glass side panel. Real data picked by _featured_event()
+    rather than a static placeholder.
     """
     ev = _featured_event(events)
     if not ev:
         return {
-            "venue": "No shows scheduled",
-            "meta": "Check back soon for new listings.",
+            "performer": "No shows scheduled",
+            "venue": "Check back soon",
+            "meta": "New listings appear as we find them.",
+            "badges": "",
         }
     today = datetime.now().strftime("%Y-%m-%d")
     when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
     parts = [p for p in [when, ev.get("time_start"), _confidence_label(ev.get("confidence"))] if p]
+    venue_favorites = _load_favorite_venues()
+    performer_meta = _load_performer_meta()
+    performer_fav = _performer_favorite(ev.get("performer") or ev.get("name"), performer_meta)
+    venue_fav = _venue_favorite(ev.get("venue"), venue_favorites)
     return {
+        "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
         "venue": html.escape(_venue_display_name(ev.get("venue"))),
         "meta": html.escape(" • ".join(parts)),
+        "badges": _hero_badges_html(performer_fav, venue_fav),
     }
 
 
@@ -407,8 +428,10 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     out = (
         template
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
+        .replace("HERO_PERFORMER_PLACEHOLDER", hero["performer"])
         .replace("HERO_VENUE_PLACEHOLDER", hero["venue"])
         .replace("HERO_META_PLACEHOLDER", hero["meta"])
+        .replace("HERO_BADGES_PLACEHOLDER", hero["badges"])
         .replace("TOTAL_PLACEHOLDER", str(h["total"]))
         .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
         .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))

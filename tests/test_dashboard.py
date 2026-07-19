@@ -320,6 +320,37 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
     assert "Venue-Only Venue" not in chunk
 
 
+def test_hero_headlines_the_performer_name():
+    # The hero's big display headline is the performer, not the venue --
+    # the venue/time back it up in the glass side panel instead.
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "V", "date": _d(2),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    assert '<h2 class="hero-title">Combo Act</h2>' in html
+
+
+def test_hero_shows_favorite_badges_matching_its_own_tier(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(2),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    assert "★ Favorite artist" in html
+    assert "★ Favorite venue" in html
+
+
+def test_hero_shows_no_badges_when_neither_artist_nor_venue_is_a_favorite(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
+    html, _ = _render_to_temp([
+        {"performer": "Nobody Special", "venue": "Nowhere Venue", "date": _d(2),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    assert '<div class="badge-row"></div>' in html
+
+
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
         "venue-only venue",

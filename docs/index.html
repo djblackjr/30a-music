@@ -1,65 +1,85 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>30A Live Music</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,900;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ---------------------------------------------------------------------
+   "Gulf Dusk" -- a single committed atmosphere rather than a light/dark
+   toggle: checking tonight's live music is inherently a golden-hour,
+   evening-plans decision on this coast, so the palette stays in that
+   world (deep dusk navy, sunset coral, warm gold) at every hour you
+   actually look at the page. Fraunces (display) + Work Sans (UI/data).
+   --------------------------------------------------------------------- */
 :root{
-  --navy:#1F3864;--navy-dark:#152945;--navy-light:#2c4a7c;
-  --teal:#1B7A8A;--teal-light:#2497aa;
-  --cream:#F5F0E8;--card:#ffffff;--amber:#f59e0b;
-  --ink:#1c2b3a;--muted:#64748b;--border:#e7e2d8;
-  --radius-sm:8px;--radius-md:14px;--radius-lg:18px;
-  --shadow-sm:0 1px 3px rgba(31,56,100,.08);
-  --shadow-md:0 6px 20px rgba(31,56,100,.14);
-  --shadow-lg:0 16px 40px rgba(0,0,0,.28);
+  --navy:#1B2740;--navy-dark:#0B111F;--navy-light:#26355A;
+  --teal:#3FB8AE;--teal-light:#F4B942;
+  --cream:#20304F;--card:#182338;--amber:#F4B942;
+  --ink:#F6EEDD;--ink-dim:rgba(246,238,221,.68);--muted:#93A0BE;--border:rgba(246,238,221,.12);
+  --coral:#FF6E52;--coral-deep:#E85539;
+  --glass:rgba(38,53,90,.55);--glass-hi:rgba(255,255,255,.06);
+  --radius-sm:12px;--radius-md:18px;--radius-lg:26px;
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.4);
+  --shadow-md:0 16px 34px -14px rgba(0,0,0,.5);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.45;}
+body{font-family:'Work Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(ellipse 900px 500px at 12% -8%,rgba(244,185,66,.14),transparent 60%),
+    radial-gradient(ellipse 1000px 650px at 90% 0%,rgba(255,110,82,.12),transparent 55%),
+    linear-gradient(180deg,#0B111F 0%,#101A2E 55%,#0C1322 100%);
+  color:var(--ink);font-size:16px;line-height:1.45;}
 a{color:var(--teal);text-decoration:none;}
 :focus-visible{outline:3px solid var(--teal-light);outline-offset:2px;border-radius:4px;}
 @media (prefers-reduced-motion:no-preference){
   .btn,.maplink,select,input,.stat,.legchip,th[data-sort]{transition:background-color .15s ease,box-shadow .15s ease,border-color .15s ease;}
+  .hero-kicker::before{animation:pulse 2.6s ease-in-out infinite;}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important;scroll-behavior:auto!important;}
 }
-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;padding:22px 16px 24px;box-shadow:var(--shadow-md);} .hero-shell{margin:16px 0 12px;} .hero-panel{display:grid;grid-template-columns:1.3fr .8fr;gap:16px;background:linear-gradient(135deg,rgba(27,122,138,.18),rgba(245,158,11,.16));border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:20px;} .hero-kicker{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;} .hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;} .hero-side{background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;justify-content:center;} .hero-side-title{font-size:.73rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;} .hero-side-venue{font-size:1.05rem;font-weight:700;color:var(--navy);} .hero-side-meta{font-size:.9rem;color:var(--muted);margin-top:6px;} @media(max-width:800px){.hero-panel{grid-template-columns:1fr;}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+header{padding:26px 16px 12px;} .hero-shell{margin:8px 0 20px;} .hero-panel{position:relative;overflow:hidden;display:grid;grid-template-columns:1.25fr .85fr;gap:28px;align-items:end;background:radial-gradient(900px 380px at 10% 0%,rgba(244,185,66,.22),transparent 55%),radial-gradient(760px 420px at 95% 100%,rgba(255,110,82,.26),transparent 60%),linear-gradient(150deg,#1B2740 0%,#223258 48%,#16213B 100%);border:1px solid var(--border);border-radius:32px;box-shadow:var(--shadow-lg);padding:40px 34px 34px;} .hero-panel::before{content:"";position:absolute;left:-8%;right:-8%;bottom:30%;height:1px;background:linear-gradient(90deg,transparent,rgba(246,238,221,.2) 30%,rgba(246,238,221,.28) 50%,rgba(246,238,221,.2) 70%,transparent);pointer-events:none;} .hero-kicker{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:16px;} .hero-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(244,185,66,.18);} .hero-title{position:relative;z-index:1;font-family:'Fraunces',Georgia,serif;font-weight:900;font-style:normal;font-size:clamp(1.9rem,4.4vw,3.2rem);line-height:1.04;letter-spacing:-.015em;color:var(--ink);margin:0 0 12px;text-wrap:balance;} .hero-meta-line{position:relative;z-index:1;font-size:1rem;color:var(--ink-dim);font-weight:500;margin:0 0 20px;} .hero-meta-line b{color:var(--ink);font-weight:600;} .badge-row{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:9px;margin-bottom:26px;} .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-size:.76rem;font-weight:600;background:var(--glass-hi);border:1px solid var(--border);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--ink-dim);} .badge.fav{color:var(--amber);border-color:rgba(244,185,66,.35);} .hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap;} .hero-side{position:relative;z-index:1;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,.06);display:flex;flex-direction:column;justify-content:center;} .hero-side-title{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;} .hero-side-venue{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;font-size:1.4rem;color:var(--ink);margin-bottom:6px;} .hero-side-meta{font-size:.88rem;color:var(--ink-dim);margin-top:6px;} @media(max-width:800px){.hero-panel{grid-template-columns:1fr;padding:30px 22px 26px;}}
 .hd-inner{max-width:1100px;margin:0 auto;}
-header h1{font-size:1.9rem;font-weight:800;letter-spacing:-.01em;}
-header h1 .note{color:var(--amber);}
-header p{font-size:.95rem;opacity:.75;margin-top:4px;}
-.upd-badge{display:inline-block;font-size:.72rem;opacity:.75;margin-top:10px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:999px;}
+header h1{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;font-size:1.7rem;letter-spacing:-.01em;color:var(--ink);}
+header h1 .note{font-style:normal;color:var(--coral);}
+header p{font-size:.9rem;color:var(--muted);margin-top:4px;font-weight:500;}
+.upd-badge{display:inline-block;font-size:.72rem;color:var(--muted);margin-top:10px;background:var(--glass-hi);border:1px solid var(--border);padding:5px 12px;border-radius:999px;}
 .ftr{text-align:center;margin-top:18px;padding-top:2px;}
 .ftr .upd-badge{background:var(--card);border:1px solid var(--border);color:var(--muted);margin:0 4px;}
 .page{max-width:1100px;margin:0 auto;padding:0 16px 40px;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:16px 0;}
-.stat{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:8px 4px;text-align:center;min-width:0;}
-.stat .n{font-size:1.2rem;font-weight:800;color:var(--navy);letter-spacing:-.01em;}
+.stat{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:10px 4px;text-align:center;min-width:0;}
+.stat .n{font-size:1.2rem;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
 .stat .l{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;white-space:nowrap;}
 .top{display:grid;gap:16px;margin-bottom:16px;}
 @media(min-width:900px){.top{grid-template-columns:1.35fr 1fr;align-items:start;}}
-.map-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;margin-top:8px;}
+.map-card{background:#F6EEDD;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid rgba(15,22,38,.08);overflow:hidden;display:flex;flex-direction:column;margin-top:8px;}
 .map-svg-wrap{width:100%;overflow:hidden;}
-.map-caption{font-size:.72rem;color:var(--muted);padding:8px 14px 12px;text-align:center;}
-.tn{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:20px;display:flex;flex-direction:column;margin:16px 0;}
+.map-caption{font-size:.72rem;color:#7A7159;padding:8px 14px 12px;text-align:center;}
+.tn{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:var(--ink);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;margin:16px 0;}
 .tn-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-content:start;}
 .tn-body::-webkit-scrollbar{width:6px;}
 .tn-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px;}
 .tn-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
-.tn h2{font-size:.96rem;font-weight:700;color:#facc15;opacity:.95;text-transform:uppercase;letter-spacing:.06em;}
-.tn-hint{font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;}.tn-sub{text-transform:none;font-weight:500;opacity:.62;letter-spacing:0;}
+.tn h2{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:1.15rem;color:var(--ink);text-transform:none;letter-spacing:-.01em;}
+.tn-hint{font-size:.72rem;font-weight:700;color:var(--amber);opacity:1;text-transform:uppercase;letter-spacing:.08em;}.tn-sub{text-transform:none;font-weight:500;opacity:.65;letter-spacing:0;color:var(--ink-dim);}
 .tn-empty{opacity:.7;padding:6px 2px;}
-.sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);overflow:hidden;display:flex;flex-direction:column;}
+.sc{background:var(--glass-hi);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s ease;}
+.sc:hover{border-color:rgba(255,110,82,.35);}
 .sc-row{padding:12px 14px;display:flex;flex-direction:column;flex:1;gap:4px;cursor:pointer;}
 .sc-row>div{min-width:0;}
 .sc-meta{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;}
 .sc-row .vt,.sc-row .maplink{max-width:100%;white-space:normal;}
 .sc-row:focus-visible{outline:2px solid var(--teal-light);outline-offset:-2px;}
-.scdet{display:none;background:#fff;color:#334155;padding:10px 14px;font-size:.8rem;border-top:1px solid rgba(255,255,255,.15);}
+.scdet{display:none;background:rgba(0,0,0,.18);color:var(--ink-dim);padding:10px 14px;font-size:.8rem;border-top:1px solid var(--border);}
 .scdet.open{display:block;}
 .scdet .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}
 .scdet .ob:last-child{border-bottom:none;}
-.scdet .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}
+.scdet .cflr{color:#F87171;font-weight:700;margin-top:6px;}
 
-.sc b{font-size:1.035rem;line-height:1.25;}
+.sc b{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:1.05rem;line-height:1.22;color:var(--ink);}
 .sc small{opacity:.75;font-size:.855rem;}
 .sc-time{display:inline-flex;align-items:center;white-space:nowrap;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
@@ -73,27 +93,31 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 .tbl-hint{font-size:.8rem;color:var(--muted);margin-bottom:8px;padding-left:2px;}
 .leg{display:flex;gap:8px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
 .leg::-webkit-scrollbar{height:6px;}
-.leg::-webkit-scrollbar-thumb{background:rgba(31,56,100,.25);border-radius:99px;}
+.leg::-webkit-scrollbar-thumb{background:rgba(246,238,221,.25);border-radius:99px;}
 .legchip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:.78rem;box-shadow:var(--shadow-sm);white-space:nowrap;}
 .ld{width:9px;height:9px;border-radius:50%;display:inline-block;}
 @media(max-width:680px){.leg{margin:0 -16px;padding:10px 16px;}}
-.fil{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.fil input[type=search]{min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;width:100%;background:var(--cream);outline:none;}
-.fil input[type=search]:focus{border-color:var(--teal);background:#fff;}
+.fil{background:var(--glass);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:20px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+.fil input[type=search]{min-height:46px;padding:0 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;width:100%;background:var(--cream);color:var(--ink);outline:none;}
+.fil input[type=search]::placeholder{color:var(--muted);}
+.fil input[type=search]:focus{border-color:var(--teal);background:var(--navy-light);}
 .dr{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.dr .favdd .btn{width:100%;}
+.dr .favdd{min-width:0;}
+.dr .favdd .btn{width:100%;overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:520px){.dr{grid-template-columns:1fr;}}
 .br{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.btn{min-height:44px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--navy);white-space:nowrap;box-shadow:var(--shadow-sm);}
-.btn:hover{background:var(--cream);}
-.btn.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:var(--shadow-md);}
-.btn.ghost{background:transparent;box-shadow:none;color:var(--muted);}
-.btn.ghost:hover{background:var(--cream);}
+.btn{min-height:46px;padding:0 18px;border:1px solid var(--border);border-radius:999px;background:var(--glass-hi);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;font-size:.85rem;font-weight:600;color:var(--ink-dim);white-space:nowrap;box-shadow:var(--shadow-sm);}
+.btn:hover{background:rgba(255,255,255,.1);border-color:var(--navy-light);color:var(--ink);}
+.btn.on,.btn-cta{background:var(--coral);color:#1B0D08;border-color:var(--coral);box-shadow:0 10px 24px -12px rgba(255,110,82,.55);}
+.btn.on:hover,.btn-cta:hover{background:#ff7d63;}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--muted);border-color:transparent;}
+.btn.ghost:hover{background:var(--glass-hi);color:var(--ink);}
 .cnt{font-size:.8rem;color:var(--muted);margin-left:auto;align-self:center;}
 .favdd{position:relative;display:inline-flex;}
-.favdd-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:20;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:8px;min-width:220px;max-width:280px;max-height:280px;overflow-y:auto;}
+.favdd-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:20;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:8px;min-width:220px;max-width:280px;max-height:280px;overflow-y:auto;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 .favdd-item{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;color:var(--ink);}
 .favdd-item:hover{background:var(--cream);}
-.favdd-item input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--navy);}
+.favdd-item input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--coral);}
 .favdd-empty{padding:8px 6px;color:var(--muted);font-size:.82rem;}
 .favdd-selectall{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 6px;font-size:.85rem;font-weight:700;color:var(--teal);cursor:pointer;border-radius:var(--radius-sm);}
 .favdd-selectall:hover{background:var(--cream);}
@@ -105,17 +129,18 @@ header p{font-size:.95rem;opacity:.75;margin-top:4px;}
 }
 .wrap{display:none;}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;}
-thead th{background:var(--navy);color:#fff;padding:12px 14px;text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+thead th{background:var(--navy);color:var(--ink);padding:12px 14px;text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
 th[data-sort]{cursor:pointer;}
 th[data-sort]:hover{background:var(--teal);}
 th[data-sort].asc::after{content:" ▲";font-size:.7em;}
 th[data-sort].desc::after{content:" ▼";font-size:.7em;}
-td{padding:7px 14px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;}
+td{padding:7px 14px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle;color:var(--ink-dim);}
+td b{color:var(--ink);}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f5faff;}
+tr:hover td{background:rgba(255,255,255,.03);}
 tr.up td:first-child{border-left:3px solid var(--teal);}
-tr.now td:first-child{border-left:4px solid var(--navy);}
-.vt{padding:4px 11px;border-radius:999px;font-size:.8rem;font-weight:600;display:inline-block;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+tr.now td:first-child{border-left:4px solid var(--coral);}
+.vt{padding:4px 11px;border-radius:999px;font-size:.8rem;font-weight:600;display:inline-block;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35);}
 .fav-star{color:var(--amber);}
 .vt-rft{background:#c0392b;}.vt-ps{background:#d35400;}.vt-sbb{background:#8e44ad;}.vt-nbs{background:#16a085;}
 .vt-sbs{background:#27ae60;}.vt-aj{background:#2980b9;}.vt-pav{background:#e67e22;}
@@ -136,30 +161,33 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
   .wrap td:nth-of-type(2){grid-column:1;grid-row:2;color:var(--muted);font-size:.82rem;}
   .wrap td:nth-of-type(3){grid-column:2;grid-row:2;color:var(--muted);font-size:.82rem;justify-self:end;}
 }
-.mm{position:fixed;inset:0;background:rgba(15,26,40,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.mm{position:fixed;inset:0;background:rgba(6,10,20,.72);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
 .mm.on{display:flex;}
-.mmbox{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:85vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
-.mmhd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--navy);color:#fff;gap:10px;}
+.mmbox{background:var(--navy);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:85vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
+.mmhd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);color:var(--ink);gap:10px;}
 .mmhd b{font-size:.95rem;}
-.mmx{background:rgba(255,255,255,.14);border:none;color:#fff;font-size:1.3rem;line-height:1;cursor:pointer;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.mmx{background:rgba(255,255,255,.14);border:none;color:var(--ink);font-size:1.3rem;line-height:1;cursor:pointer;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
 .mmx:hover{background:rgba(255,255,255,.26);}
 .mmfr{width:100%;height:420px;border:0;display:block;flex:1;}
-.mmft{padding:10px 16px;text-align:right;background:#fff;border-top:1px solid var(--border);font-size:.85rem;}
+.mmft{padding:10px 16px;text-align:right;background:var(--navy);border-top:1px solid var(--border);font-size:.85rem;color:var(--ink-dim);}
 .mmft a{font-weight:600;}
 @media(max-width:680px){
   .mm{padding:0;}
   .mmbox{max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;}
   .mmfr{flex:1;height:auto;}
 }
-.src{font-size:.8rem;color:#16a085;letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#dc2626;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#16a34a;}.cf-md .d{background:#f59e0b;}.cf-lo .d{background:#dc2626;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:#f7fbfd;border-top:1px dashed var(--border);font-size:.82rem;color:#334155;padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#b91c1c;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
+.src{font-size:.8rem;color:var(--teal);letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#F87171;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#22c55e;}.cf-md .d{background:var(--amber);}.cf-lo .d{background:#F87171;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:rgba(255,255,255,.03);border-top:1px dashed var(--border);font-size:.82rem;color:var(--ink-dim);padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#F87171;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
 <header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p></div></header>
 <main class="page">
 <div class="hero-shell">
   <div class="hero-panel">
     <div>
       <p class="hero-kicker">Tonight’s best live music in 30A</p>
+      <h2 class="hero-title">The Typos</h2>
+      <p class="hero-meta-line">at <b>30Avenue</b> &middot; Today • 6:00 pm • High confidence</p>
+      <div class="badge-row"><span class="badge fav">★ Favorite artist</span><span class="badge fav">★ Favorite venue</span></div>
       <div class="hero-actions">
-        <button class="btn on" type="button" onclick="sf('today')">Explore tonight</button>
+        <button class="btn btn-cta" type="button" onclick="sf('today')">Explore tonight</button>
         <button class="btn ghost" type="button" onclick="sf('week')">This week</button>
       </div>
     </div>
@@ -2006,7 +2034,7 @@ tr.now td:first-child{border-left:4px solid var(--navy);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">865</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-18 13:26:16</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-18 21:52:02</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
@@ -2015,7 +2043,7 @@ var T=_localDate();
 var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
 var ALL_FAV_VENUES=["30Avenue", "AJ's Grayton Beach", "Chiringo", "Crackings", "Local Catch Bar & Grill", "North Beach Social", "Papa Surf", "Red Fish Taco", "Seaside Amphitheater", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "Stinky's Fish Camp", "The Bay", "The Pavilion at Watersound Town Center", "The Red Bar", "Watersound Town Center"];
 var ALL_FAV_ARTISTS=["Casey Kearney", "Dion Jones", "Dion Jones & The Neon Tears", "Forrest Williams", "Queens Handsome", "Queens Ransom", "Stevie Monce", "The Typos", "Will Thompson"];
-var ALL_VENUES=["30AFest Headquarters @ WaterColor Inn", "30Ave", "30Avenue", "A Simple Faith Church", "Aaron Bessant Park", "AJ's Grayton Beach", "Alys Beach", "Baytowne", "Boggy Boys Pizza", "Burn Pine Country Club", "Caf\u00e9 Thirty-A", "Camp Helen State Park", "Carillon Beach Village Green", "Chautauqua Theater", "Crackings", "Downtown Panama City", "Downtown Pensacola", "Eastern Lake Trailhead", "Ectc", "Eden Gardens State Park", "Emerald Bay Golf Course", "Emerald Coast Theatre Company", "EO Wilson Biophilia Center", "Fish Out of Water", "Frank Brown Park", "George Core Park", "Grand Boulevard", "HarborWalk Village", "Havana Beach Bar", "Havana Beach Bar & Grill", "Hibiscus Guesthouse", "Hilton Sandestin Beach Golf Resort & Spa", "Hotel Effie", "Local Catch Bar & Grill", "Mattie Kelly Cultural Arts Village", "MCGUIRE'S DESTIN", "Neat", "NEAT", "Nick's Seafood Restaurant", "North Beach", "North Beach Social", "Old Florida Fish House", "Ovide", "Papa Surf", "Point Washington State Forest", "Point Washington Trail Head", "Red Bar", "Red Fish Taco", "Rosemary Beach", "Rosemary Beach Town Hall", "Sandestin Golf and Beach Resort", "Scratch Biscuit Kitchen", "Seascape Towne Centre", "Seaside", "Seaside Amphitheater", "Shack's Art Gallery", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "Stinky's Fish Camp", "The Alice", "The Bay", "The Big Chill", "The Big Chill 30A", "The Links Golf Club", "The Markey Shops", "The Pavilion at Watersound Town Center", "The Pearl", "The Pearl Hotel", "The Red Bar", "The Village of Baytowne Wharf", "WaterColor Package Store", "Watersound", "Watersound Town Center"];
+var ALL_VENUES=["30AFest Headquarters @ WaterColor Inn", "30Ave", "30Avenue", "A Simple Faith Church", "Aaron Bessant Park", "AJ's Grayton Beach", "Alys Beach", "Baytowne", "Boggy Boys Pizza", "Burn Pine Country Club", "Caf\u00e9 Thirty-A", "Camp Helen State Park", "Carillon Beach Village Green", "Chautauqua Theater", "Crackings", "Downtown Panama City", "Downtown Pensacola", "Eastern Lake Trailhead", "Ectc", "Eden Gardens State Park", "Emerald Bay Golf Course", "Emerald Coast Theatre Company", "EO Wilson Biophilia Center", "Fish Out of Water", "Frank Brown Park", "George Core Park", "Grand Boulevard", "HarborWalk Village", "Havana Beach Bar", "Havana Beach Bar & Grill", "Hibiscus Guesthouse", "Hilton Sandestin Beach Golf Resort & Spa", "Hotel Effie", "Local Catch Bar & Grill", "Mattie Kelly Cultural Arts Village", "MCGUIRE'S DESTIN", "NEAT", "Neat", "Nick's Seafood Restaurant", "North Beach", "North Beach Social", "Old Florida Fish House", "Ovide", "Papa Surf", "Point Washington State Forest", "Point Washington Trail Head", "Red Bar", "Red Fish Taco", "Rosemary Beach", "Rosemary Beach Town Hall", "Sandestin Golf and Beach Resort", "Scratch Biscuit Kitchen", "Seascape Towne Centre", "Seaside", "Seaside Amphitheater", "Shack's Art Gallery", "Shelby's Beach Bar", "Shunk Gulley", "Stinky's Bait Shack", "Stinky's Fish Camp", "The Alice", "The Bay", "The Big Chill", "The Big Chill 30A", "The Links Golf Club", "The Markey Shops", "The Pavilion at Watersound Town Center", "The Pearl", "The Pearl Hotel", "The Red Bar", "The Village of Baytowne Wharf", "WaterColor Package Store", "Watersound", "Watersound Town Center"];
 var ALL_ARTISTS=["30A BBQ Festival", "30A Songwriters Festival", "30A Songwriters Showcase - Cat Ridgeway Band", "3Hg", "9 to 5: The Musical", "9 to 5: The Musical at ECTC", "9/11 Day of Honor & Live Music", "Aaron Gleason", "AJ's Grayton Brunch & Live Music", "AJ's Tin Cup Classic", "Alex Napier", "Alys Beach Crafted", "Ariel + Tim", "Arnold Gleason", "Back to 'Old' School Bash", "Back to School Nutrition & Wellness Talk", "Barktoberfest", "Baytowne Beer Festival", "Baytowne Beer Festival Backyard Bash", "Baytowne Boomin' Tuesday", "Baytowne International Talk Like a Pirate Day", "Baytowne NYE Countdown", "Baytowne Scallywag Sunday", "Baytowne Thursdaze Light Show", "Ben Buzga", "Bingo Brunch", "Bingo Brunch at Scratch Biscuit Kitchen", "Bingo Nights Rooftop Heights", "Bingo Nights Rooftop Heights at Hotel Effie", "Biophilia Center Back to Nature", "Biophilia Center Creature Feature", "Biophilia Center Summerfest", "Black Creek String Band", "Blast on the Bay", "Boukou Groove", "Breakfast with Santa", "Breakfast with Santa at Fish Out of Water", "Brent Varner", "Brett Stafford", "Brook Washor", "Brooke Washor", "Bryan Bludworth", "Bubbles & Beauty", "Bubbles & Beauty at The Pearl Hotel", "Bubbles Sip N' Shop", "Bubbles Sip N' Shop at WaterColor Package Store", "Bubbly Baytowne", "Burgers, Bourbon and Beer", "Cade Pierce", "Cadillac Willy", "Caf\u00e9 Thirty-A Christmas Charity Ball", "Caring & Sharing Fall Fashion Show", "Casey Kearney", "Cat Ridgeway Band", "Catalyst Dance Band", "Children's Play - Pirate Who Learns to Say Please", "Chris Johnson", "Christon Birge", "Christon Birge Duo", "Christy Larsen", "Coconut Radio", "Come From Away", "Come From Away at ECTC", "Corey Hall Band", "Corey Hall Trio", "Dancing Dream: A Tribute to ABBA", "David Dunavent", "Dear Jack, Dear Louise", "Dear Jack, Dear Louise at ECTC", "Derek Givans", "Destin Seafood Festival", "Dion Jones", "Dion Jones & The Neon Tears", "DJ", "DJ 30A", "Dueling Pianos", "Duncan Crittenden", "ECTC Children's Theater", "ECTC Children's Theater at Seaside", "Eden Gardens Christmas Candlelight Open House & Luminaries", "Ellie Biscuit 20 &10-Mile Trail Race", "Emerald Coast Foundation's Children's Charity Poker Run", "Emily Bass", "Eric Stockton Band", "Festival of the Arts", "Flow Tribe", "Flutterby Arts Festival", "Fore Her Golf Outing", "Fore Her Pink Run", "Fore Her Pink Run at Baytowne", "Forgotten Music Festival", "Fox Play", "Free Bingo", "Free Bingo at Stinky's Bait Shack", "Frozen: The Musical", "Frozen: The Musical at ECTC", "Gilleran's Island", "Grayton Locals Market", "Grease - The Musical", "Grit and Grace: Holding Our Own", "Groovin' on the Green", "Gulf Coast Jam", "HarborWalk Coastal Country Concert", "HarborWalk Saturday Social", "Harrison Prentice", "Havana Nights", "Havana Nights  at The Pearl Hotel", "Hdtv", "Hemingway Day", "Hemingway Day at The Pearl Hotel", "High Aces", "Huck & Lilly", "Ike Bartley", "In the Woods 30A 50K", "Jake & Aimee", "Jamah Terry", "Jared Harden", "Jared Herzog", "Jarred McConnell & High Aces", "Jim Couch", "John \"Papa\" Gros", "Johnny Hayes", "Jonathan Puzan", "Jordan Chase", "Josh Drake", "Kevin Carson", "Keylan Rayne", "Kids' Night Out", "Killer Robot Army", "Kyle LaMonica", "Labor Day Block Party", "Labor Day Block Party at WaterColor Package Store", "Lake Powell Cleanup", "Lane Maury", "Late Night Mix Tape", "Laura Lane", "Leana Carter", "Lips Manly", "LIVE MUSIC Mondays", "Low Tide Junction", "Marc Harris", "Mari Gleason", "Mark Payne", "Martin Lane", "Mat Hall + Tim Dutrow", "Matt McCarty's Jazz Jam", "Max McCann", "Meco", "Merchant Walkabout & The Paper Bear Movie", "Michael Johnson", "Michael Johnson at Havana Beach Bar & Grill", "Mike Whitty & Friends", "Million Dollar Quarter Christmas", "Million Dollar Quarter Christmas at ECTC", "Mindy Smith", "Moon Crush: Joe Bonamassa's Sound Wave", "Moon Crush: Oldies", "Moon Crush: Pink Moon", "Moon Crush: Shinedown's Lunatic Ball", "Moon Crush: Styx & Friends", "Moon Crush: Tedeschi Trucks Sun, Sand and Soul", "New Cahoots", "Nick's Kids Catfish Tournament", "October Film Series", "October Film Series at Eden Gardens State Park", "Operation Outdoor Freedom Trailfest", "Otha Allen", "Otha Allen Jr.", "Outro", "Pairing & Sharing Wine Dinner Benefit", "Panama City Songwriters Festival", "Paper Bear Screening", "Paper Bear Screening at Seaside", "PCB Summer Concert Series", "Pensacola Seafood Festival", "Pickled Pickers", "Preston", "Pumpkin Carving & Costume Contest", "Pumpkin Carving & Costume Contest at Scratch Biscuit Kitchen", "Queens of the Tiles: Mahjong", "Queens of the Tiles: Mahjong at Ovide", "Ranger Led Hike", "Ranger Led Hike at Eden Gardens State Park", "Red, White, & Blues Concert", "Reid Fisher", "Remedy", "Rhino Jockeys + Matt Miller", "River Dan", "Rockin' In Paradise with Styx + Friends", "Ronni Kay", "Ronnie Presley", "Ronny Dean Garrett", "Run Katie Run", "Sacred Heart Annual Charity Golf Classic", "Salt Rock Revival", "Sand ole Opry", "Seabreeze Jazz Festival", "Seaside Halloweener Derby & Costume Contest", "Seaside Holiday Parade & Turn on the Town", "Seaside New Year's Eve Celebration", "Shack's Sunday Art Market", "Shinedown's Lunatic Ball Beach Weekend", "Sierra Riggs", "Soular Flair", "Sounds Like Summer: 30A Songwriters Showcase", "Sounds Like Summer: Children's Play", "Sounds of Seaside", "Spencer Maige", "Split Krickit", "Star Gazing", "Star Gazing at Eden Gardens State Park", "Stevie Monce", "Stinky's Brunch & Live Music", "Stranger Boy", "Sunshine Wranglers", "The 39 Steps", "The 39 Steps at ECTC", "The Kennedys", "The Market Shops Bloody Mary Festival", "The Next Big Thing Conference", "The Nutcracker", "The Nutcracker at Seaside", "The Red Bar Jazz Band", "The Typos", "Tim Jackson's Storyteller Tour", "Tim Roberts", "TJ & Brad", "TK Bardwell", "Trevor Finlay", "Voices of Valor", "Voices of Valor at ECTC", "Wild Sea Turtle Wednesday", "Wild Sea Turtle Wednesday at The Big Chill 30A", "Will Thompson Band", "Wine & Fries", "Wine & Song", "Wine & Song at NEAT", "Zack Miller", "Zoe Walega"];
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
