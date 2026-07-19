@@ -178,6 +178,11 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("county_fair",    re.compile(r"\bcounty\s+fair\b", re.I)),
     ("wine_tasting",   re.compile(r"\buncorked\b", re.I)),
     ("award_ceremony", re.compile(r"\bseaside prize\b", re.I)),
+    ("art_market",     re.compile(r"\bart\s+(?:market|walk|gallery|show)\b", re.I)),
+    # A specific title, not a generic keyword -- confirmed as a real
+    # community-theater production (a play, not music) that recurred across
+    # multiple venues/nights on the dashboard.
+    ("community_theater", re.compile(r"\bgrit and grace\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text.

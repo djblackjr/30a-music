@@ -88,6 +88,11 @@ def test_detect_non_music_newly_added_patterns():
     assert detect_non_music("Harvest Wine & Food Festival: Harvest After Dark") == "wine_festival"
     assert detect_non_music("Rosemary Beach Uncorked") == "wine_tasting"
     assert detect_non_music("Seaside Prize") == "award_ceremony"
+    # An art market and a touring community-theater play -- both non-music,
+    # both slipped through onto the live dashboard as junk rows (the play
+    # even duplicated across two venues/nights) before these were added.
+    assert detect_non_music("Shack's Sunday Art Market") == "art_market"
+    assert detect_non_music("Grit and Grace: Holding Our Own") == "community_theater"
     # Real music events that must NOT be caught by the widened patterns.
     assert detect_non_music("Here Comes the Sun Summer Concert Series at Rosemary Beach") is None
     assert detect_non_music("Rockin' In Paradise with Styx + Friends") is None
