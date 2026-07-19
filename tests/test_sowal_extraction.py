@@ -99,6 +99,50 @@ def test_detect_non_music_newly_added_patterns():
     assert detect_non_music("Shinedown's Lunatic Ball Beach Weekend") is None
 
 
+def test_detect_non_music_more_community_calendar_categories():
+    # A batch of real slipped-through junk rows, each verified against its
+    # actual SoWal description before adding a pattern -- not guessed from
+    # the title alone (several title-plausible guesses below turned out to
+    # be wrong, see the "must NOT catch" block).
+    assert detect_non_music("Free Bingo at Stinky's Bait Shack") == "bingo"
+    assert detect_non_music("Bingo Nights Rooftop Heights at Hotel Effie") == "bingo"
+    assert detect_non_music("Queens of the Tiles: Mahjong at Ovide") == "game_night"
+    assert detect_non_music("AJ's Tin Cup Classic") == "golf"
+    assert detect_non_music("Sacred Heart Annual Charity Golf Classic") == "golf"
+    assert detect_non_music("Grayton Locals Market") == "locals_market"
+    assert detect_non_music("Kids' Night Out") == "kids_activity"
+    assert detect_non_music("Pumpkin Carving & Costume Contest at Scratch Biscuit Kitchen") == "kids_activity"
+    assert detect_non_music("Seaside Halloweener Derby & Costume Contest") == "kids_activity"
+    assert detect_non_music("October Film Series at Eden Gardens State Park") == "film_festival"
+    assert detect_non_music("Ranger Led Hike at Eden Gardens State Park") == "guided_tour"
+    assert detect_non_music("Ellie Biscuit 20 &10-Mile Trail Race") == "sporting_event"
+    assert detect_non_music("In the Woods 30A 50K") == "sporting_event"
+    assert detect_non_music("Emerald Coast Foundation's Children's Charity Poker Run") == "sporting_event"
+    # ECTC (Emerald Coast Theatre Company) productions and other staged
+    # theater/ballet -- confirmed via venue ("Emerald Coast Theatre Company")
+    # and description (Ballet Pensacola, Panama City Theatre), not music.
+    assert detect_non_music("Come From Away at ECTC") == "theater_production"
+    assert detect_non_music("9 to 5: The Musical at ECTC") == "theater_production"
+    assert detect_non_music("Grease - The Musical") == "theater_production"
+    assert detect_non_music("The Nutcracker at Seaside") == "theater_production"
+    # Narrow on purpose: "Sounds Like Summer" alternates real live-music
+    # nights with scripted children's plays under one series title, so only
+    # the play instances should match.
+    assert detect_non_music("Sounds Like Summer: Children's Play") == "childrens_play"
+
+
+def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():
+    # Confirmed via actual SoWal descriptions: titles that read like generic
+    # non-music party/festival branding but turned out to have a real named
+    # act or explicit live music booked -- must NOT be swept up by a broad
+    # "festival"/"bash"/"party" guess.
+    assert detect_non_music("Havana Nights  at The Pearl Hotel") is None
+    assert detect_non_music("Baytowne Beer Festival Backyard Bash") is None
+    assert detect_non_music("30A BBQ Festival") is None
+    assert detect_non_music("Barktoberfest") is None
+    assert detect_non_music("Labor Day Block Party at WaterColor Package Store") is None
+
+
 def test_detect_non_music_does_not_catch_real_music_festivals_with_no_single_act():
     # "Panama City Songwriters Festival" is real (SoWal description:
     # "Featuring original songs by local, regional and national

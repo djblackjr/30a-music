@@ -311,21 +311,20 @@ def _confidence_label(score) -> str:
 
 def _featured_event(events: list[dict]) -> dict | None:
     """
-    Pick one upcoming event to headline the hero card: soonest date first;
-    within that date, a favorite-artist + favorite-venue show outranks a
-    favorite-artist-only show, which outranks a favorite-venue-only show,
-    which outranks neither -- confidence and then id (insertion order) break
-    any remaining tie within the same favorite tier. Defensively re-filters
-    to today-or-later even though the pipeline already purges past-dated
-    events before render normally runs -- callers (like the test suite) may
-    pass unpurged data.
+    Pick one upcoming event to headline the hero card. Favorite tier is the
+    PRIMARY sort key, ahead of date: a favorite-artist + favorite-venue show
+    always wins the hero slot over anything else upcoming, even if it isn't
+    the soonest show. A favorite-artist-only show outranks favorite-venue-
+    only, which outranks neither. Date (soonest first) only breaks ties
+    within the same tier, then confidence, then id (insertion order).
+    Defensively re-filters to today-or-later even though the pipeline
+    already purges past-dated events before render normally runs -- callers
+    (like the test suite) may pass unpurged data.
     """
     today = datetime.now().strftime("%Y-%m-%d")
     upcoming = [e for e in events if (e.get("date") or "") >= today]
     if not upcoming:
         return None
-    soonest = min(e["date"] for e in upcoming)
-    same_day = [e for e in upcoming if e["date"] == soonest]
     venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
 
@@ -342,9 +341,9 @@ def _featured_event(events: list[dict]) -> dict | None:
             tier = 3
         conf = e.get("confidence")
         conf = conf if isinstance(conf, (int, float)) else 0.0
-        return (tier, -conf, e.get("id") or 0)
+        return (tier, e.get("date") or "", -conf, e.get("id") or 0)
 
-    return min(same_day, key=rank)
+    return min(upcoming, key=rank)
 
 
 def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:

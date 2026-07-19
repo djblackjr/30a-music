@@ -159,13 +159,13 @@ _CATEGORY_PATTERNS: list[tuple[str, "re.Pattern"]] = [
 # which must NOT be caught by these patterns).
 _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("farmers_market", re.compile(r"farmers?\s*market", re.I)),
-    ("guided_tour",    re.compile(r"guided\s+\w*\s*(tour|hike|walk)|ranger[- ]?guided|nature\s+hike|history\s+tour", re.I)),
+    ("guided_tour",    re.compile(r"guided\s+\w*\s*(tour|hike|walk)|ranger[- ]?guided|ranger[- ]?led|nature\s+hike|history\s+tour", re.I)),
     ("car_show",       re.compile(r"\bcar\s+show\b|\bcars\s+of\s+30a\b", re.I)),
     # "day run" catches holiday/charity races named e.g. "Thanksgiving Day Run",
     # "Turkey Day Run", "Memorial Day Run" -- a common naming convention this
     # crawler was missing (confirmed via a real "30A Thanksgiving Day Run"
     # listing that slipped through as a blank-venue event on the dashboard).
-    ("sporting_event", re.compile(r"\bironman\b|\btriathlon\b|\bmarathon\b|\b\d+k\s+run\b|\bfun run\b|\bday\s+run\b", re.I)),
+    ("sporting_event", re.compile(r"\bironman\b|\btriathlon\b|\bmarathon\b|\b\d+k\s+run\b|\bfun run\b|\bday\s+run\b|trail\s+(?:race|run|trot)|\b\d+k\b|\bpoker\s+run\b", re.I)),
     # Widened to also match "Airshow" as one word (was "air show" only,
     # missing "Pensacola Beach Airshow: US Navy Blue Angels").
     ("air_show",       re.compile(r"\bair\s*show\b", re.I)),
@@ -173,7 +173,7 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     # variants (was "wine festival" only, missing "Harvest Wine & Food
     # Festival: ..." listings).
     ("wine_festival",  re.compile(r"\bwine\s*(?:&|and)?\s*food\s+festival\b|\bwine\s+festival\b", re.I)),
-    ("film_festival",  re.compile(r"\bmountainfilm\b|\bfilm festival\b", re.I)),
+    ("film_festival",  re.compile(r"\bmountainfilm\b|\bfilm festival\b|\bfilm series\b|\bscreening\b", re.I)),
     ("eggfest",        re.compile(r"\beggs on the beach\b|\beggfest\b", re.I)),
     ("county_fair",    re.compile(r"\bcounty\s+fair\b", re.I)),
     ("wine_tasting",   re.compile(r"\buncorked\b", re.I)),
@@ -183,6 +183,22 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     # community-theater production (a play, not music) that recurred across
     # multiple venues/nights on the dashboard.
     ("community_theater", re.compile(r"\bgrit and grace\b", re.I)),
+    ("bingo",          re.compile(r"\bbingo\b", re.I)),
+    ("game_night",     re.compile(r"\bmahjong\b", re.I)),
+    # "Tin Cup" is a golf-tournament naming convention (Tin Cup = a classic
+    # golf movie) that doesn't contain the word "golf" itself.
+    ("golf",           re.compile(r"\bgolf\b|\btin\s+cup\s+classic\b", re.I)),
+    ("locals_market",  re.compile(r"\blocals?\s+market\b", re.I)),
+    ("kids_activity",  re.compile(r"\bkids.?\s+night\s+out\b|\bpumpkin\s+carving\b|\bcostume\s+contest\b", re.I)),
+    # Each verified against its actual SoWal description first, same as
+    # everything above -- "the musical"/"nutcracker" catch staged theater
+    # (Grease at Rosemary Beach, Ballet Pensacola's Nutcracker) that isn't
+    # under the ECTC brand, and "children's play" is narrow on purpose: the
+    # "Sounds Like Summer" series alternates real live-music nights with
+    # scripted children's plays under the same umbrella title, so only the
+    # play instances should be caught.
+    ("theater_production", re.compile(r"\bectc\b|\bthe musical\b|\bnutcracker\b", re.I)),
+    ("childrens_play", re.compile(r"child(?:ren)?'?s\s+play\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text.

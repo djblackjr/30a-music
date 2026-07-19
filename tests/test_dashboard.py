@@ -232,6 +232,8 @@ def _hero_chunk(html):
 
 
 def test_hero_features_the_soonest_upcoming_event_not_a_later_one():
+    # Neither event is a favorite, so both land in the same (lowest) tier --
+    # date is what breaks the tie here, same as before tier became primary.
     html, _ = _render_to_temp([
         {"performer": "Later Act", "venue": "Later Venue", "date": _d(5),
          "time_start": "7PM", "source": "venue"},
@@ -241,6 +243,23 @@ def test_hero_features_the_soonest_upcoming_event_not_a_later_one():
     chunk = _hero_chunk(html)
     assert "Soonest Venue" in chunk
     assert "Later Venue" not in chunk
+
+
+def test_hero_prefers_a_later_favorite_combo_over_a_sooner_non_favorite_show(monkeypatch):
+    # Favorite tier outranks date entirely -- a favorite-artist +
+    # favorite-venue show always wins the hero slot, even over something
+    # happening sooner that isn't a favorite at all.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
+    html, _ = _render_to_temp([
+        {"performer": "Sooner Nobody", "venue": "Sooner Venue", "date": _d(1),
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(8),
+         "time_start": "7PM", "source": "venue"},
+    ])
+    chunk = _hero_chunk(html)
+    assert "Combo Venue" in chunk
+    assert "Sooner Venue" not in chunk
 
 
 def test_hero_prefers_higher_confidence_event_on_a_tied_date():
