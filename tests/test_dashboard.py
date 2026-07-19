@@ -210,7 +210,7 @@ def test_render_includes_venue_artist_filter_controls():
 
 def test_render_includes_featured_hero_section():
     html, _ = _render_to_temp([
-        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+        {"performer": "A", "venue": "V", "date": _d(0), "time_start": "6PM", "source": "seed"},
     ])
     assert "Tonight’s best live music in 30A" in html
     assert 'class="hero-panel"' in html
@@ -260,6 +260,28 @@ def test_hero_prefers_a_later_favorite_combo_over_a_sooner_non_favorite_show(mon
     chunk = _hero_chunk(html)
     assert "Combo Venue" in chunk
     assert "Sooner Venue" not in chunk
+
+
+def test_hero_kicker_does_not_claim_tonight_for_a_future_featured_show(monkeypatch):
+    # The kicker must not say "Tonight's best live music" when the featured
+    # show (bumped ahead by favorite tier) is actually days out -- that would
+    # be actively misleading, not just an omission. It should say so plainly
+    # once it isn't tonight, and switch back to "Tonight's" the moment the
+    # featured pick genuinely is today's show.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
+    future_html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(8),
+         "time_start": "7PM", "source": "venue"},
+    ])
+    assert "Tonight’s best live music in 30A" not in future_html
+    assert "This week’s best live music in 30A" in future_html
+
+    today_html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(0),
+         "time_start": "7PM", "source": "venue"},
+    ])
+    assert "Tonight’s best live music in 30A" in today_html
 
 
 def test_hero_prefers_higher_confidence_event_on_a_tied_date():

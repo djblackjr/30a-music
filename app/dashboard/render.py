@@ -359,27 +359,36 @@ def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:
 
 def _hero_context(events: list[dict]) -> dict:
     """
-    (performer, venue, meta, badges) strings for the hero card -- the
-    performer headlines the hero in large display type, the venue/meta back
-    it up in the glass side panel. Real data picked by _featured_event()
-    rather than a static placeholder.
+    (kicker, performer, venue, meta, badges) strings for the hero card --
+    the performer headlines the hero in large display type, the venue/meta
+    back it up in the glass side panel. Real data picked by
+    _featured_event() rather than a static placeholder.
+
+    _featured_event() ranks favorite tier ahead of date, so the featured
+    show is sometimes days out, not tonight -- the kicker must say so
+    instead of always claiming "Tonight's best live music", which would be
+    false advertising the moment a favorite combo bumps a same-day show.
     """
     ev = _featured_event(events)
     if not ev:
         return {
+            "kicker": "Live music in 30A",
             "performer": "No shows scheduled",
             "venue": "Check back soon",
             "meta": "New listings appear as we find them.",
             "badges": "",
         }
     today = datetime.now().strftime("%Y-%m-%d")
-    when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
+    is_today = ev.get("date") == today
+    when = "Today" if is_today else _fmt_date(ev.get("date"))
+    kicker = "Tonight’s best live music in 30A" if is_today else "This week’s best live music in 30A"
     parts = [p for p in [when, ev.get("time_start"), _confidence_label(ev.get("confidence"))] if p]
     venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
     performer_fav = _performer_favorite(ev.get("performer") or ev.get("name"), performer_meta)
     venue_fav = _venue_favorite(ev.get("venue"), venue_favorites)
     return {
+        "kicker": kicker,
         "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
         "venue": html.escape(_venue_display_name(ev.get("venue"))),
         "meta": html.escape(" • ".join(parts)),
@@ -427,6 +436,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     out = (
         template
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
+        .replace("HERO_KICKER_PLACEHOLDER", hero["kicker"])
         .replace("HERO_PERFORMER_PLACEHOLDER", hero["performer"])
         .replace("HERO_VENUE_PLACEHOLDER", hero["venue"])
         .replace("HERO_META_PLACEHOLDER", hero["meta"])
