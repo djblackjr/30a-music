@@ -63,6 +63,15 @@ VENUE_CLASS = {
     "30avenue": "vt-30a",
     "mcguire's destin": "vt-mcg",
     "mcguire’s destin": "vt-mcg",
+    "crackings": "vt-crk",
+    "local catch bar & grill": "vt-lcb",
+    "seaside amphitheater": "vt-sea",
+    "shunk gulley": "vt-sgl",
+    "stinky's fish camp": "vt-sfc",
+    "stinky’s fish camp": "vt-sfc",
+    "the bay": "vt-bay",
+    "the red bar": "vt-trb",
+    "watersound town center": "vt-wsc",
 }
 
 # Venues whose plain name is ambiguous or shares a name with a business
