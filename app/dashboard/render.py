@@ -495,7 +495,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
 
     hero_tonight = _hero_card(
         tonight_group,
-        kicker="Tonight’s favorites",
+        kicker="Tonight’s Featured Artist",
         empty_performer="No favorites tonight",
         empty_meta="Nothing starred for tonight — check the full lineup below.",
         show_extra=True,
@@ -503,7 +503,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     )
     hero_week = _hero_card(
         week_group,
-        kicker="This week’s favorites",
+        kicker="This Week’s Featured Artists",
         empty_performer="No favorites this week",
         empty_meta="Nothing starred coming up — check the full lineup below.",
         show_extra=True,

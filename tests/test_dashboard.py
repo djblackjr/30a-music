@@ -213,8 +213,8 @@ def test_render_includes_both_hero_cards():
         {"performer": "A", "venue": "V", "date": _d(0), "time_start": "6PM", "source": "seed"},
     ])
     assert html.count('<div class="hero-panel">') == 2
-    assert "Tonight’s favorites" in html
-    assert "This week’s favorites" in html
+    assert "Tonight’s Featured Artist" in html
+    assert "This Week’s Featured Artists" in html
 
 
 # --- two hero cards: "Tonight" (today only) and "This week" (tomorrow..+7),
