@@ -74,6 +74,18 @@ VENUE_CLASS = {
     "watersound town center": "vt-wsc",
 }
 
+# Fallback "View event" link for venues whose observations never carry a
+# url -- these post their schedules to Instagram (the same account their
+# screenshot imports come from; see the aliases in canonical.py) rather than
+# a working events page. Only used when an event has no observation url.
+VENUE_FALLBACK_URL = {
+    "papa surf": "https://instagram.com/papasurfburgerbar",
+    "papa surf burger bar": "https://instagram.com/papasurfburgerbar",
+    "shelby's beach bar": "https://instagram.com/shelbysbeachbar",
+    "shelby's beach bar and gill": "https://instagram.com/shelbysbeachbar",
+    "shelby's": "https://instagram.com/shelbysbeachbar",
+}
+
 # Venues whose plain name is ambiguous or shares a name with a business
 # elsewhere; anything not listed falls back to searching the venue name as-is.
 VENUE_MAPS_QUERY = {
@@ -281,7 +293,9 @@ def _rows_html(events: list[dict], path: Path) -> str:
         # already sorts by confidence DESC) becomes the tile's "View event"
         # link back to its original listing (SoWal, AJ's, etc).
         obs = load_event_observations(ev["id"], path) if ev.get("id") else []
-        event_url = next((o["url"] for o in obs if o.get("url")), None)
+        event_url = next((o["url"] for o in obs if o.get("url")), None) or VENUE_FALLBACK_URL.get(
+            venue.lower()
+        )
         event_url_a = html.escape(event_url) if event_url else ""
 
         # The report stays clean: no Sources/Confidence/Link columns. The source
