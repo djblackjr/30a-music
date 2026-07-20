@@ -324,7 +324,7 @@ def test_hero_prefers_higher_confidence_favorite_on_a_tied_date(monkeypatch):
 
 
 def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alone(monkeypatch):
-    # _pick_featured() calls _load_favorite_venues()/_load_performer_meta()
+    # _pick_featured_group() calls _load_favorite_venues()/_load_performer_meta()
     # with no args, so patching the VENUE_FAVORITES_CSV/ARTISTS_CSV module
     # constants wouldn't work here -- those are only read once, as the
     # functions' default *parameter* values, at import time. Patching the
@@ -352,6 +352,53 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
     assert "Combo Venue" in week
     assert "Artist-Only Venue" not in week
     assert "Venue-Only Venue" not in week
+
+
+def test_hero_tonight_card_lists_every_tied_combo_match(monkeypatch):
+    # Two different favorite-artist + favorite-venue shows both happening
+    # tonight -- both are a genuine combo, so both belong on the card, not
+    # just whichever sorts first. The primary one headlines; the rest show
+    # up in a compact "Also tonight" list.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "combo venue one", "combo venue two",
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "combo act one": True,
+        "combo act two": True,
+    })
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act One", "venue": "Combo Venue One", "date": _d(0),
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Combo Act Two", "venue": "Combo Venue Two", "date": _d(0),
+         "time_start": "8PM", "source": "venue"},
+    ])
+    tonight, _ = _hero_chunks(html)
+    assert "Combo Act One" in tonight  # tied on everything else -> lower id (inserted first) headlines
+    assert "Also tonight" in tonight
+    assert "Combo Act Two" in tonight
+    assert "Combo Venue Two" in tonight
+
+
+def test_hero_week_card_never_lists_multiple_even_with_tied_combos(monkeypatch):
+    # The "include every tied combo" behavior is scoped to tonight only --
+    # the week card always picks a single best match.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "combo venue one", "combo venue two",
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "combo act one": True,
+        "combo act two": True,
+    })
+    tied_date = _d(3)
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act One", "venue": "Combo Venue One", "date": tied_date,
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Combo Act Two", "venue": "Combo Venue Two", "date": tied_date,
+         "time_start": "8PM", "source": "venue"},
+    ])
+    _, week = _hero_chunks(html)
+    assert "Also tonight" not in week
+    assert "Combo Venue Two" not in week
 
 
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
@@ -410,7 +457,7 @@ def test_hero_labels_todays_event_as_today(monkeypatch):
 
 
 def test_hero_falls_back_gracefully_with_no_upcoming_events():
-    # every event is past-dated -- _pick_featured() must not crash or pick a
+    # every event is past-dated -- _pick_featured_group() must not crash or pick a
     # stale show, and no HERO_*_PLACEHOLDER token should leak into the page.
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": _d(-30), "time_start": "6PM", "source": "venue"},
