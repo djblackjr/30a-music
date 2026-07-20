@@ -387,32 +387,44 @@ def _hero_meta_html(ev: dict) -> str:
     return f'at <b>{venue}</b> &middot; {html.escape(" • ".join(parts))}'
 
 
-def _hero_more_html(extra: list[tuple[dict, bool, bool]]) -> str:
-    """Compact list of additional tied combo matches under the primary
-    headline -- e.g. two favorite-artist-at-favorite-venue shows the same
-    night both get surfaced, not just whichever sorted first."""
+def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also tonight") -> str:
+    """List of additional tied combo matches under the primary headline --
+    e.g. two favorite-artist-at-favorite-venue shows the same night (or same
+    week, for the week card) both get surfaced, not just whichever sorted
+    first. Each entry gets the same badge treatment as the headline (both
+    badges always apply here, since this list is combo-tier-only) so it
+    doesn't read as an afterthought."""
     if not extra:
         return ""
     rows = []
-    for ev, _, _ in extra:
+    for ev, performer_fav, venue_fav in extra:
         performer = html.escape(ev.get("performer") or ev.get("name") or "Live Music")
         venue = html.escape(_venue_display_name(ev.get("venue")))
+        when = _fmt_date(ev.get("date"))
         time_s = html.escape(ev.get("time_start") or "")
         tail = f" &middot; {time_s}" if time_s else ""
-        rows.append(f'<div class="hero-more-item"><b>{performer}</b> <span>at {venue}{tail}</span></div>')
-    return '<div class="hero-more"><p class="hero-more-label">Also tonight</p>' + "".join(rows) + "</div>"
+        badges = _hero_badges_html(performer_fav, venue_fav)
+        rows.append(
+            '<div class="hero-more-item">'
+            f'<div class="hero-more-name">{performer}</div>'
+            f'<div class="hero-more-meta">{when} at <b>{venue}</b>{tail}</div>'
+            f'<div class="badge-row hero-more-badges">{badges}</div>'
+            "</div>"
+        )
+    return f'<div class="hero-more"><p class="hero-more-label">{html.escape(label)}</p>' + "".join(rows) + "</div>"
 
 
 def _hero_card(
     group: list[tuple[dict, bool, bool]],
-    *, kicker: str, empty_performer: str, empty_meta: str, show_extra: bool = False,
+    *, kicker: str, empty_performer: str, empty_meta: str,
+    show_extra: bool = False, more_label: str = "Also tonight",
 ) -> dict:
     """(kicker, performer, meta, badges, extra) strings for one hero card.
     `group` is whatever _pick_featured_group() returned -- empty means no
     favorite qualified in that card's window, which gets its own honest
     empty state rather than silently falling back to a non-favorite show.
     The first entry headlines the card; any further tied entries render as
-    a compact "Also tonight" list when show_extra is set."""
+    a list (headed `more_label`) when show_extra is set."""
     if not group:
         return {"kicker": kicker, "performer": empty_performer, "meta": empty_meta, "badges": "", "extra": ""}
     ev, performer_fav, venue_fav = group[0]
@@ -421,7 +433,7 @@ def _hero_card(
         "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
         "meta": _hero_meta_html(ev),
         "badges": _hero_badges_html(performer_fav, venue_fav),
-        "extra": _hero_more_html(group[1:]) if show_extra else "",
+        "extra": _hero_more_html(group[1:], label=more_label) if show_extra else "",
     }
 
 
@@ -467,7 +479,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     week_end = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
     tonight_group = _pick_featured_group(events, today, today, allow_ties_at_tier_0=True)
-    week_group = _pick_featured_group(events, tomorrow, week_end)
+    week_group = _pick_featured_group(events, tomorrow, week_end, allow_ties_at_tier_0=True)
 
     hero_tonight = _hero_card(
         tonight_group,
@@ -475,12 +487,15 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         empty_performer="No favorites tonight",
         empty_meta="Nothing starred for tonight — check the full lineup below.",
         show_extra=True,
+        more_label="Also tonight",
     )
     hero_week = _hero_card(
         week_group,
         kicker="This week’s favorites",
         empty_performer="No favorites this week",
         empty_meta="Nothing starred coming up — check the full lineup below.",
+        show_extra=True,
+        more_label="Also this week",
     )
 
     out = (
@@ -495,6 +510,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("HERO_WEEK_PERFORMER_PLACEHOLDER", hero_week["performer"])
         .replace("HERO_WEEK_META_PLACEHOLDER", hero_week["meta"])
         .replace("HERO_WEEK_BADGES_PLACEHOLDER", hero_week["badges"])
+        .replace("HERO_WEEK_EXTRA_PLACEHOLDER", hero_week["extra"])
         .replace("TOTAL_PLACEHOLDER", str(h["total"]))
         .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
         .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))

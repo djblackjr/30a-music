@@ -379,9 +379,11 @@ def test_hero_tonight_card_lists_every_tied_combo_match(monkeypatch):
     assert "Combo Venue Two" in tonight
 
 
-def test_hero_week_card_never_lists_multiple_even_with_tied_combos(monkeypatch):
-    # The "include every tied combo" behavior is scoped to tonight only --
-    # the week card always picks a single best match.
+def test_hero_week_card_lists_every_combo_match_in_the_window(monkeypatch):
+    # Same "include every combo match" behavior as tonight, just scoped to
+    # the week window and its own "Also this week" label instead of
+    # "Also tonight" -- a favorite-artist + favorite-venue show anywhere in
+    # the next 7 days belongs on the card, not just the single best one.
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
         "combo venue one", "combo venue two",
     })
@@ -389,16 +391,18 @@ def test_hero_week_card_never_lists_multiple_even_with_tied_combos(monkeypatch):
         "combo act one": True,
         "combo act two": True,
     })
-    tied_date = _d(3)
     html, _ = _render_to_temp([
-        {"performer": "Combo Act One", "venue": "Combo Venue One", "date": tied_date,
+        {"performer": "Combo Act One", "venue": "Combo Venue One", "date": _d(3),
          "time_start": "6PM", "source": "venue"},
-        {"performer": "Combo Act Two", "venue": "Combo Venue Two", "date": tied_date,
+        {"performer": "Combo Act Two", "venue": "Combo Venue Two", "date": _d(5),
          "time_start": "8PM", "source": "venue"},
     ])
     _, week = _hero_chunks(html)
+    assert "Combo Act One" in week  # earlier date -> headlines
+    assert "Also this week" in week
+    assert "Combo Act Two" in week
+    assert "Combo Venue Two" in week
     assert "Also tonight" not in week
-    assert "Combo Venue Two" not in week
 
 
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
