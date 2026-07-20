@@ -259,7 +259,6 @@ def test_hero_tonight_card_only_considers_today(monkeypatch):
     tonight, week = _hero_chunks(html)
     assert "No favorites tonight" in tonight
     assert "Later Act" in week
-    assert "★ Favorite venue" in week
 
 
 def test_hero_week_card_excludes_tonight_itself(monkeypatch):
@@ -320,7 +319,6 @@ def test_hero_prefers_higher_confidence_favorite_on_a_tied_date(monkeypatch):
     ])
     _, week = _hero_chunks(html)
     assert "Verified Venue" in week
-    assert "High confidence" in week
 
 
 def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alone(monkeypatch):
@@ -466,17 +464,6 @@ def test_hero_headlines_the_performer_name(monkeypatch):
          "time_start": "6PM", "source": "venue"},
     ])
     assert '<h2 class="hero-title">Combo Act</h2>' in html
-
-
-def test_hero_shows_favorite_badges_matching_its_own_tier(monkeypatch):
-    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
-    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
-    html, _ = _render_to_temp([
-        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(2),
-         "time_start": "6PM", "source": "venue"},
-    ])
-    assert "★ Favorite artist" in html
-    assert "★ Favorite venue" in html
 
 
 def test_hero_labels_todays_event_as_today(monkeypatch):

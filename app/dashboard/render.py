@@ -320,14 +320,6 @@ def _health(events: list[dict], path: Path) -> dict:
     }
 
 
-def _confidence_label(score) -> str:
-    return {
-        "high": "High confidence",
-        "medium": "Medium confidence",
-        "low": "Low confidence",
-    }.get(confidence_band(score), "Confidence pending")
-
-
 def _pick_featured_group(
     events: list[dict], start_date: str, end_date: str, *, allow_ties_at_tier_0: bool = False,
 ) -> list[tuple[dict, bool, bool]]:
@@ -388,25 +380,13 @@ def _pick_featured_group(
     return [(ev, performer_fav, venue_fav)]
 
 
-def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:
-    """Badge row under a hero headline -- mirrors the same favorite tiers
-    _pick_featured_group() ranked by, so the picked show visibly explains
-    itself."""
-    badges = []
-    if performer_favorite:
-        badges.append('<span class="badge fav">★ Favorite artist</span>')
-    if venue_favorite:
-        badges.append('<span class="badge fav">★ Favorite venue</span>')
-    return "".join(badges)
-
-
 def _hero_meta_html(ev: dict) -> str:
-    """'at <b>Venue</b> · Today · 7:00 pm · High confidence' -- pre-escaped
-    HTML, safe to insert directly into the template."""
+    """'at <b>Venue</b> · Today · 7:00 pm' -- pre-escaped HTML, safe to
+    insert directly into the template."""
     today = datetime.now().strftime("%Y-%m-%d")
     when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
     venue = html.escape(_venue_display_name(ev.get("venue")))
-    parts = [p for p in [when, ev.get("time_start"), _confidence_label(ev.get("confidence"))] if p]
+    parts = [p for p in [when, ev.get("time_start")] if p]
     return f'at <b>{venue}</b> &middot; {html.escape(" • ".join(parts))}'
 
 
@@ -414,24 +394,20 @@ def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also 
     """List of additional tied combo matches under the primary headline --
     e.g. two favorite-artist-at-favorite-venue shows the same night (or same
     week, for the week card) both get surfaced, not just whichever sorted
-    first. Each entry gets the same badge treatment as the headline (both
-    badges always apply here, since this list is combo-tier-only) so it
-    doesn't read as an afterthought."""
+    first."""
     if not extra:
         return ""
     rows = []
-    for ev, performer_fav, venue_fav in extra:
+    for ev, _performer_fav, _venue_fav in extra:
         performer = html.escape(ev.get("performer") or ev.get("name") or "Live Music")
         venue = html.escape(_venue_display_name(ev.get("venue")))
         when = _fmt_date(ev.get("date"))
         time_s = html.escape(ev.get("time_start") or "")
         tail = f" &middot; {time_s}" if time_s else ""
-        badges = _hero_badges_html(performer_fav, venue_fav)
         rows.append(
             '<div class="hero-more-item">'
             f'<div class="hero-more-name">{performer}</div>'
             f'<div class="hero-more-meta">{when} at <b>{venue}</b>{tail}</div>'
-            f'<div class="badge-row hero-more-badges">{badges}</div>'
             "</div>"
         )
     return f'<div class="hero-more"><p class="hero-more-label">{html.escape(label)}</p>' + "".join(rows) + "</div>"
@@ -442,20 +418,19 @@ def _hero_card(
     *, kicker: str, empty_performer: str, empty_meta: str,
     show_extra: bool = False, more_label: str = "Also tonight",
 ) -> dict:
-    """(kicker, performer, meta, badges, extra) strings for one hero card.
-    `group` is whatever _pick_featured_group() returned -- empty means no
-    favorite qualified in that card's window, which gets its own honest
-    empty state rather than silently falling back to a non-favorite show.
-    The first entry headlines the card; any further tied entries render as
-    a list (headed `more_label`) when show_extra is set."""
+    """(kicker, performer, meta, extra) strings for one hero card. `group`
+    is whatever _pick_featured_group() returned -- empty means no favorite
+    qualified in that card's window, which gets its own honest empty state
+    rather than silently falling back to a non-favorite show. The first
+    entry headlines the card; any further tied entries render as a list
+    (headed `more_label`) when show_extra is set."""
     if not group:
-        return {"kicker": kicker, "performer": empty_performer, "meta": empty_meta, "badges": "", "extra": ""}
-    ev, performer_fav, venue_fav = group[0]
+        return {"kicker": kicker, "performer": empty_performer, "meta": empty_meta, "extra": ""}
+    ev, _performer_fav, _venue_fav = group[0]
     return {
         "kicker": kicker,
         "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
         "meta": _hero_meta_html(ev),
-        "badges": _hero_badges_html(performer_fav, venue_fav),
         "extra": _hero_more_html(group[1:], label=more_label) if show_extra else "",
     }
 
@@ -527,12 +502,10 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
         .replace("HERO_TONIGHT_KICKER_PLACEHOLDER", hero_tonight["kicker"])
         .replace("HERO_TONIGHT_PERFORMER_PLACEHOLDER", hero_tonight["performer"])
         .replace("HERO_TONIGHT_META_PLACEHOLDER", hero_tonight["meta"])
-        .replace("HERO_TONIGHT_BADGES_PLACEHOLDER", hero_tonight["badges"])
         .replace("HERO_TONIGHT_EXTRA_PLACEHOLDER", hero_tonight["extra"])
         .replace("HERO_WEEK_KICKER_PLACEHOLDER", hero_week["kicker"])
         .replace("HERO_WEEK_PERFORMER_PLACEHOLDER", hero_week["performer"])
         .replace("HERO_WEEK_META_PLACEHOLDER", hero_week["meta"])
-        .replace("HERO_WEEK_BADGES_PLACEHOLDER", hero_week["badges"])
         .replace("HERO_WEEK_EXTRA_PLACEHOLDER", hero_week["extra"])
         .replace("TOTAL_PLACEHOLDER", str(h["total"]))
         .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
