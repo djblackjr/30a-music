@@ -394,20 +394,18 @@ def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also 
     """List of additional tied combo matches under the primary headline --
     e.g. two favorite-artist-at-favorite-venue shows the same night (or same
     week, for the week card) both get surfaced, not just whichever sorted
-    first."""
+    first. Reuses _hero_meta_html() so an entry that falls on today reads
+    "Today" instead of a redundant date, same as the primary headline
+    does -- only entries on a later date within the week actually need one."""
     if not extra:
         return ""
     rows = []
     for ev, _performer_fav, _venue_fav in extra:
         performer = html.escape(ev.get("performer") or ev.get("name") or "Live Music")
-        venue = html.escape(_venue_display_name(ev.get("venue")))
-        when = _fmt_date(ev.get("date"))
-        time_s = html.escape(ev.get("time_start") or "")
-        tail = f" &middot; {time_s}" if time_s else ""
         rows.append(
             '<div class="hero-more-item">'
             f'<div class="hero-more-name">{performer}</div>'
-            f'<div class="hero-more-meta">{when} at <b>{venue}</b>{tail}</div>'
+            f'<div class="hero-more-meta">{_hero_meta_html(ev)}</div>'
             "</div>"
         )
     return f'<div class="hero-more"><p class="hero-more-label">{html.escape(label)}</p>' + "".join(rows) + "</div>"
