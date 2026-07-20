@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>30A Music App Wireframe</title>
+    <style>
+      :root {
+        --bg: #07111f;
+        --panel: #0f1b2d;
+        --panel-2: #14263b;
+        --text: #f6f7fb;
+        --muted: #92a0b8;
+        --accent: #ff6b3d;
+        --accent-2: #3dc6ff;
+        --border: #243447;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #07111f 0%, #0d1726 100%);
+        color: var(--text);
+      }
+      .page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .topbar {
+        background: rgba(15,27,45,0.92);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      }
+      .brand { font-size: 1.1rem; font-weight: 700; }
+      .pill { background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px; color: var(--muted); }
+      .search-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+      .search-box, .select {
+        flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); padding: 12px 14px; color: var(--text);
+      }
+      .hero {
+        margin-top: 18px; background: linear-gradient(120deg, rgba(61,198,255,0.18), rgba(255,107,61,0.16));
+        border: 1px solid var(--border); border-radius: 24px; padding: 24px; display: grid; grid-template-columns: 1.35fr 0.8fr; gap: 20px;
+      }
+      .hero h1 { font-size: 1.7rem; margin: 0 0 8px; }
+      .hero p { color: var(--muted); line-height: 1.6; margin: 0 0 14px; }
+      .btn { display: inline-block; background: var(--accent); color: white; border: 0; padding: 10px 14px; border-radius: 999px; font-weight: 700; text-decoration: none; }
+      .hero-card { background: rgba(7,17,31,0.7); border: 1px solid var(--border); border-radius: 18px; padding: 16px; }
+      .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 0; }
+      .chip { border: 1px solid var(--border); border-radius: 999px; padding: 7px 10px; color: var(--muted); font-size: 0.92rem; }
+      .content { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
+      .panel {
+        background: rgba(15,27,45,0.92); border: 1px solid var(--border); border-radius: 20px; padding: 18px;
+      }
+      .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+      .event-list { display: grid; gap: 12px; }
+      .event-card {
+        display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--panel-2); border: 1px solid var(--border); border-radius: 16px; padding: 14px;
+      }
+      .event-card h3 { margin: 0 0 4px; font-size: 1rem; }
+      .meta { color: var(--muted); font-size: 0.95rem; }
+      .tag { display: inline-block; background: rgba(61,198,255,0.15); color: var(--accent-2); border: 1px solid rgba(61,198,255,0.25); border-radius: 999px; padding: 5px 8px; font-size: 0.8rem; margin-top: 8px; }
+      .side-list { display: grid; gap: 10px; }
+      .side-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
+      .side-card h4 { margin: 0 0 6px; font-size: 0.98rem; }
+      .small { color: var(--muted); font-size: 0.9rem; }
+      @media (max-width: 1000px) {
+        .hero, .content { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div>
+          <div class="brand">30A Music Intelligence</div>
+          <div class="small">Live shows, venues, and confidence-scored event detection</div>
+        </div>
+        <div class="pill">South Walton • Updated today</div>
+      </header>
+
+      <section class="search-row">
+        <input class="search-box" value="Search artists, venues, or dates" />
+        <select class="select">
+          <option>All dates</option>
+          <option>Today</option>
+          <option>This week</option>
+          <option>Next 30 days</option>
+        </select>
+        <select class="select">
+          <option>All genres</option>
+          <option>Rock</option>
+          <option>Jazz</option>
+          <option>Country</option>
+        </select>
+      </section>
+
+      <section class="hero">
+        <div>
+          <h1>Tonight’s best live music in 30A</h1>
+          <p>Browse nearby shows, venue highlights, and intelligently grouped events sourced from multiple local venues and calendars.</p>
+          <a class="btn" href="#">Explore upcoming shows</a>
+          <div class="chip-row">
+            <span class="chip">Nearby</span>
+            <span class="chip">Free shows</span>
+            <span class="chip">Featured venues</span>
+            <span class="chip">High confidence</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="small">Featured venue</div>
+          <h3 style="margin:8px 0 6px;">The Village of Baytowne Wharf</h3>
+          <div class="meta">Friday • 7:30 PM • Live acoustic set</div>
+          <div class="tag">Strong local signal</div>
+        </div>
+      </section>
+
+      <section class="content">
+        <div class="panel">
+          <div class="section-title">
+            <strong>Upcoming shows</strong>
+            <span class="small">Sorted by date and confidence</span>
+          </div>
+          <div class="event-list">
+            <div class="event-card">
+              <div>
+                <h3>Grayson Turner</h3>
+                <div class="meta">Sandlot Sports Bar • Thu, 7:00 PM</div>
+                <div class="tag">High confidence</div>
+              </div>
+              <div class="small">Tonight</div>
+            </div>
+            <div class="event-card">
+              <div>
+                <h3>Jared Herzog</h3>
+                <div class="meta">The Pearl • Fri, 6:00 PM</div>
+                <div class="tag">Venue confirmed</div>
+              </div>
+              <div class="small">Fri</div>
+            </div>
+            <div class="event-card">
+              <div>
+                <h3>Corey Hall</h3>
+                <div class="meta">Stinky’s Bait Shack • Sat, 8:30 PM</div>
+                <div class="tag">New observation</div>
+              </div>
+              <div class="small">Sat</div>
+            </div>
+            <div class="event-card">
+              <div>
+                <h3>Jazz Legacy Project</h3>
+                <div class="meta">Kaiya Beach Resort • Sun, 7:00 PM</div>
+                <div class="tag">Festival-style</div>
+              </div>
+              <div class="small">Sun</div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div class="section-title">
+            <strong>Popular venues</strong>
+            <span class="small">Nearby</span>
+          </div>
+          <div class="side-list">
+            <div class="side-card">
+              <h4>AJ’s Seafood & Oyster Bar</h4>
+              <div class="small">Frequent live sets • 12 upcoming</div>
+            </div>
+            <div class="side-card">
+              <h4>Club LA</h4>
+              <div class="small">Mixed genres • 9 upcoming</div>
+            </div>
+            <div class="side-card">
+              <h4>Seascape Resort</h4>
+              <div class="small">Resort concerts • 7 upcoming</div>
+            </div>
+            <div class="side-card">
+              <h4>North Beach Social</h4>
+              <div class="small">Local favorites • 5 upcoming</div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </body>
+</html>
