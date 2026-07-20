@@ -277,6 +277,13 @@ def _rows_html(events: list[dict], path: Path) -> str:
             if embed else badge
         )
 
+        # Highest-confidence observation with a URL (load_event_observations
+        # already sorts by confidence DESC) becomes the tile's "View event"
+        # link back to its original listing (SoWal, AJ's, etc).
+        obs = load_event_observations(ev["id"], path) if ev.get("id") else []
+        event_url = next((o["url"] for o in obs if o.get("url")), None)
+        event_url_a = html.escape(event_url) if event_url else ""
+
         # The report stays clean: no Sources/Confidence/Link columns. The source
         # listing and provenance are one click away — clicking a row reveals its
         # observations, each linking back to its original listing.
@@ -284,7 +291,8 @@ def _rows_html(events: list[dict], path: Path) -> str:
             f'<tr data-date="{date}" data-venue="{venue_e}" data-venue-display="{venue_display_e}" '
             f'data-performer="{performer}" '
             f'data-favorite="{fav_attr}" '
-            f'data-performer-favorite="{performer_fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}">'
+            f'data-performer-favorite="{performer_fav_attr}" data-embed="{embed_a}" data-ext="{ext_a}" '
+            f'data-url="{event_url_a}">'
             f"<td><b>{performer}</b></td>"
             f"<td>{_fmt_date(date)}</td>"
             f"<td>{time_s}</td>"
@@ -294,7 +302,6 @@ def _rows_html(events: list[dict], path: Path) -> str:
         conf = ev.get("confidence")
         conf_s = f"{conf:.2f}" if isinstance(conf, (int, float)) else "—"
         sc = ev.get("source_count") or 1
-        obs = load_event_observations(ev["id"], path) if ev.get("id") else []
         detail = (
             f'<div class="ob"><span><b>Sources</b></span>'
             f'<span><span class="cf {_band_class(conf)}"><span class="d"></span>'

@@ -82,6 +82,8 @@ header p{font-size:.9rem;color:var(--muted);margin-top:4px;font-weight:500;}
 .sc b{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:1.05rem;line-height:1.22;color:var(--ink);}
 .sc small{opacity:.75;font-size:.855rem;}
 .sc-time{display:inline-flex;align-items:center;white-space:nowrap;}
+.sc-view{align-self:flex-start;font-size:.76rem;font-weight:700;color:var(--teal);text-decoration:none;letter-spacing:.01em;padding:2px 0;}
+.sc-view:hover{text-decoration:underline;}
 .sc .vt{padding:6px 12px;font-size:.8rem;}
 .sc .maplink{min-height:44px;}
 .maplink::after{content:" ›";opacity:.6;font-weight:700;margin-left:2px;}
@@ -431,7 +433,7 @@ function rr(){
     var vcls=tds[3]&&tds[3].querySelector('span')?tds[3].querySelector('span').className:'vt-def';
     var sib=r.nextElementSibling;
     var det=(sib&&sib.classList.contains('exp'))?sib.querySelector('td').innerHTML:'';
-    groups[dt].push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:v,vdisp:r.getAttribute('data-venue-display')||v,vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',favorite:fv==='Y',performerFavorite:pfv==='Y',detail:det});
+    groups[dt].push({artist:tds[0]?tds[0].textContent.trim():'',time:tds[2]?tds[2].textContent.trim():'',venue:v,vdisp:r.getAttribute('data-venue-display')||v,vcls:vcls,embed:r.getAttribute('data-embed')||'',ext:r.getAttribute('data-ext')||'',url:r.getAttribute('data-url')||'',favorite:fv==='Y',performerFavorite:pfv==='Y',detail:det});
   });
   order.sort();
   var html='';
@@ -455,7 +457,8 @@ function rr(){
         var icsLink='<a href="#" class="calink ics-link" data-artist="'+_escAttr(s.artist)+'" data-venue="'+_escAttr(s.vdisp)+'" data-date="'+dt+'" data-time="'+_escAttr(s.time)+'" title="Download for Apple/other calendar apps" aria-label="Download '+_escAttr(s.artist)+' as a calendar file">'+ICAL_SVG+'</a>';
         var gcalLink='<a href="'+_gcalHref({artist:s.artist,venue:s.vdisp,date:dt,time:s.time})+'" class="calink gcal-link" target="_blank" rel="noopener" title="Add to Google Calendar" aria-label="Add '+_escAttr(s.artist)+' to Google Calendar">'+GCAL_SVG+'</a>';
         var cal=icsLink+gcalLink;
-        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div></div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
+        var viewLink=s.url?'<a href="'+_escAttr(s.url)+'" class="sc-view" target="_blank" rel="noopener" aria-label="View original listing for '+_escAttr(s.artist)+'">View event ›</a>':'';
+        body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div>'+viewLink+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
       html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
