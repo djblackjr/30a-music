@@ -379,6 +379,37 @@ def test_hero_tonight_card_lists_every_tied_combo_match(monkeypatch):
     assert "Combo Venue Two" in tonight
 
 
+def test_hero_orders_same_date_combo_ties_by_artists_csv_order(monkeypatch):
+    # Three combo matches on the same date -- without an artist-order
+    # override this would sort by confidence (Third Act highest, then
+    # First, then Second). Patching _load_artist_order to reflect a
+    # roster ordered First/Second/Third must win instead, regardless of
+    # confidence.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "combo venue one", "combo venue two", "combo venue three",
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "first act": True, "second act": True, "third act": True,
+    })
+    monkeypatch.setattr(render, "_load_artist_order", lambda *a, **k: {
+        "first act": 0, "second act": 1, "third act": 2,
+    })
+    tied_date = _d(0)
+    html, _ = _render_to_temp([
+        {"performer": "Third Act", "venue": "Combo Venue Three", "date": tied_date,
+         "time_start": "9PM", "source": "venue"},  # highest confidence (venue source)
+        {"performer": "First Act", "venue": "Combo Venue One", "date": tied_date,
+         "time_start": "6PM", "source": "some_random_blog"},
+        {"performer": "Second Act", "venue": "Combo Venue Two", "date": tied_date,
+         "time_start": "7PM", "source": "some_random_blog"},
+    ])
+    tonight, _ = _hero_chunks(html)
+    first_pos = tonight.index("First Act")
+    second_pos = tonight.index("Second Act")
+    third_pos = tonight.index("Third Act")
+    assert first_pos < second_pos < third_pos
+
+
 def test_hero_week_card_lists_every_combo_match_in_the_window(monkeypatch):
     # Same "include every combo match" behavior as tonight, just scoped to
     # the week window and its own "Also this week" label instead of

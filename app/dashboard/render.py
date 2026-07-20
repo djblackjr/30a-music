@@ -152,6 +152,25 @@ def _performer_favorite(performer: str | None, meta: dict[str, bool]) -> bool:
     return bool(meta.get((performer or "").strip().lower()))
 
 
+def _load_artist_order(csv_path: Path = ARTISTS_CSV) -> dict[str, int]:
+    """
+    {performer_lower: row_index} in the order performers appear in
+    artists.csv, top to bottom. Used only to order same-date combo matches
+    on the hero cards the way the roster is curated, rather than by an
+    incidental tiebreaker like confidence. A performer not in the file (or
+    a missing file) has no entry -- callers fall back to len(map) so
+    unlisted performers sort after every listed one, not before.
+    """
+    if not csv_path.exists():
+        return {}
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        return {
+            (row.get("performer") or "").strip().lower(): i
+            for i, row in enumerate(csv.DictReader(f))
+            if (row.get("performer") or "").strip()
+        }
+
+
 def _favorite_performer_names(csv_path: Path = ARTISTS_CSV) -> list[str]:
     """Every performer marked favorite=Y in artists.csv, original casing, sorted.
     Same "full roster regardless of current bookings" reasoning as
@@ -320,7 +339,8 @@ def _pick_featured_group(
     headline an actual favorite, they don't fall back to "whatever's on".
 
     Normally returns just the single best match (date breaks ties within a
-    tier, soonest first, then confidence, then id). When
+    tier, soonest first; same-date ties then follow the performer's row
+    order in artists.csv, then confidence, then id). When
     allow_ties_at_tier_0 and the best tier present IS 0 (a combo), every
     tied combo match is returned instead of just one -- multiple genuinely
     favorite-artist-at-favorite-venue shows the same night are all worth
@@ -329,6 +349,7 @@ def _pick_featured_group(
     """
     venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
+    artist_order = _load_artist_order()
 
     def tier_and_favs(e):
         venue_fav = _venue_favorite(e.get("venue"), venue_favorites)
@@ -353,7 +374,9 @@ def _pick_featured_group(
             continue
         conf = e.get("confidence")
         conf = conf if isinstance(conf, (int, float)) else 0.0
-        scored.append(((tier, date, -conf, e.get("id") or 0), e, performer_fav, venue_fav))
+        performer = (e.get("performer") or e.get("name") or "").strip().lower()
+        order = artist_order.get(performer, len(artist_order))
+        scored.append(((tier, date, order, -conf, e.get("id") or 0), e, performer_fav, venue_fav))
 
     if not scored:
         return []
