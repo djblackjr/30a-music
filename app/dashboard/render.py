@@ -15,7 +15,7 @@ import csv
 import html
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
 
@@ -309,26 +309,20 @@ def _confidence_label(score) -> str:
     }.get(confidence_band(score), "Confidence pending")
 
 
-def _featured_event(events: list[dict]) -> dict | None:
+def _pick_featured(events: list[dict], start_date: str, end_date: str) -> tuple[dict | None, bool, bool]:
     """
-    Pick one upcoming event to headline the hero card. Favorite tier is the
-    PRIMARY sort key, ahead of date: a favorite-artist + favorite-venue show
-    always wins the hero slot over anything else upcoming, even if it isn't
-    the soonest show. A favorite-artist-only show outranks favorite-venue-
-    only, which outranks neither. Date (soonest first) only breaks ties
-    within the same tier, then confidence, then id (insertion order).
-    Defensively re-filters to today-or-later even though the pipeline
-    already purges past-dated events before render normally runs -- callers
-    (like the test suite) may pass unpurged data.
+    Best favorite-only match within [start_date, end_date] (inclusive) --
+    a favorite-artist + favorite-venue combo outranks favorite-artist-only,
+    which outranks favorite-venue-only. An event that's neither (tier 3) is
+    never a candidate at all: these two hero cards only ever headline an
+    actual favorite, they don't fall back to "whatever's on". Date (soonest
+    first) breaks ties within the same tier, then confidence, then id.
+    Returns (None, False, False) when nothing in range qualifies.
     """
-    today = datetime.now().strftime("%Y-%m-%d")
-    upcoming = [e for e in events if (e.get("date") or "") >= today]
-    if not upcoming:
-        return None
     venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
 
-    def rank(e):
+    def tier_and_favs(e):
         venue_fav = _venue_favorite(e.get("venue"), venue_favorites)
         performer_fav = _performer_favorite(e.get("performer") or e.get("name"), performer_meta)
         if performer_fav and venue_fav:
@@ -339,16 +333,30 @@ def _featured_event(events: list[dict]) -> dict | None:
             tier = 2
         else:
             tier = 3
+        return tier, performer_fav, venue_fav
+
+    scored = []
+    for e in events:
+        date = e.get("date") or ""
+        if not (start_date <= date <= end_date):
+            continue
+        tier, performer_fav, venue_fav = tier_and_favs(e)
+        if tier == 3:
+            continue
         conf = e.get("confidence")
         conf = conf if isinstance(conf, (int, float)) else 0.0
-        return (tier, e.get("date") or "", -conf, e.get("id") or 0)
+        scored.append(((tier, date, -conf, e.get("id") or 0), e, performer_fav, venue_fav))
 
-    return min(upcoming, key=rank)
+    if not scored:
+        return None, False, False
+    scored.sort(key=lambda t: t[0])
+    _, ev, performer_fav, venue_fav = scored[0]
+    return ev, performer_fav, venue_fav
 
 
 def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:
-    """Badge row under the hero headline -- mirrors the same favorite tiers
-    _featured_event() ranked by, so the picked show visibly explains itself."""
+    """Badge row under a hero headline -- mirrors the same favorite tiers
+    _pick_featured() ranked by, so the picked show visibly explains itself."""
     badges = []
     if performer_favorite:
         badges.append('<span class="badge fav">★ Favorite artist</span>')
@@ -357,41 +365,30 @@ def _hero_badges_html(performer_favorite: bool, venue_favorite: bool) -> str:
     return "".join(badges)
 
 
-def _hero_context(events: list[dict]) -> dict:
-    """
-    (kicker, performer, venue, meta, badges) strings for the hero card --
-    the performer headlines the hero in large display type, the venue/meta
-    back it up in the glass side panel. Real data picked by
-    _featured_event() rather than a static placeholder.
-
-    _featured_event() ranks favorite tier ahead of date, so the featured
-    show is sometimes days out, not tonight -- the kicker must say so
-    instead of always claiming "Tonight's best live music", which would be
-    false advertising the moment a favorite combo bumps a same-day show.
-    """
-    ev = _featured_event(events)
-    if not ev:
-        return {
-            "kicker": "Live music in 30A",
-            "performer": "No shows scheduled",
-            "venue": "Check back soon",
-            "meta": "New listings appear as we find them.",
-            "badges": "",
-        }
+def _hero_meta_html(ev: dict) -> str:
+    """'at <b>Venue</b> · Today · 7:00 pm · High confidence' -- pre-escaped
+    HTML, safe to insert directly into the template."""
     today = datetime.now().strftime("%Y-%m-%d")
-    is_today = ev.get("date") == today
-    when = "Today" if is_today else _fmt_date(ev.get("date"))
-    kicker = "Tonight’s best live music in 30A" if is_today else "This week’s best live music in 30A"
+    when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
+    venue = html.escape(_venue_display_name(ev.get("venue")))
     parts = [p for p in [when, ev.get("time_start"), _confidence_label(ev.get("confidence"))] if p]
-    venue_favorites = _load_favorite_venues()
-    performer_meta = _load_performer_meta()
-    performer_fav = _performer_favorite(ev.get("performer") or ev.get("name"), performer_meta)
-    venue_fav = _venue_favorite(ev.get("venue"), venue_favorites)
+    return f'at <b>{venue}</b> &middot; {html.escape(" • ".join(parts))}'
+
+
+def _hero_card(
+    ev: dict | None, performer_fav: bool, venue_fav: bool,
+    *, kicker: str, empty_performer: str, empty_meta: str,
+) -> dict:
+    """(kicker, performer, meta, badges) strings for one hero card. `ev` is
+    whatever _pick_featured() returned -- None means no favorite qualified
+    in that card's window, which gets its own honest empty state rather
+    than silently falling back to a non-favorite show."""
+    if not ev:
+        return {"kicker": kicker, "performer": empty_performer, "meta": empty_meta, "badges": ""}
     return {
         "kicker": kicker,
         "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
-        "venue": html.escape(_venue_display_name(ev.get("venue"))),
-        "meta": html.escape(" • ".join(parts)),
+        "meta": _hero_meta_html(ev),
         "badges": _hero_badges_html(performer_fav, venue_fav),
     }
 
@@ -432,15 +429,38 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     events.sort(key=lambda e: ((e.get("date") or ""), e.get("id") or 0))
 
     h = _health(events, path)
-    hero = _hero_context(events)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    week_end = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+
+    tonight_ev, tonight_pfav, tonight_vfav = _pick_featured(events, today, today)
+    week_ev, week_pfav, week_vfav = _pick_featured(events, tomorrow, week_end)
+
+    hero_tonight = _hero_card(
+        tonight_ev, tonight_pfav, tonight_vfav,
+        kicker="Tonight’s favorites",
+        empty_performer="No favorites tonight",
+        empty_meta="Nothing starred for tonight — check the full lineup below.",
+    )
+    hero_week = _hero_card(
+        week_ev, week_pfav, week_vfav,
+        kicker="This week’s favorites",
+        empty_performer="No favorites this week",
+        empty_meta="Nothing starred coming up — check the full lineup below.",
+    )
+
     out = (
         template
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
-        .replace("HERO_KICKER_PLACEHOLDER", hero["kicker"])
-        .replace("HERO_PERFORMER_PLACEHOLDER", hero["performer"])
-        .replace("HERO_VENUE_PLACEHOLDER", hero["venue"])
-        .replace("HERO_META_PLACEHOLDER", hero["meta"])
-        .replace("HERO_BADGES_PLACEHOLDER", hero["badges"])
+        .replace("HERO_TONIGHT_KICKER_PLACEHOLDER", hero_tonight["kicker"])
+        .replace("HERO_TONIGHT_PERFORMER_PLACEHOLDER", hero_tonight["performer"])
+        .replace("HERO_TONIGHT_META_PLACEHOLDER", hero_tonight["meta"])
+        .replace("HERO_TONIGHT_BADGES_PLACEHOLDER", hero_tonight["badges"])
+        .replace("HERO_WEEK_KICKER_PLACEHOLDER", hero_week["kicker"])
+        .replace("HERO_WEEK_PERFORMER_PLACEHOLDER", hero_week["performer"])
+        .replace("HERO_WEEK_META_PLACEHOLDER", hero_week["meta"])
+        .replace("HERO_WEEK_BADGES_PLACEHOLDER", hero_week["badges"])
         .replace("TOTAL_PLACEHOLDER", str(h["total"]))
         .replace("AVGCONF_PLACEHOLDER", h["avgconf"])
         .replace("VERIFIED_PLACEHOLDER", str(h["verified"]))

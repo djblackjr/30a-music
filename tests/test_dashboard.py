@@ -208,101 +208,123 @@ def test_render_includes_venue_artist_filter_controls():
     assert "favSet.has(n)" in html
 
 
-def test_render_includes_featured_hero_section():
+def test_render_includes_both_hero_cards():
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": _d(0), "time_start": "6PM", "source": "seed"},
     ])
-    assert "Tonight’s best live music in 30A" in html
-    assert 'class="hero-panel"' in html
-    assert "Featured venue" in html
+    assert html.count('<div class="hero-panel">') == 2
+    assert "Tonight’s favorites" in html
+    assert "This week’s favorites" in html
 
 
-# --- hero "Featured venue" card: real data, not the old hardcoded stub -----
+# --- two hero cards: "Tonight" (today only) and "This week" (tomorrow..+7),
+# each a favorites-only pick -- neither ever falls back to a non-favorite
+# show just because it's the only thing on. --------------------------------
 
 def _d(offset_days):
     return (datetime.now() + timedelta(days=offset_days)).strftime("%Y-%m-%d")
 
 
-def _hero_chunk(html):
-    # The hero-side-venue/-meta divs sit right after the "Featured venue"
-    # label and nothing else on the page uses that class, so slicing there
-    # isolates the hero card's own text from the (also server-rendered)
-    # table rows for every other event further down the page.
-    return html.split('class="hero-side-venue"')[1][:300]
+def _hero_chunks(html):
+    # Two identical '<div class="hero-panel">' markers bound the tonight
+    # card's content between the 1st and 2nd occurrence (split does this for
+    # free); the week card runs from the 2nd occurrence to end of page, so
+    # slice it down to just its own card's worth of markup.
+    parts = html.split('<div class="hero-panel">')
+    return parts[1], parts[2][:700]
 
 
-def test_hero_features_the_soonest_upcoming_event_not_a_later_one():
-    # Neither event is a favorite, so both land in the same (lowest) tier --
-    # date is what breaks the tie here, same as before tier became primary.
+def test_hero_cards_show_empty_state_when_no_favorites_anywhere():
+    # "A"/"V" and "B"/"W" aren't in the real venue_groups.csv/artists.csv, so
+    # neither card has a favorite to feature -- each must say so honestly
+    # rather than falling back to showing a non-favorite show anyway.
     html, _ = _render_to_temp([
-        {"performer": "Later Act", "venue": "Later Venue", "date": _d(5),
-         "time_start": "7PM", "source": "venue"},
-        {"performer": "Soonest Act", "venue": "Soonest Venue", "date": _d(1),
+        {"performer": "A", "venue": "V", "date": _d(0), "time_start": "6PM", "source": "seed"},
+        {"performer": "B", "venue": "W", "date": _d(3), "time_start": "6PM", "source": "seed"},
+    ])
+    tonight, week = _hero_chunks(html)
+    assert "No favorites tonight" in tonight
+    assert "No favorites this week" in week
+    assert ">A<" not in tonight
+    assert ">B<" not in week
+
+
+def test_hero_tonight_card_only_considers_today(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"fav venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
+    html, _ = _render_to_temp([
+        {"performer": "Later Act", "venue": "Fav Venue", "date": _d(2),
          "time_start": "6PM", "source": "venue"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Soonest Venue" in chunk
-    assert "Later Venue" not in chunk
+    tonight, week = _hero_chunks(html)
+    assert "No favorites tonight" in tonight
+    assert "Later Act" in week
+    assert "★ Favorite venue" in week
 
 
-def test_hero_prefers_a_later_favorite_combo_over_a_sooner_non_favorite_show(monkeypatch):
-    # Favorite tier outranks date entirely -- a favorite-artist +
-    # favorite-venue show always wins the hero slot, even over something
-    # happening sooner that isn't a favorite at all.
-    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
-    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
+def test_hero_week_card_excludes_tonight_itself(monkeypatch):
+    # A favorite happening tonight belongs on the Tonight card only -- the
+    # Week card must not also feature it (would be redundant with itself).
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"fav venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
     html, _ = _render_to_temp([
-        {"performer": "Sooner Nobody", "venue": "Sooner Venue", "date": _d(1),
+        {"performer": "Tonight Act", "venue": "Fav Venue", "date": _d(0),
          "time_start": "6PM", "source": "venue"},
-        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(8),
-         "time_start": "7PM", "source": "venue"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Combo Venue" in chunk
-    assert "Sooner Venue" not in chunk
+    tonight, week = _hero_chunks(html)
+    assert "Tonight Act" in tonight
+    assert "No favorites this week" in week
+    assert "Tonight Act" not in week
 
 
-def test_hero_kicker_does_not_claim_tonight_for_a_future_featured_show(monkeypatch):
-    # The kicker must not say "Tonight's best live music" when the featured
-    # show (bumped ahead by favorite tier) is actually days out -- that would
-    # be actively misleading, not just an omission. It should say so plainly
-    # once it isn't tonight, and switch back to "Tonight's" the moment the
-    # featured pick genuinely is today's show.
-    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
-    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
-    future_html, _ = _render_to_temp([
-        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(8),
-         "time_start": "7PM", "source": "venue"},
-    ])
-    assert "Tonight’s best live music in 30A" not in future_html
-    assert "This week’s best live music in 30A" in future_html
-
-    today_html, _ = _render_to_temp([
-        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(0),
-         "time_start": "7PM", "source": "venue"},
-    ])
-    assert "Tonight’s best live music in 30A" in today_html
-
-
-def test_hero_prefers_higher_confidence_event_on_a_tied_date():
-    tied_date = _d(2)
+def test_hero_week_card_ignores_favorites_beyond_one_week(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"fav venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
     html, _ = _render_to_temp([
-        # Neither venue is in venue_groups.csv, so both land in the same
-        # favorite tier and confidence -- "venue" source is high-trust (0.95)
-        # vs. an unlisted source's 0.5 default trust -- is what should decide
-        # which one heads the hero card.
+        {"performer": "Far Act", "venue": "Fav Venue", "date": _d(10),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    tonight, week = _hero_chunks(html)
+    assert "No favorites tonight" in tonight
+    assert "No favorites this week" in week
+    assert "Far Act" not in week
+
+
+def test_hero_never_features_a_non_favorite_even_as_the_only_upcoming_show(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
+    html, _ = _render_to_temp([
+        {"performer": "Nobody Special", "venue": "Nowhere Venue", "date": _d(0),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    tonight, week = _hero_chunks(html)
+    assert "No favorites tonight" in tonight
+    assert "Nobody Special" not in tonight
+    assert "Nowhere Venue" not in tonight
+
+
+def test_hero_prefers_higher_confidence_favorite_on_a_tied_date(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
+        "unverified venue", "verified venue",
+    })
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
+    tied_date = _d(3)
+    html, _ = _render_to_temp([
+        # Both favorite venues (same tier) on the same date -- "venue" source
+        # is high-trust (0.95) vs. an unlisted source's 0.5 default, so
+        # confidence decides which one heads the week card.
         {"performer": "Unverified Act", "venue": "Unverified Venue", "date": tied_date,
          "time_start": "6PM", "source": "some_random_blog"},
         {"performer": "Verified Act", "venue": "Verified Venue", "date": tied_date,
          "time_start": "8PM", "source": "venue"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Verified Venue" in chunk
-    assert "High confidence" in chunk
+    _, week = _hero_chunks(html)
+    assert "Verified Venue" in week
+    assert "High confidence" in week
 
 
 def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alone(monkeypatch):
-    # _featured_event() calls _load_favorite_venues()/_load_performer_meta()
+    # _pick_featured() calls _load_favorite_venues()/_load_performer_meta()
     # with no args, so patching the VENUE_FAVORITES_CSV/ARTISTS_CSV module
     # constants wouldn't work here -- those are only read once, as the
     # functions' default *parameter* values, at import time. Patching the
@@ -318,7 +340,7 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
     tied_date = _d(3)
     html, _ = _render_to_temp([
         # Lower confidence than the other two, but the combo of favorite
-        # artist + favorite venue must still win the hero slot outright.
+        # artist + favorite venue must still win the week card outright.
         {"performer": "Combo Act", "venue": "Combo Venue", "date": tied_date,
          "time_start": "6PM", "source": "some_random_blog"},
         {"performer": "Artist-Only Act", "venue": "Artist-Only Venue", "date": tied_date,
@@ -326,41 +348,10 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
         {"performer": "Venue-Only Act", "venue": "Venue-Only Venue", "date": tied_date,
          "time_start": "8PM", "source": "venue"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Combo Venue" in chunk
-    assert "Artist-Only Venue" not in chunk
-    assert "Venue-Only Venue" not in chunk
-
-
-def test_hero_headlines_the_performer_name():
-    # The hero's big display headline is the performer, not the venue --
-    # the venue/time back it up in the glass side panel instead.
-    html, _ = _render_to_temp([
-        {"performer": "Combo Act", "venue": "V", "date": _d(2),
-         "time_start": "6PM", "source": "venue"},
-    ])
-    assert '<h2 class="hero-title">Combo Act</h2>' in html
-
-
-def test_hero_shows_favorite_badges_matching_its_own_tier(monkeypatch):
-    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
-    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
-    html, _ = _render_to_temp([
-        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(2),
-         "time_start": "6PM", "source": "venue"},
-    ])
-    assert "★ Favorite artist" in html
-    assert "★ Favorite venue" in html
-
-
-def test_hero_shows_no_badges_when_neither_artist_nor_venue_is_a_favorite(monkeypatch):
-    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
-    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
-    html, _ = _render_to_temp([
-        {"performer": "Nobody Special", "venue": "Nowhere Venue", "date": _d(2),
-         "time_start": "6PM", "source": "venue"},
-    ])
-    assert '<div class="badge-row"></div>' in html
+    _, week = _hero_chunks(html)
+    assert "Combo Venue" in week
+    assert "Artist-Only Venue" not in week
+    assert "Venue-Only Venue" not in week
 
 
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
@@ -380,30 +371,54 @@ def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monk
         {"performer": "Artist-Only Act", "venue": "Artist-Only Venue", "date": tied_date,
          "time_start": "7PM", "source": "some_random_blog"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Artist-Only Venue" in chunk
-    assert "Venue-Only Venue" not in chunk
+    _, week = _hero_chunks(html)
+    assert "Artist-Only Venue" in week
+    assert "Venue-Only Venue" not in week
 
 
-def test_hero_labels_todays_event_as_today():
+def test_hero_headlines_the_performer_name(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"v"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "V", "date": _d(2),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    assert '<h2 class="hero-title">Combo Act</h2>' in html
+
+
+def test_hero_shows_favorite_badges_matching_its_own_tier(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"combo venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"combo act": True})
+    html, _ = _render_to_temp([
+        {"performer": "Combo Act", "venue": "Combo Venue", "date": _d(2),
+         "time_start": "6PM", "source": "venue"},
+    ])
+    assert "★ Favorite artist" in html
+    assert "★ Favorite venue" in html
+
+
+def test_hero_labels_todays_event_as_today(monkeypatch):
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"tonight venue"})
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "Tonight Venue", "date": _d(0),
          "time_start": "6PM", "source": "venue"},
     ])
-    chunk = _hero_chunk(html)
-    assert "Tonight Venue" in chunk
-    assert "Today" in chunk
+    tonight, _ = _hero_chunks(html)
+    assert "Tonight Venue" in tonight
+    assert "Today" in tonight
 
 
 def test_hero_falls_back_gracefully_with_no_upcoming_events():
-    # every event is past-dated -- _featured_event() must not crash or pick
-    # a stale show, and no HERO_*_PLACEHOLDER token should leak into the page.
+    # every event is past-dated -- _pick_featured() must not crash or pick a
+    # stale show, and no HERO_*_PLACEHOLDER token should leak into the page.
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": _d(-30), "time_start": "6PM", "source": "venue"},
     ])
-    assert "No shows scheduled" in html
-    assert "HERO_VENUE_PLACEHOLDER" not in html
-    assert "HERO_META_PLACEHOLDER" not in html
+    assert "No favorites tonight" in html
+    assert "No favorites this week" in html
+    assert "HERO_TONIGHT_PERFORMER_PLACEHOLDER" not in html
+    assert "HERO_WEEK_PERFORMER_PLACEHOLDER" not in html
 
 
 def test_favorites_panel_includes_select_all_toggle():
