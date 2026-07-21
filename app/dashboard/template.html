@@ -24,19 +24,20 @@
   --shadow-lg:0 24px 60px -20px rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-/* 20px = 125% of the 16px browser default. Nearly every font-size in this
-   stylesheet is set in rem, so bumping the root size scales nearly all text
-   on the page by the same 25% in this one place, rather than hand-editing
-   dozens of individual rules. The inline SVG venue-map labels use bare px
-   font-size attributes (not rem), so they're untouched by this -- that's a
-   small set of map annotations, not body copy. */
-html{font-size:20px;}
+/* 17px: 20px (the prior +25% bump) scaled back down 15% (20*.85=17),
+   netting out to ~106% of the 16px browser default overall. Nearly every
+   font-size in this stylesheet is set in rem, so the root size scales
+   nearly all text on the page uniformly in this one place, rather than
+   hand-editing dozens of individual rules. The inline SVG venue-map labels
+   use bare px font-size attributes (not rem), so they're untouched by
+   this -- that's a small set of map annotations, not body copy. */
+html{font-size:17px;}
 body{font-family:'Work Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   background:
     radial-gradient(ellipse 900px 500px at 12% -8%,rgba(244,185,66,.14),transparent 60%),
     radial-gradient(ellipse 1000px 650px at 90% 0%,rgba(255,110,82,.12),transparent 55%),
     linear-gradient(180deg,#0B111F 0%,#101A2E 55%,#0C1322 100%);
-  color:var(--ink);font-size:20px;line-height:1.45;}
+  color:var(--ink);font-size:17px;line-height:1.45;}
 a{color:var(--teal);text-decoration:none;}
 :focus-visible{outline:3px solid var(--teal-light);outline-offset:2px;border-radius:4px;}
 @media (prefers-reduced-motion:no-preference){
