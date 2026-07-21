@@ -72,6 +72,10 @@ VENUE_CLASS = {
     "the bay": "vt-bay",
     "the red bar": "vt-trb",
     "watersound town center": "vt-wsc",
+    "rosemary beach": "vt-rsb",
+    "rosemary beach town hall": "vt-rsb",
+    "fish out of water": "vt-fow",
+    "old florida fish house": "vt-ofh",
 }
 
 # Fallback "View event" link for venues whose observations never carry a
