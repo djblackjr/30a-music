@@ -392,6 +392,15 @@ RECURRING_SERIES_TITLES = frozenset({
     "Here Comes the Sun Summer Concert Series at Rosemary Beach",
     "Baytowne Wednesday Night Concert Series",
     "Harbor Nights at HarborWalk",
+    # "Wine & Song at Neat" -- split_title's ' at Venue' fallback resolves the
+    # venue half fine ("Neat"), which meant needs_enrichment's other two
+    # checks (unresolved/category status, missing venue) never fired and this
+    # title never got the prose-lineup treatment at all: "Wine & Song" was
+    # saved directly as a fake performer, sitting right next to the real
+    # per-date performer's own correctly-resolved event (e.g. "Marc Harris")
+    # -- confirmed live, 2026-07-21: both rows existed in the database for
+    # the same date/venue/time, sourced from the identical sowal.com URL.
+    "Wine & Song at Neat",
 })
 
 
