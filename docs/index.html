@@ -24,20 +24,21 @@
   --shadow-lg:0 24px 60px -20px rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-/* 17px: 20px (the prior +25% bump) scaled back down 15% (20*.85=17),
-   netting out to ~106% of the 16px browser default overall. Nearly every
-   font-size in this stylesheet is set in rem, so the root size scales
-   nearly all text on the page uniformly in this one place, rather than
-   hand-editing dozens of individual rules. The inline SVG venue-map labels
-   use bare px font-size attributes (not rem), so they're untouched by
-   this -- that's a small set of map annotations, not body copy. */
-html{font-size:17px;}
+/* 15px, slightly below the 16px browser default -- still reads as too
+   big at 17px (~106%), so this drops below baseline rather than just
+   easing toward it. Nearly every font-size in this stylesheet is set in
+   rem, so the root size scales nearly all text on the page uniformly in
+   this one place, rather than hand-editing dozens of individual rules.
+   The inline SVG venue-map labels use bare px font-size attributes (not
+   rem), so they're untouched by this -- that's a small set of map
+   annotations, not body copy. */
+html{font-size:15px;}
 body{font-family:'Work Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   background:
     radial-gradient(ellipse 900px 500px at 12% -8%,rgba(244,185,66,.14),transparent 60%),
     radial-gradient(ellipse 1000px 650px at 90% 0%,rgba(255,110,82,.12),transparent 55%),
     linear-gradient(180deg,#0B111F 0%,#101A2E 55%,#0C1322 100%);
-  color:var(--ink);font-size:17px;line-height:1.45;}
+  color:var(--ink);font-size:15px;line-height:1.45;}
 a{color:var(--teal);text-decoration:none;}
 :focus-visible{outline:3px solid var(--teal-light);outline-offset:2px;border-radius:4px;}
 @media (prefers-reduced-motion:no-preference){
@@ -1568,7 +1569,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">618</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-21 10:33:07</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-21 10:38:16</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
