@@ -64,6 +64,8 @@ def print_summary(result: dict) -> None:
     print(f"  \033[1mImage files found:\033[0m      {result['image_files']}")
     print(f"  \033[1mEvents saved:\033[0m           {result['events_saved']}")
     print(f"  \033[1mSowal/site conflicts fixed:\033[0m {result['sowal_conflicts_resolved']}")
+    print(f"  \033[1mNames recanonicalized:\033[0m  {result['venues_renamed']} venues, {result['performers_renamed']} performers"
+          f" ({result['venues_merged']} + {result['performers_merged']} duplicate rows merged)")
     print(f"  \033[1mPast events purged:\033[0m     {result['purged_past']}")
     print(f"  \033[1mNew or changed events:\033[0m  {result['new_or_changed']}")
     print(f"  \033[1mExcel report:\033[0m           {result['report_path']}")
