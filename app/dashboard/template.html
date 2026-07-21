@@ -124,6 +124,13 @@ header p{font-size:.9rem;color:var(--muted);margin-top:4px;font-weight:500;}
 .btn.ghost{background:transparent;box-shadow:none;color:var(--muted);border-color:transparent;}
 .btn.ghost:hover{background:var(--glass-hi);color:var(--ink);}
 .cnt{font-size:.8rem;color:var(--muted);margin-left:auto;align-self:center;}
+.top-btn{position:fixed;right:20px;bottom:20px;z-index:25;width:48px;height:48px;border-radius:50%;
+  border:1px solid var(--coral);background:var(--coral);color:#1B0D08;font-size:1.3rem;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px -12px rgba(255,110,82,.55);
+  opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s;}
+.top-btn.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.top-btn:hover{background:#ff7d63;}
+@media (prefers-reduced-motion:reduce){.top-btn{transition:none;}}
 .favdd{position:relative;display:inline-flex;}
 .favdd-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:20;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:8px;min-width:220px;max-width:280px;max-height:280px;overflow-y:auto;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 .favdd-item{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;color:var(--ink);}
@@ -337,6 +344,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">BUILD_PLACEHOLDER</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
+<button type="button" class="top-btn" id="topBtn" onclick="scrollToTop()" aria-label="Back to top">↑</button>
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
@@ -630,6 +638,11 @@ function jumpToDate(key){
   _closeFavDD();
   var target=document.getElementById('day-'+key);
   if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+  // scrollIntoView doesn't reliably fire a native 'scroll' event before the
+  // animation settles in every browser, so the button's usual scroll-listener
+  // show/hide can't be trusted here -- force it on since a date jump always
+  // lands well past the hero cards.
+  document.getElementById('topBtn').classList.add('show');
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
@@ -681,6 +694,13 @@ function closeMap(){
   if(_lastTrigger&&typeof _lastTrigger.focus==='function')_lastTrigger.focus();
 }
 document.getElementById('mm').addEventListener('click',function(e){if(e.target.id==='mm')closeMap();});
+function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
+// Threshold of one viewport height rather than a fixed pixel count -- the
+// button should show once you've scrolled meaningfully past the hero
+// cards regardless of screen size, not at some number tuned to one device.
+window.addEventListener('scroll',function(){
+  document.getElementById('topBtn').classList.toggle('show',window.scrollY>window.innerHeight);
+},{passive:true});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMap();_closeFavDD();}});
 document.addEventListener('change',function(e){
   if(e.target.type!=='checkbox')return;
