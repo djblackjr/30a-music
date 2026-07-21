@@ -110,7 +110,7 @@ header p{font-size:.9rem;color:var(--muted);margin-top:4px;font-weight:500;}
 .fil input[type=search]{min-height:46px;padding:0 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;width:100%;background:var(--cream);color:var(--ink);outline:none;}
 .fil input[type=search]::placeholder{color:var(--muted);}
 .fil input[type=search]:focus{border-color:var(--teal);background:var(--navy-light);}
-.dr{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.dr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .dr .favdd{min-width:0;}
 .dr .favdd .btn{width:100%;overflow:hidden;text-overflow:ellipsis;}
 @media(max-width:520px){.dr{grid-template-columns:1fr;}}
@@ -131,6 +131,22 @@ header p{font-size:.9rem;color:var(--muted);margin-top:4px;font-weight:500;}
 .favdd-selectall{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 6px;font-size:.85rem;font-weight:700;color:var(--teal);cursor:pointer;border-radius:var(--radius-sm);}
 .favdd-selectall:hover{background:var(--cream);}
 .favdd-sep{border:none;border-top:1px solid var(--border);margin:4px 0;}
+.cal-panel{padding:10px;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-nav-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--glass-hi);color:var(--ink);font-size:1rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.cal-nav-btn:hover{background:var(--cream);}
+.cal-title{font-weight:700;font-size:.85rem;color:var(--ink);}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+.cal-dow span{text-align:center;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-cell{aspect-ratio:1;border:none;background:none;border-radius:50%;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+.cal-cell.cal-pad{visibility:hidden;}
+.cal-cell:disabled{cursor:default;opacity:.4;}
+.cal-cell.cal-has{color:var(--ink);font-weight:600;cursor:pointer;}
+.cal-cell.cal-has:hover{background:var(--cream);}
+.cal-cell.cal-today{box-shadow:inset 0 0 0 2px var(--coral);}
+.cal-cell .cal-dot{width:4px;height:4px;border-radius:50%;background:var(--teal);visibility:hidden;}
+.cal-cell.cal-has .cal-dot{visibility:visible;}
 @media(max-width:680px){
   .br{flex-wrap:wrap;overflow-x:visible;}
   .br .btn{flex:1 1 auto;justify-content:center;}
@@ -223,6 +239,10 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <div class="favdd" id="allArtistDD">
 <button class="btn" id="allArtistBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleFavDD('artist')">Artists ▾</button>
 <div class="favdd-panel" id="allArtistPanel" hidden></div>
+</div>
+<div class="favdd" id="calDD">
+<button class="btn" id="calBtn" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleCalDD()">📅 Jump to date ▾</button>
+<div class="favdd-panel cal-panel" id="calPanel" hidden></div>
 </div>
 </div>
 <div class="br">
@@ -318,7 +338,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <script>
 function _localDate(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var T=_localDate();
-var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set();
+var sk='date',sd=1,df='today',selVenues=new Set(),selArtists=new Set(),calViewDate=new Date();
 var ALL_FAV_VENUES=FAV_VENUES_PLACEHOLDER;
 var ALL_FAV_ARTISTS=FAV_ARTISTS_PLACEHOLDER;
 var ALL_VENUES=ALL_VENUES_PLACEHOLDER;
@@ -468,7 +488,7 @@ function rr(){
         var viewLink=s.url?'<a href="'+_escAttr(s.url)+'" class="sc-view" target="_blank" rel="noopener" aria-label="View original listing for '+_escAttr(s.artist)+'">View event ›</a>':'';
         body+='<div class="sc"><div class="sc-row" role="button" tabindex="0" aria-expanded="false" data-detail-for="'+cid+'"><div class="sc-name"><b>'+astar+s.artist+'</b></div><div class="sc-meta"><span class="sc-time"><small>'+_fmtTime(s.time)+'</small>'+cal+'</span>'+v+'</div>'+viewLink+'</div>'+(s.detail?'<div class="scdet" id="'+cid+'">'+s.detail+'</div>':'')+'</div>';
       });
-      html+='<div class="tn">'+hd+'<div class="tn-body">'+body+'</div></div>';
+      html+='<div class="tn" id="day-'+dt+'">'+hd+'<div class="tn-body">'+body+'</div></div>';
     });
   }
   host.innerHTML=html;
@@ -515,6 +535,8 @@ function _closeFavDD(){
     document.getElementById(DD_CONFIG[k].panel).hidden=true;
     document.getElementById(DD_CONFIG[k].btn).setAttribute('aria-expanded','false');
   }
+  var cp=document.getElementById('calPanel');
+  if(cp){cp.hidden=true;document.getElementById('calBtn').setAttribute('aria-expanded','false');}
 }
 function toggleFavDD(kind){
   var cfg=DD_CONFIG[kind];
@@ -536,6 +558,69 @@ function _updateFavBtnLabel(kind){
   var btn=document.getElementById(cfg.btn);
   btn.textContent=(count?cfg.base+' ('+count+')':cfg.base)+' ▾';
   btn.classList.toggle('on',count>0);
+}
+// Every date that has at least one show, anywhere -- independent of the
+// current Today/Week/Month/All-Dates filter or search/venue/artist
+// selections, since this decides which calendar days are even choosable,
+// not what's currently showing in the results list below.
+function _eventDateSet(){
+  var s=new Set();
+  document.querySelectorAll('#tb tr[data-date]').forEach(function(r){
+    if(r.classList.contains('exp'))return;
+    var dt=r.getAttribute('data-date');
+    if(dt)s.add(dt);
+  });
+  return s;
+}
+function _renderCalPanel(){
+  var panel=document.getElementById('calPanel');
+  var y=calViewDate.getFullYear(),m=calViewDate.getMonth();
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dow=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var first=new Date(y,m,1).getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var evDates=_eventDateSet();
+  var html='<div class="cal-nav"><button type="button" class="cal-nav-btn" aria-label="Previous month" onclick="calShiftMonth(-1)">‹</button>'
+    +'<span class="cal-title">'+months[m]+' '+y+'</span>'
+    +'<button type="button" class="cal-nav-btn" aria-label="Next month" onclick="calShiftMonth(1)">›</button></div>';
+  html+='<div class="cal-dow">'+dow.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>';
+  html+='<div class="cal-grid">';
+  for(var i=0;i<first;i++)html+='<span class="cal-cell cal-pad"></span>';
+  for(var day=1;day<=daysInMonth;day++){
+    var key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var has=evDates.has(key);
+    var cls='cal-cell'+(has?' cal-has':'')+(key===T?' cal-today':'');
+    html+='<button type="button" class="'+cls+'"'+(has?' onclick="jumpToDate(\''+key+'\')"':' disabled')
+      +' aria-label="'+months[m]+' '+day+', '+y+(has?'':' — no shows')+'">'+day+'<span class="cal-dot"></span></button>';
+  }
+  html+='</div>';
+  panel.innerHTML=html;
+}
+function calShiftMonth(delta){
+  calViewDate=new Date(calViewDate.getFullYear(),calViewDate.getMonth()+delta,1);
+  _renderCalPanel();
+}
+function toggleCalDD(){
+  var panel=document.getElementById('calPanel');
+  var btn=document.getElementById('calBtn');
+  var wasOpen=!panel.hidden;
+  _closeFavDD();
+  if(wasOpen)return;
+  calViewDate=new Date();
+  _renderCalPanel();
+  panel.hidden=false;
+  btn.setAttribute('aria-expanded','true');
+}
+// Switches to the All-Dates filter (so the picked day's section is
+// guaranteed to exist in the results list regardless of whatever
+// Today/Week/Month scope was active) and smooth-scrolls to it. Only ever
+// called with a date the calendar itself marked has-events (see
+// _renderCalPanel), so the target section is always found.
+function jumpToDate(key){
+  sf('all');
+  _closeFavDD();
+  var target=document.getElementById('day-'+key);
+  if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function we(){var d=new Date();d.setDate(d.getDate()+7);return _localDate(d);}
 function me(){var d=new Date();d.setMonth(d.getMonth()+1);return _localDate(d);}
