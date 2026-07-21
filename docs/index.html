@@ -1568,7 +1568,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">618</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-21 10:25:47</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-21 10:33:07</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <script>
@@ -1816,9 +1816,16 @@ function _renderCalPanel(){
   var first=new Date(y,m,1).getDay();
   var daysInMonth=new Date(y,m+1,0).getDate();
   var evDates=_eventDateSet();
-  var html='<div class="cal-nav"><button type="button" class="cal-nav-btn" aria-label="Previous month" onclick="calShiftMonth(-1)">‹</button>'
+  // stopPropagation matters here: calShiftMonth() rewrites panel.innerHTML,
+  // destroying this very button mid-click. Without stopping propagation
+  // first, the click still bubbles to document's outside-click closer, but
+  // by then e.target (this now-detached button) has no parentElement for
+  // .closest('.favdd') to find -- so navigating a month immediately closed
+  // the picker right after redrawing it, making every month past the
+  // current one look unreachable.
+  var html='<div class="cal-nav"><button type="button" class="cal-nav-btn" aria-label="Previous month" onclick="event.stopPropagation();calShiftMonth(-1)">‹</button>'
     +'<span class="cal-title">'+months[m]+' '+y+'</span>'
-    +'<button type="button" class="cal-nav-btn" aria-label="Next month" onclick="calShiftMonth(1)">›</button></div>';
+    +'<button type="button" class="cal-nav-btn" aria-label="Next month" onclick="event.stopPropagation();calShiftMonth(1)">›</button></div>';
   html+='<div class="cal-dow">'+dow.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>';
   html+='<div class="cal-grid">';
   for(var i=0;i<first;i++)html+='<span class="cal-cell cal-pad"></span>';

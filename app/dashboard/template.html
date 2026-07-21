@@ -581,9 +581,16 @@ function _renderCalPanel(){
   var first=new Date(y,m,1).getDay();
   var daysInMonth=new Date(y,m+1,0).getDate();
   var evDates=_eventDateSet();
-  var html='<div class="cal-nav"><button type="button" class="cal-nav-btn" aria-label="Previous month" onclick="calShiftMonth(-1)">‹</button>'
+  // stopPropagation matters here: calShiftMonth() rewrites panel.innerHTML,
+  // destroying this very button mid-click. Without stopping propagation
+  // first, the click still bubbles to document's outside-click closer, but
+  // by then e.target (this now-detached button) has no parentElement for
+  // .closest('.favdd') to find -- so navigating a month immediately closed
+  // the picker right after redrawing it, making every month past the
+  // current one look unreachable.
+  var html='<div class="cal-nav"><button type="button" class="cal-nav-btn" aria-label="Previous month" onclick="event.stopPropagation();calShiftMonth(-1)">‹</button>'
     +'<span class="cal-title">'+months[m]+' '+y+'</span>'
-    +'<button type="button" class="cal-nav-btn" aria-label="Next month" onclick="calShiftMonth(1)">›</button></div>';
+    +'<button type="button" class="cal-nav-btn" aria-label="Next month" onclick="event.stopPropagation();calShiftMonth(1)">›</button></div>';
   html+='<div class="cal-dow">'+dow.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>';
   html+='<div class="cal-grid">';
   for(var i=0;i<first;i++)html+='<span class="cal-cell cal-pad"></span>';
