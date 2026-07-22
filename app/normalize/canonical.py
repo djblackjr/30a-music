@@ -41,6 +41,8 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Papa Surf", "PapaSurf Burger Bar"),
     ("Papa Surf", "PAPASURF BURGER BAR"),
     ("Shelby's Beach Bar", "shelbysbeachbar"),
+    # GPT-4o Vision reads the venue's fuller on-flyer name; same real venue.
+    ("Shelby's Beach Bar", "Shelby's Beach Bar and Grill"),
     ("North Beach Social", "NORTH BEACH SOCIAL"),
     ("North Beach Social", "northbeachsocial"),
     ("North Beach Social", "North Beach Social 1"),
