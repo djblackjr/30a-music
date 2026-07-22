@@ -355,6 +355,9 @@ var ALL_VENUES=ALL_VENUES_PLACEHOLDER;
 var ALL_ARTISTS=ALL_ARTISTS_PLACEHOLDER;
 document.getElementById('upd').textContent='Updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function _timeMins(tok){
+  var w=tok.trim().toLowerCase();
+  if(w==='noon')return 12*60;
+  if(w==='midnight')return 0;
   var m=tok.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?/i);
   if(!m)return null;
   var h=parseInt(m[1],10)%12,mins=m[2]?parseInt(m[2],10):0;

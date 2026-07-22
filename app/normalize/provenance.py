@@ -166,6 +166,11 @@ def start_minutes(value: str | None) -> int | None:
         return None
     s = value.strip()
 
+    if s.lower() == "noon":
+        return 12 * 60
+    if s.lower() == "midnight":
+        return 0
+
     m = _RANGE_RE.match(s)
     if m:
         a_h, a_m, a_mer, b_h, b_m, b_mer = m.groups()
