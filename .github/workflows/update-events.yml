@@ -2,13 +2,16 @@ name: Update Music Events
 
 on:
   schedule:
-    # GitHub explicitly warns that schedules on the hour (minute 0) hit peak
-    # queue congestion and can be delayed for hours or dropped entirely --
-    # confirmed happening here: the original Friday cron never fired via
-    # `schedule` even once (only manual/push runs show up in the history).
-    # Offsetting to :17 avoids the top-of-hour pileup.
+    # GitHub's own `schedule` trigger has never reliably fired for this repo
+    # (confirmed: the original Friday cron never ran once via `schedule` --
+    # only manual/dispatch runs show up in the history). Kept only as a
+    # fallback in case it fires; the real trigger is now an external
+    # cron-job.org ping hitting workflow_dispatch directly (same fix as the
+    # sibling 331 Bridge Fishing Report app, where it's been running
+    # reliably). workflow_dispatch runs aren't subject to the same queue
+    # congestion as `schedule` is.
     - cron: '17 12 * * *'  # Every day ~7am/8am Central, depending on DST
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Allow manual trigger — this is what cron-job.org calls
 
 permissions:
   # Default GITHUB_TOKEN is read-only unless declared otherwise; without this
