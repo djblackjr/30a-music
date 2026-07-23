@@ -77,6 +77,7 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Chautauqua Theater", "Florida Chautauqua Theatre"),
     ("The Village Door", "John Wehner's Village Door"),
     ("Havana Beach Bar", "Havana Beach Rooftop Bar"),
+    ("Havana Beach Bar", "Havana Beach Bar & Grill"),
     ("The Big Chill 30A", "The Big Chill"),
 
     # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
@@ -88,6 +89,12 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("New Cahoots", "The New Cahoots"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / The Typos"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / WineLers"),
+    # Pre-dates split_title()'s " at Venue" fallback: an older crawl saved
+    # the whole raw title as the performer instead of splitting it, leaving
+    # this malformed row sitting next to the correctly re-crawled one for
+    # the same sowal.com URL (event ids 981/990/1004/1052/1061 vs
+    # 2495/2496/2499/2506/2507, confirmed live 2026-07-22).
+    ("Michael Johnson", "Michael Johnson at Havana Beach Bar & Grill"),
 ]
 
 # variant (lowercased) -> canonical
