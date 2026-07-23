@@ -549,11 +549,11 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     )
     hero_week = _hero_card(
         week_group,
-        kicker="This Week’s Featured Artists",
+        kicker="Next Up Featured Artist",
         empty_performer="No favorites this week",
         empty_meta="Nothing starred coming up — check the full lineup below.",
         show_extra=True,
-        more_label="Also this week",
+        more_label="Also Featured This Week",
     )
 
     out = (
