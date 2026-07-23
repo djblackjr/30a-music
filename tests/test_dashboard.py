@@ -338,7 +338,7 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
     tied_date = _d(3)
     html, _ = _render_to_temp([
         # Lower confidence than the other two, but the combo of favorite
-        # artist + favorite venue must still win the week card outright.
+        # artist + favorite venue must still headline the week card.
         {"performer": "Combo Act", "venue": "Combo Venue", "date": tied_date,
          "time_start": "6PM", "source": "some_random_blog"},
         {"performer": "Artist-Only Act", "venue": "Artist-Only Venue", "date": tied_date,
@@ -348,7 +348,11 @@ def test_hero_prefers_favorite_artist_plus_favorite_venue_combo_over_either_alon
     ])
     _, week = _hero_chunks(html)
     assert "Combo Venue" in week
-    assert "Artist-Only Venue" not in week
+    # Artist-Only Act is still a favorite artist, so the week card includes
+    # it too (as a secondary entry) -- only Venue-Only Act, which isn't a
+    # favorite artist at all, is excluded.
+    assert "Artist-Only Venue" in week
+    assert "Venue-Only Venue" not in week
     assert "Venue-Only Venue" not in week
 
 

@@ -355,14 +355,16 @@ def _health(events: list[dict], path: Path) -> dict:
 
 
 def _pick_featured_group(
-    events: list[dict], start_date: str, end_date: str, *, allow_ties_at_tier_0: bool = False,
+    events: list[dict], start_date: str, end_date: str, *,
+    allow_ties_at_tier_0: bool = False,
+    include_all_performer_favorites: bool = False,
 ) -> list[tuple[dict, bool, bool]]:
     """
-    Best favorite-only match(es) within [start_date, end_date] (inclusive)
-    -- a favorite-artist + favorite-venue combo outranks favorite-artist-
-    only, which outranks favorite-venue-only. An event that's neither
-    (tier 3) is never a candidate at all: these hero cards only ever
-    headline an actual favorite, they don't fall back to "whatever's on".
+    Favorite-only match(es) within [start_date, end_date] (inclusive) -- a
+    favorite-artist + favorite-venue combo outranks favorite-artist-only,
+    which outranks favorite-venue-only. An event that's neither (tier 3) is
+    never a candidate at all: these hero cards only ever headline an actual
+    favorite, they don't fall back to "whatever's on".
 
     Normally returns just the single best match (date breaks ties within a
     tier, soonest first; same-date ties then follow the performer's row
@@ -370,8 +372,24 @@ def _pick_featured_group(
     allow_ties_at_tier_0 and the best tier present IS 0 (a combo), every
     tied combo match is returned instead of just one -- multiple genuinely
     favorite-artist-at-favorite-venue shows the same night are all worth
-    surfacing, not just whichever happens to sort first. Returns [] when
-    nothing in range qualifies.
+    surfacing, not just whichever happens to sort first.
+
+    When include_all_performer_favorites is set (the week card) and at
+    least one performer-favorite match exists in range, the single-best-
+    tier restriction is dropped for those matches: EVERY event whose
+    performer is a favorite (tier 0 or 1) is returned, sorted
+    chronologically first (soonest date), tier only breaking same-date ties
+    -- a starred artist playing a non-favorite venue is still a reason to
+    go, so it shouldn't lose its spot to an unrelated combo match later in
+    the week (confirmed live 2026-07-22: Will Thompson at Aaron Bessant
+    Park, a non-favorite venue, was crowded out entirely by four favorite-
+    venue combo matches elsewhere that same week). Tier-2 (venue-only)
+    matches are excluded whenever a performer favorite exists, but remain
+    the fallback (via the normal single-best-match path below) when NO
+    performer favorite is playing that week at all -- the card still
+    prefers showing a favorite venue's show over nothing.
+
+    Returns [] when nothing in range qualifies.
     """
     venue_favorites = _load_favorite_venues()
     performer_meta = _load_performer_meta()
@@ -406,6 +424,16 @@ def _pick_featured_group(
 
     if not scored:
         return []
+
+    if include_all_performer_favorites:
+        performer_matches = [t for t in scored if t[2]]
+        if performer_matches:
+            performer_matches.sort(key=lambda t: (t[1].get("date") or "", t[0][0], t[0][2], t[0][3], t[0][4]))
+            return [(e, pf, vf) for _, e, pf, vf in performer_matches]
+        # No performer favorite in range at all -- fall through to the
+        # normal single-best-match path below, which can still surface a
+        # tier-2 venue-only match rather than showing nothing.
+
     scored.sort(key=lambda t: t[0])
     best_tier = scored[0][0][0]
     if allow_ties_at_tier_0 and best_tier == 0:
@@ -509,7 +537,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     week_end = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
     tonight_group = _pick_featured_group(events, today, today, allow_ties_at_tier_0=True)
-    week_group = _pick_featured_group(events, tomorrow, week_end, allow_ties_at_tier_0=True)
+    week_group = _pick_featured_group(events, tomorrow, week_end, include_all_performer_favorites=True)
 
     hero_tonight = _hero_card(
         tonight_group,
