@@ -79,6 +79,9 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Havana Beach Bar", "Havana Beach Rooftop Bar"),
     ("Havana Beach Bar", "Havana Beach Bar & Grill"),
     ("The Big Chill 30A", "The Big Chill"),
+    # GPT-4o Vision reads a flyer's short venue name; sowal.com uses the
+    # full "Town Center" form. Same real venue.
+    ("Watersound Town Center", "Watersound"),
 
     # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
     ("Coconut Radio", "COCONUT RADIO"),

@@ -312,6 +312,7 @@ def classify_performer(title: str | None, description: str = "") -> dict:
     going to name a musical act, so there's no description fallback here.
     """
     perf_part, _venue = split_title(title)
+    perf_part = _strip_series_prefix(perf_part)
 
     non_music = detect_non_music(perf_part)
     if non_music:
@@ -401,7 +402,39 @@ RECURRING_SERIES_TITLES = frozenset({
     # -- confirmed live, 2026-07-21: both rows existed in the database for
     # the same date/venue/time, sourced from the identical sowal.com URL.
     "Wine & Song at Neat",
+    # Bare series titles with no per-date artist at all -- same "Wine & Song"
+    # problem: a crawl before the week's lineup is announced saves the series
+    # name itself as a fake performer, sitting next to the later re-crawl's
+    # correctly-resolved artist (e.g. "PCB Summer Concert Series" next to
+    # "Will Thompson Band" for the same Aaron Bessant Park date/time;
+    # "Sounds Like Summer: 30A Songwriters Showcase" next to "Cat Ridgeway
+    # Band" for the same Watersound Town Center date/time) -- confirmed live
+    # 2026-07-22, both from the identical sowal.com URL re-crawled a week
+    # apart.
+    "PCB Summer Concert Series",
+    "Sounds Like Summer: 30A Songwriters Showcase",
 })
+
+# Series whose sowal.com detail-page title becomes "<series> - <artist>" once
+# the per-date lineup is announced, rather than replacing the title outright
+# the way PCB Summer Concert Series's page does (contrast RECURRING_SERIES_TITLES
+# above, which marks a bare series title unresolved and discards it entirely).
+# Stripping the prefix keeps the artist name instead of throwing it away --
+# confirmed live 2026-07-22: "30A Songwriters Showcase - Cat Ridgeway Band" is
+# real, current sowal.com data, not a guess, and recurs weekly with a
+# different trailing artist each time.
+RECURRING_SERIES_PREFIXES: tuple[str, ...] = (
+    "30A Songwriters Showcase - ",
+)
+
+
+def _strip_series_prefix(perf_part: str) -> str:
+    for prefix in RECURRING_SERIES_PREFIXES:
+        if perf_part.startswith(prefix):
+            stripped = perf_part[len(prefix):].strip()
+            if stripped:
+                return stripped
+    return perf_part
 
 
 # A real lineup entry ("Casey Kearney Band", "Will Thompson Band: Tribute to
