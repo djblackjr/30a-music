@@ -15,6 +15,10 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Casey Kearney", "CASEY KEARNEY"),
     ("Casey Kearney", "Casey Kearney Band"),
     ("Casey Kearney", "CASEY KEARNEY BAND"),
+    # Favorite is listed as "Will Thompson" in artists.csv; favorite-matching
+    # is an exact string match with no fuzzy logic, so the "Band" suffix
+    # broke the star (confirmed live 2026-07-22).
+    ("Will Thompson", "Will Thompson Band"),
     ("Brett Stafford", "BRETT STAFFORD"),
     ("Brett Stafford", "Brett Stafford Smith"),
     ("Cadillac Willy", "CADILLAC WILLY"),
