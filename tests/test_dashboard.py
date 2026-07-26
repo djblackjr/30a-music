@@ -214,7 +214,7 @@ def test_render_includes_both_hero_cards():
     ])
     assert html.count('<div class="hero-panel">') == 2
     assert "Tonight’s Featured Artist" in html
-    assert "This Week’s Featured Artists" in html
+    assert "Next Up Featured Artist" in html
 
 
 # --- two hero cards: "Tonight" (today only) and "This week" (tomorrow..+7),
@@ -414,7 +414,7 @@ def test_hero_orders_same_date_combo_ties_by_artists_csv_order(monkeypatch):
 
 def test_hero_week_card_lists_every_combo_match_in_the_window(monkeypatch):
     # Same "include every combo match" behavior as tonight, just scoped to
-    # the week window and its own "Also this week" label instead of
+    # the week window and its own "Also Featured This Week" label instead of
     # "Also tonight" -- a favorite-artist + favorite-venue show anywhere in
     # the next 7 days belongs on the card, not just the single best one.
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
@@ -432,7 +432,7 @@ def test_hero_week_card_lists_every_combo_match_in_the_window(monkeypatch):
     ])
     _, week = _hero_chunks(html)
     assert "Combo Act One" in week  # earlier date -> headlines
-    assert "Also this week" in week
+    assert "Also Featured This Week" in week
     assert "Combo Act Two" in week
     assert "Combo Venue Two" in week
     assert "Also tonight" not in week
@@ -470,7 +470,7 @@ def test_hero_headlines_the_performer_name(monkeypatch):
     assert '<h2 class="hero-title">Combo Act</h2>' in html
 
 
-def test_hero_labels_todays_event_as_today(monkeypatch):
+def test_hero_labels_todays_event_as_tonight(monkeypatch):
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {"tonight venue"})
     monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {})
     html, _ = _render_to_temp([
@@ -479,7 +479,7 @@ def test_hero_labels_todays_event_as_today(monkeypatch):
     ])
     tonight, _ = _hero_chunks(html)
     assert "Tonight Venue" in tonight
-    assert "Today" in tonight
+    assert "Tonight" in tonight
 
 
 def test_hero_falls_back_gracefully_with_no_upcoming_events():
