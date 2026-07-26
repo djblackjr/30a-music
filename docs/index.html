@@ -219,17 +219,17 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:var(--teal);letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#F87171;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#22c55e;}.cf-md .d{background:var(--amber);}.cf-lo .d{background:#F87171;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:rgba(255,255,255,.03);border-top:1px dashed var(--border);font-size:.82rem;color:var(--ink-dim);padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#F87171;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge">July 26th, 2026</p></div></header>
 <main class="page">
 <div class="hero-shell">
   <div class="hero-grid">
     <div class="hero-panel">
       <p class="hero-kicker">Tonight’s Featured Artist</p>
       <h2 class="hero-title">Lips Manly</h2>
-      <p class="hero-meta-line">at <b>Red Fish Taco</b> &middot; Today • 6:00 pm</p>
+      <p class="hero-meta-line">at <b>Red Fish Taco</b> &middot; Tonight • 6:00 pm</p>
       
       <div class="hero-actions">
-        <button class="btn btn-cta" type="button" onclick="sf('today')">Explore tonight</button>
+        <button class="btn btn-cta" type="button" onclick="heroExplore('today')">Explore tonight</button>
       </div>
     </div>
     <div class="hero-panel">
@@ -238,7 +238,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
       <p class="hero-meta-line">at <b>Red Fish Taco</b> &middot; Tue Jul 28 • 6:00 pm</p>
       <div class="hero-more"><p class="hero-more-label">Also Featured This Week</p><div class="hero-more-item"><div class="hero-more-name">Dion Jones &amp; The Neon Tears</div><div class="hero-more-meta">at <b>AJ&#x27;s Grayton Beach</b> &middot; Wed Jul 29 • 6:00 pm</div></div><div class="hero-more-item"><div class="hero-more-name">The Typos</div><div class="hero-more-meta">at <b>Mcguire&#x27;s Destin</b> &middot; Thu Jul 30 • 8:30–12:30AM</div></div><div class="hero-more-item"><div class="hero-more-name">Stevie Monce</div><div class="hero-more-meta">at <b>Papa Surf</b> &middot; Fri Jul 31 • 6:00 - 9:00 PM</div></div></div>
       <div class="hero-actions">
-        <button class="btn btn-cta" type="button" onclick="sf('week')">Explore this week</button>
+        <button class="btn btn-cta" type="button" onclick="heroExplore('week')">Explore this week</button>
       </div>
     </div>
   </div>
@@ -1535,7 +1535,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">595</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-26 05:18:13</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-07-26 08:20:34</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <button type="button" class="top-btn" id="topBtn" onclick="scrollToTop()" aria-label="Back to top">↑</button>
@@ -1852,6 +1852,16 @@ function sf(f){
   var b=document.getElementById('b-'+f);
   if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
   rr();
+}
+// Hero "Explore tonight"/"Explore this week" buttons sit above the filter
+// bar and results, so filtering alone leaves the user staring at the hero
+// with no visible change -- jump down to the results the same way
+// jumpToDate does, so the filtered list is actually in view.
+function heroExplore(f){
+  sf(f);
+  var target=document.querySelector('.fil');
+  if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('topBtn').classList.add('show');
 }
 function srt(k,th){
   var tb=document.getElementById('tb');

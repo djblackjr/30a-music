@@ -219,7 +219,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
   .mmfr{flex:1;height:auto;}
 }
 .src{font-size:.8rem;color:var(--teal);letter-spacing:1px;white-space:nowrap;font-weight:700;}.cfl{color:#F87171;font-weight:700;margin-left:4px;}.cf{font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.cf .d{width:8px;height:8px;border-radius:50%;display:inline-block;}.cf-hi .d{background:#22c55e;}.cf-md .d{background:var(--amber);}.cf-lo .d{background:#F87171;}#tb tr:not(.exp){cursor:pointer;}tr.exp{display:none;}tr.exp.open{display:table-row;}tr.exp td{background:rgba(255,255,255,.03);border-top:1px dashed var(--border);font-size:.82rem;color:var(--ink-dim);padding:10px 14px;}tr.exp .ob{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dotted var(--border);}tr.exp .ob:last-child{border-bottom:none;}tr.exp .cflr{color:#F87171;font-weight:700;margin-top:6px;}@media(max-width:680px){.wrap td:nth-of-type(6),.wrap td:nth-of-type(7){display:inline-block;margin-top:8px;margin-right:12px;}.wrap tr.exp{display:none;}.wrap tr.exp.open{display:block;}.wrap tr.exp td{display:block;}}</style></head><body>
-<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p></div></header>
+<header><div class="hd-inner"><h1><span class="note">♫</span> 30A Live Music</h1><p>Some Favorites to Check Out on the Emerald Coast</p><p class="upd-badge">TODAY_DATE_PLACEHOLDER</p></div></header>
 <main class="page">
 <div class="hero-shell">
   <div class="hero-grid">
@@ -229,7 +229,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
       <p class="hero-meta-line">HERO_TONIGHT_META_PLACEHOLDER</p>
       HERO_TONIGHT_EXTRA_PLACEHOLDER
       <div class="hero-actions">
-        <button class="btn btn-cta" type="button" onclick="sf('today')">Explore tonight</button>
+        <button class="btn btn-cta" type="button" onclick="heroExplore('today')">Explore tonight</button>
       </div>
     </div>
     <div class="hero-panel">
@@ -238,7 +238,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
       <p class="hero-meta-line">HERO_WEEK_META_PLACEHOLDER</p>
       HERO_WEEK_EXTRA_PLACEHOLDER
       <div class="hero-actions">
-        <button class="btn btn-cta" type="button" onclick="sf('week')">Explore this week</button>
+        <button class="btn btn-cta" type="button" onclick="heroExplore('week')">Explore this week</button>
       </div>
     </div>
   </div>
@@ -663,6 +663,16 @@ function sf(f){
   var b=document.getElementById('b-'+f);
   if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
   rr();
+}
+// Hero "Explore tonight"/"Explore this week" buttons sit above the filter
+// bar and results, so filtering alone leaves the user staring at the hero
+// with no visible change -- jump down to the results the same way
+// jumpToDate does, so the filtered list is actually in view.
+function heroExplore(f){
+  sf(f);
+  var target=document.querySelector('.fil');
+  if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('topBtn').classList.add('show');
 }
 function srt(k,th){
   var tb=document.getElementById('tb');

@@ -249,6 +249,14 @@ def _fmt_date(iso: str | None) -> str:
         return iso or ""
 
 
+def _fmt_ordinal_date(dt: datetime) -> str:
+    """'July 23rd, 2026' -- header subtitle date, spelled out in full
+    rather than the abbreviated "Sat Jul 25" used for event rows."""
+    day = dt.day
+    suffix = "th" if 11 <= day % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return dt.strftime(f"%B {day}{suffix}, %Y")
+
+
 def _obs_html(o: dict) -> str:
     src = html.escape(o.get("source") or "")
     otype = html.escape(o.get("observation_type") or "")
@@ -446,7 +454,7 @@ def _hero_meta_html(ev: dict) -> str:
     """'at <b>Venue</b> · Today · 7:00 pm' -- pre-escaped HTML, safe to
     insert directly into the template."""
     today = datetime.now().strftime("%Y-%m-%d")
-    when = "Today" if ev.get("date") == today else _fmt_date(ev.get("date"))
+    when = "Tonight" if ev.get("date") == today else _fmt_date(ev.get("date"))
     venue = html.escape(_venue_display_name(ev.get("venue")))
     parts = [p for p in [when, ev.get("time_start")] if p]
     return f'at <b>{venue}</b> &middot; {html.escape(" • ".join(parts))}'
@@ -558,6 +566,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
 
     out = (
         template
+        .replace("TODAY_DATE_PLACEHOLDER", _fmt_ordinal_date(datetime.now()))
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
         .replace("HERO_TONIGHT_KICKER_PLACEHOLDER", hero_tonight["kicker"])
         .replace("HERO_TONIGHT_PERFORMER_PLACEHOLDER", hero_tonight["performer"])
