@@ -1,0 +1,42 @@
+name: Favorites Watch
+
+on:
+  schedule:
+    # Same caveat as update-events.yml: GitHub's own `schedule` trigger has
+    # been unreliable for this repo — the real trigger is an external
+    # cron-job.org ping hitting workflow_dispatch. Kept as a fallback.
+    - cron: '32 12 * * *'  # Every day ~7am/8am Central, depending on DST
+  workflow_dispatch:  # Allow manual trigger — this is what cron-job.org calls
+
+permissions:
+  # Needed to commit the updated data/favorites_watch.json snapshot back.
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run favorites watch
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python run_favorites_watch.py
+
+      - name: Commit updated snapshot
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/favorites_watch.json
+          git diff --staged --quiet || git commit -m "Favorites watch snapshot $(date +'%Y-%m-%d')"
+          git push
