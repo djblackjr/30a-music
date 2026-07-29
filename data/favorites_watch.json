@@ -1,65 +1,56 @@
 [
   {
     "date": "2026-08-01",
-    "favorite_name": "30Avenue",
-    "found": true,
-    "performer": "Geoff McBride & Joey Shaling",
-    "source_url": "https://www.destinfun.com/events/30avenue-stroll-with-live-music",
-    "time": "17:30\u201320:30",
-    "venue": "30Avenue (on the green in Inlet Beach)"
-  },
-  {
-    "date": "2026-08-09",
     "favorite_name": "AJ's Grayton Beach",
     "found": true,
-    "performer": "Christon Birge Duo",
-    "source_url": "https://www.christonbirge.com/tour",
-    "time": null,
+    "performer": "Stranger Boy",
+    "source_url": "https://ajsgrayton.com/-events-and-music?destination=events&promotion=custom_promotion&source=header&spot_id=124461",
+    "time": "21:00",
     "venue": "AJ's Grayton Beach"
   },
   {
-    "date": "2026-09-03",
-    "favorite_name": "Chiringo",
-    "found": true,
-    "performer": "Boukou Groove (full band)",
-    "source_url": "https://30a.com/events/boukou-groove-live/",
-    "time": "19:00-22:00",
-    "venue": "Chiringo Grayton Beach"
-  },
-  {
-    "date": "2026-08-05",
+    "date": "2026-08-11",
     "favorite_name": "Crackings",
     "found": true,
-    "performer": "Martin Lane",
-    "source_url": "https://www.bandsintown.com/e/107848567?app_id=y5t04gz269&came_from=287",
-    "time": "09:30 AM",
-    "venue": "Crackings. (Grayton Beach, South Walton, FL)"
+    "performer": "Jared Herzog",
+    "source_url": "https://30a.com/locations/crackings/",
+    "time": "09:30",
+    "venue": "Crackings."
   },
   {
-    "date": "2026-08-01",
+    "date": "2026-07-31",
     "favorite_name": "North Beach Social",
     "found": true,
-    "performer": "Lane Maury",
-    "source_url": "https://30a.com/locations/north-beach-social/",
-    "time": "13:00\u201316:00",
+    "performer": "Martin Lane",
+    "source_url": "https://www.bandsintown.com/e/108209951-martin-lane-at-north-beach-social?came_from=274",
+    "time": "13:00",
     "venue": "North Beach Social"
   },
   {
-    "date": "2026-08-01",
+    "date": "2026-07-18",
+    "favorite_name": "Papa Surf",
+    "found": true,
+    "performer": "Shenaniganza",
+    "source_url": "https://business.waltonareachamber.com/events/details/shenaniganza-papa-surf-07-18-2026-56991",
+    "time": "17:00\u201320:00",
+    "venue": "Papa Surf Burger Bar"
+  },
+  {
+    "date": "2026-07-31",
     "favorite_name": "Red Fish Taco",
     "found": true,
-    "performer": "The Typos",
+    "performer": "Cadillac Willy",
     "source_url": "https://30a.com/locations/red-fish-taco/",
-    "time": "18:00 - 21:00",
+    "time": "18:00\u201321:00",
     "venue": "Red Fish Taco"
   },
   {
-    "date": "2026-09-16",
+    "date": "2026-08-05",
     "favorite_name": "Seaside Amphitheater",
     "found": true,
     "performer": "Max McCann",
-    "source_url": "https://seasidefl.com/event/sounds-of-seaside/2026-09-09/",
-    "time": "17:00-19:00",
+    "source_url": "https://seasidefl.com/event/sounds-of-seaside-9/2026-08-05/",
+    "time": "17:00\u201319:00",
     "venue": "Seaside Amphitheater"
   },
   {
@@ -68,71 +59,53 @@
     "found": true,
     "performer": "Martin\u2011Lane (acoustic duo)",
     "source_url": "https://www.bandsintown.com/e/108432365-martin-lane-at-shelby%27s-beach-bar-and-grill",
-    "time": "18:00 Local Time (CDT)",
-    "venue": "Shelby's Beach Bar & Grill, Santa Rosa Beach, FL"
-  },
-  {
-    "date": "2026-06-26",
-    "favorite_name": "Shunk Gulley",
-    "found": true,
-    "performer": "Chris Johnson",
-    "source_url": "https://30a-tv.com/events/chris-johnson-shunk-gulley-oyster-bar-2/",
-    "time": "17:00\u201321:00",
-    "venue": "Shunk Gulley Oyster Bar"
+    "time": "18:00 CDT",
+    "venue": "Shelby's Beach Bar & Grill"
   },
   {
     "date": "2026-08-10",
     "favorite_name": "Stinky's Bait Shack",
     "found": true,
-    "performer": "Buffalo & The Heard Duo",
+    "performer": "Buffalo & Heard Duo",
     "source_url": "https://30a.com/events/buffalo-heard-duo/",
-    "time": "17:00\u201320:00",
+    "time": "17:00 - 20:00",
     "venue": "Stinky's Bait Shack"
   },
   {
-    "date": "2026-08-24",
+    "date": "2025-08-30",
     "favorite_name": "Stinky's Fish Camp",
     "found": true,
-    "performer": "Songwriter Harrison Prentice",
-    "source_url": "https://30a.com/events/comedy-night/",
-    "time": "19:00",
-    "venue": "Stinky\u2019s Bait Shack (next to Stinky\u2019s Fish Camp)"
+    "performer": null,
+    "source_url": "https://30a.com/events/stinkys-backyard-sessions-2025-08-02-2025-08-09-2025-08-16-2025-08-23-2025-08-30/",
+    "time": "16:00\u201319:00",
+    "venue": "Stinky's Bait Shack (adjacent to Stinky's Fish Camp)"
   },
   {
-    "date": "2026-09-06",
+    "date": "2026-08-16",
     "favorite_name": "The Bay",
     "found": true,
     "performer": "Mike Whitty & Friends",
-    "source_url": "https://30a.com/events/?pno=16",
-    "time": "16:00\u201320:00",
-    "venue": "The Bay"
+    "source_url": "https://sowal.com/event/sunday-pickin-w-mike-whitty-friends-the-bay-81",
+    "time": "16:00",
+    "venue": "The Bay Restaurant"
   },
   {
-    "date": "2026-09-05",
-    "favorite_name": "The Pavilion at Watersound Town Center",
-    "found": true,
-    "performer": "Grayson Capps and Kristy Lee (trio)",
-    "source_url": "https://www.watersoundtowncenter.com/events/first-friday-concert-series/",
-    "time": "18:00-20:00",
-    "venue": "The Pavilion at Watersound Town Center"
-  },
-  {
-    "date": "2026-08-26",
+    "date": "2026-08-15",
     "favorite_name": "The Red Bar",
     "found": true,
     "performer": "The Red Bar Jazz Band",
-    "source_url": "https://30a.com/events/the-red-bar-jazz-band-10-2026-05-01-2026-05-02-2026-05-06-2026-05-07-2026-05-08-2026-05-09-2026-05-13-2026-05-14-2026-05-15-2026-05-16-2026-05-20-2026-05-21-2026-05-22-2026-05-23-2026-05-22-2026-08-26/",
+    "source_url": "https://sowal.com/event/the-red-bar-jazz-band-282?date=2026-08-15",
     "time": "17:30\u201321:00",
-    "venue": "The Red Bar (Grayton Beach, FL)"
+    "venue": "The Red Bar"
   },
   {
-    "date": "2026-07-23",
+    "date": "2026-08-07",
     "favorite_name": "Watersound Town Center",
     "found": true,
-    "performer": "Cat Ridgeway Band (Opener: Dailen Spencer)",
-    "source_url": "https://30a.com/locations/the-pavilion-watersound-town-center/",
-    "time": "18:00",
-    "venue": "The Pavilion at Watersound Town Center"
+    "performer": "Livingston Taylor",
+    "source_url": "https://www.watersoundtowncenter.com/events/sounds-like-summer-livingston-taylor/",
+    "time": "starting at 6:00\u202fp.m.",
+    "venue": "The Pavilion, Watersound Town Center"
   },
   {
     "date": "2026-09-06",
@@ -140,16 +113,43 @@
     "found": true,
     "performer": "Casey Kearney",
     "source_url": "https://30a.com/events/casey-kearney-2/",
-    "time": "18:00\u201321:00",
+    "time": "18:00-21:00",
     "venue": "30Avenue, Inlet Beach, FL"
+  },
+  {
+    "date": "2026-10-30",
+    "favorite_name": "Dion Jones & The Neon Tears",
+    "found": true,
+    "performer": "Dion Jones & The Neon Tears",
+    "source_url": "https://30a.com/events/dion-jones-the-neon-tears-6/",
+    "time": "18:30\u201321:30",
+    "venue": "Red Bar, Grayton Beach, FL"
+  },
+  {
+    "date": "2026-09-24",
+    "favorite_name": "Forrest Williams",
+    "found": true,
+    "performer": "The Forrest Williams Band and Friends",
+    "source_url": "https://30a.com/events/the-forrest-williams-band-4/",
+    "time": "19:00\u201322:00",
+    "venue": "Stinky's Bait Shack, Dune Allen, South Walton, FL"
+  },
+  {
+    "date": "2026-08-03",
+    "favorite_name": "The Typos",
+    "found": true,
+    "performer": "The Typos",
+    "source_url": "https://30a.com/events/live-music-on-stage-the-typos/",
+    "time": "6:00 pm - 9:30 pm",
+    "venue": "The Big Chill"
   },
   {
     "date": "2026-08-05",
     "favorite_name": "Will Thompson",
     "found": true,
-    "performer": "Will Thompson Band (Tribute to Tom Petty & Journey)",
-    "source_url": "https://sowal.com/event/here-comes-the-sun-summer-concert-series-at-rosemary-beach-8",
-    "time": "19:00\u201320:30",
-    "venue": "St. Augustine Green, Rosemary Beach (Here Comes the Sun Summer Concert Series)"
+    "performer": "Will Thompson Band: Tribute to Tom Petty & Journey",
+    "source_url": "https://rosemarybeach.com/events/here-comes-the-sun-summer-concert-series-5/",
+    "time": "19:00\u201120:30",
+    "venue": "St. Augustine Green, Rosemary Beach"
   }
 ]
