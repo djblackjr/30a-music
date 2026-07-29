@@ -114,6 +114,13 @@ try:
 except Exception as exc:
     logger.warning("[registry] The Bay crawler unavailable: %s", exc)
 
+try:
+    from app.crawlers.favorites_watch import FavoritesWatchCrawler
+    ALL_CRAWLERS.append(FavoritesWatchCrawler())
+    logger.info("[registry] Favorites Watch crawler registered (OpenAI web_search per favorite)")
+except Exception as exc:
+    logger.warning("[registry] Favorites Watch crawler unavailable: %s", exc)
+
 # Production crawl strategy (see app/crawlers/policy.py). Bounded on purpose,
 # but the unit changed with the calendar-table-parsing crawler: max_events now
 # caps the number of DISTINCT TITLES that get an enrichment page fetch (venue

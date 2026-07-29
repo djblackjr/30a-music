@@ -1,73 +1,34 @@
 """
 tests/test_favorites_watch.py
-Tests for the pure logic in app.favorites_watch: diffing findings between
-runs and parsing the research model's JSON response. No network/API calls.
+Tests for the pure logic in app.favorites_watch: parsing the research
+model's JSON response, and filtering the main pipeline's new/changed
+events down to favorites for the push-notification step. No network/API
+calls -- send_notification and the favorites CSVs are monkeypatched, same
+pattern tests/test_dashboard.py already uses for _load_favorite_venues /
+_load_performer_meta.
 """
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.favorites_watch.diff import diff_findings
+from app.favorites_watch import pipeline_notify
 from app.favorites_watch.research import _parse_response
 
 
-def _finding(favorite_name, performer, venue, date, time="7PM", source_url="https://example.com"):
-    return {
-        "favorite_name": favorite_name,
-        "found": True,
-        "performer": performer,
-        "venue": venue,
-        "date": date,
-        "time": time,
-        "source_url": source_url,
-    }
+def _event(performer, venue, date="2026-08-03", time_start="7PM"):
+    return {"performer": performer, "venue": venue, "date": date, "time_start": time_start}
 
 
-def test_diff_reports_brand_new_favorite_as_new():
-    old = []
-    new = [_finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-03")]
-    changes = diff_findings(old, new)
-    assert len(changes["new"]) == 1
-    assert changes["new"][0]["favorite_name"] == "Stevie Monce"
-    assert changes["changed"] == []
-    assert changes["removed"] == []
+def _patch_favorites(monkeypatch, venues=(), performers=()):
+    monkeypatch.setattr(pipeline_notify, "_load_favorite_venues", lambda *a, **k: {v.lower() for v in venues})
+    monkeypatch.setattr(pipeline_notify, "_load_performer_meta", lambda *a, **k: {p.lower(): True for p in performers})
 
 
-def test_diff_reports_same_favorite_different_date_as_changed_not_new_plus_removed():
-    old = [_finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-03")]
-    new = [_finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-10")]
-    changes = diff_findings(old, new)
-    assert changes["new"] == []
-    assert changes["removed"] == []
-    assert len(changes["changed"]) == 1
-    assert changes["changed"][0]["before"]["date"] == "2026-08-03"
-    assert changes["changed"][0]["after"]["date"] == "2026-08-10"
-
-
-def test_diff_reports_favorite_no_longer_found_as_removed():
-    old = [_finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-03")]
-    new = []
-    changes = diff_findings(old, new)
-    assert changes["new"] == []
-    assert changes["changed"] == []
-    assert len(changes["removed"]) == 1
-
-
-def test_diff_is_a_noop_when_nothing_changed():
-    finding = _finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-03")
-    changes = diff_findings([finding], [dict(finding)])
-    assert changes == {"new": [], "changed": [], "removed": []}
-
-
-def test_diff_is_keyed_by_favorite_name_not_by_full_finding_identity():
-    # Same favorite, only the venue changed (e.g. a show moved locations) --
-    # this must land in "changed", not show up as unrelated new+removed.
-    old = [_finding("Stevie Monce", "Stevie Monce", "Shades Bar & Grill", "2026-08-03")]
-    new = [_finding("Stevie Monce", "Stevie Monce", "Papa Surf", "2026-08-03")]
-    changes = diff_findings(old, new)
-    assert changes["new"] == [] and changes["removed"] == []
-    assert changes["changed"][0]["after"]["venue"] == "Papa Surf"
+def _capture_notifications(monkeypatch):
+    sent = []
+    monkeypatch.setattr(pipeline_notify, "send_notification", lambda title, message: sent.append((title, message)) or True)
+    return sent
 
 
 def test_parse_response_accepts_clean_json():
@@ -112,3 +73,52 @@ def test_parse_response_drops_a_link_description_masquerading_as_a_source_url():
 
 def test_parse_response_returns_none_on_garbage():
     assert _parse_response("not json at all") is None
+
+
+def test_notify_skips_new_events_at_a_non_favorite_venue_by_a_non_favorite_performer(monkeypatch):
+    _patch_favorites(monkeypatch, venues=["LaGrange Bayou"], performers=["Stevie Monce"])
+    sent = _capture_notifications(monkeypatch)
+    changes = {"new": [_event("Some Rando", "Some Random Bar")], "changed": []}
+    assert pipeline_notify.notify_favorites_changes(changes) is False
+    assert sent == []
+
+
+def test_notify_fires_for_a_new_event_at_a_favorite_venue_even_with_a_non_favorite_performer(monkeypatch):
+    _patch_favorites(monkeypatch, venues=["LaGrange Bayou"], performers=[])
+    sent = _capture_notifications(monkeypatch)
+    changes = {"new": [_event("Some Rando", "LaGrange Bayou")], "changed": []}
+    assert pipeline_notify.notify_favorites_changes(changes) is True
+    assert len(sent) == 1
+    assert "LaGrange Bayou" in sent[0][1]
+
+
+def test_notify_fires_for_a_favorite_performer_even_at_a_non_favorite_venue(monkeypatch):
+    _patch_favorites(monkeypatch, venues=[], performers=["Stevie Monce"])
+    sent = _capture_notifications(monkeypatch)
+    changes = {"new": [_event("Stevie Monce", "Some Random Bar")], "changed": []}
+    assert pipeline_notify.notify_favorites_changes(changes) is True
+    assert "Stevie Monce" in sent[0][1]
+
+
+def test_notify_reports_changed_events_using_the_after_state(monkeypatch):
+    _patch_favorites(monkeypatch, venues=["LaGrange Bayou"], performers=[])
+    sent = _capture_notifications(monkeypatch)
+    changes = {
+        "new": [],
+        "changed": [{"before": _event("X", "LaGrange Bayou", date="2026-08-03"),
+                     "after": _event("X", "LaGrange Bayou", date="2026-08-10")}],
+    }
+    assert pipeline_notify.notify_favorites_changes(changes) is True
+    assert "2026-08-10" in sent[0][1]
+
+
+def test_notify_ignores_changed_events_at_non_favorite_spots(monkeypatch):
+    _patch_favorites(monkeypatch, venues=["LaGrange Bayou"], performers=[])
+    sent = _capture_notifications(monkeypatch)
+    changes = {
+        "new": [],
+        "changed": [{"before": _event("X", "Some Random Bar", date="2026-08-03"),
+                     "after": _event("X", "Some Random Bar", date="2026-08-10")}],
+    }
+    assert pipeline_notify.notify_favorites_changes(changes) is False
+    assert sent == []
