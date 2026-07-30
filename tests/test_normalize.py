@@ -109,12 +109,15 @@ def test_canonicalize_shelbys_ampersand_variant():
 
 def test_canonicalize_martin_lane_nonbreaking_hyphen():
     # favorites_watch's OpenAI web_search reported this act as "Martin‑Lane"
-    # with a U+2011 non-breaking hyphen instead of sowal.com's "Martin Lane"
-    # (space) -- confirmed live 2026-07-30, produced three performer
-    # identities for one act instead of two ("(acoustic duo)" is a distinct
-    # billing, same convention as "Blues Old Stand (acoustic)").
+    # with a U+2011 non-breaking hyphen, a stylization from an aggregator's
+    # event-title slug -- the band's own site/Facebook (MartinLaneMusic)
+    # spell it "Martin Lane" (space). Unlike "Blues Old Stand (acoustic)",
+    # Martin Lane IS an acoustic duo (no separate full-band version), so
+    # "(acoustic duo)" is redundant description, not a distinct billing --
+    # confirmed live 2026-07-30, all variants collapse to one identity.
     assert canonicalize("Martin‑Lane") == "Martin Lane"
-    assert canonicalize("Martin‑Lane (acoustic duo)") == "Martin Lane (acoustic duo)"
+    assert canonicalize("Martin Lane (acoustic duo)") == "Martin Lane"
+    assert canonicalize("Martin‑Lane (acoustic duo)") == "Martin Lane"
 
 
 def test_identity_key_matches_for_instagram_handle_venue():

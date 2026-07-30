@@ -112,13 +112,17 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # 2495/2496/2499/2506/2507, confirmed live 2026-07-22).
     ("Michael Johnson", "Michael Johnson at Havana Beach Bar & Grill"),
     # favorites_watch's OpenAI web_search reported this act's name with a
-    # U+2011 non-breaking hyphen ("Martin‑Lane") instead of the space
-    # sowal.com uses ("Martin Lane") -- confirmed live 2026-07-30, same act,
-    # three rows (bare, "‑Lane", "‑Lane (acoustic duo)") that should collapse
-    # to two (the "(acoustic duo)" suffix is a distinct billing, same
-    # convention as "Blues Old Stand (acoustic)" elsewhere in this file).
+    # U+2011 non-breaking hyphen ("Martin‑Lane") -- a stylization from an
+    # aggregator's event-title slug, not the band's own billing. Confirmed
+    # via martinlanemusic.com / facebook.com/MartinLaneMusic: the real name
+    # uses a space, "Martin Lane". And unlike "Blues Old Stand (acoustic)"
+    # (a distinct stripped-down billing of a normally full band), Martin Lane
+    # IS an acoustic duo (Laura Lane + Chip Martin) -- there's no separate
+    # "full band" version, so "(acoustic duo)" is redundant description, not
+    # a distinct identity. All variants collapse to the one bare name.
     ("Martin Lane", "Martin‑Lane"),
-    ("Martin Lane (acoustic duo)", "Martin‑Lane (acoustic duo)"),
+    ("Martin Lane", "Martin Lane (acoustic duo)"),
+    ("Martin Lane", "Martin‑Lane (acoustic duo)"),
 ]
 
 # variant (lowercased) -> canonical
