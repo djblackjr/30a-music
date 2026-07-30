@@ -38,7 +38,13 @@ Analyze this image — it may be an Instagram schedule post, a venue entertainme
 a flyer, or a screenshot from a venue website.
 
 Extract EVERY live music event you can see. For each event return a JSON object with:
-  - artist      (string, required) — performer name exactly as shown
+  - artist      (string, required) — performer name exactly as shown. If a specific
+                                      date/row's performer name is blank, cut off,
+                                      illegible, or otherwise not actually determinable
+                                      from the image, DO NOT invent, guess, or infer a
+                                      plausible-sounding name to fill the field — omit
+                                      that event from the output array entirely instead.
+                                      A fabricated name is worse than a missing event.
   - venue       (string)           — venue name if visible, else null. If the flyer body
                                       itself never names the venue, use the Instagram
                                       username/account name shown in the screenshot's UI
