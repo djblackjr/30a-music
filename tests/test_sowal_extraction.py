@@ -279,6 +279,47 @@ def test_classify_category_with_named_performer():
     assert c["resolved"] is True
 
 
+def test_classify_block_party_recovers_named_performer():
+    # Real SoWal listing: "Labor Day Block Party at WaterColor Package Store"
+    # is a retail promo event, not a band -- its description says "live music
+    # from Christon Birge". Before the block_party category + "music from"
+    # pattern existed, this fell into the title catch-all and saved "Labor
+    # Day Block Party" itself as the performer.
+    c = classify_performer(
+        "Labor Day Block Party at WaterColor Package Store",
+        'The celebration features "live music from Christon Birge" along '
+        "with complimentary wine tastings, street bites, family games.",
+    )
+    assert c["performer"] == "Christon Birge"
+    assert c["performer_status"] == "named"
+    assert c["event_category"] == "block_party"
+    assert c["resolved"] is True
+    assert c["extraction_method"] == "description"
+
+
+def test_classify_sip_n_shop_recovers_named_performer():
+    # Real SoWal listing: "Bubbles Sip N' Shop at WaterColor Package Store",
+    # description "Live music by Weston Hines from 3-6 PM".
+    c = classify_performer(
+        "Bubbles Sip N' Shop at WaterColor Package Store",
+        'The event features "Live music by Weston Hines from 3-6 PM" on '
+        "December 27th, 2026.",
+    )
+    assert c["performer"] == "Weston Hines"
+    assert c["performer_status"] == "named"
+    assert c["event_category"] == "sip_n_shop"
+    assert c["resolved"] is True
+    assert c["extraction_method"] == "description"
+
+
+def test_classify_block_party_without_named_performer():
+    c = classify_performer("Some Block Party at Venue")
+    assert c["performer"] is None
+    assert c["performer_status"] == "category"
+    assert c["event_category"] == "block_party"
+    assert c["resolved"] is False
+
+
 # --- lineup date handling ---------------------------------------------------
 
 def test_parse_lineup_date_explicit_year():

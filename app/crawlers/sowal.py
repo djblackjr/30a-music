@@ -144,6 +144,14 @@ _CATEGORY_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("karaoke",  re.compile(r"\bkaraoke\b", re.I)),
     ("open_mic", re.compile(r"\bopen[\s-]?mic\b", re.I)),
     ("trivia",   re.compile(r"\btrivia\b", re.I)),
+    # Retail/promo naming conventions (confirmed at WaterColor Package Store):
+    # "Labor Day Block Party" and "Bubbles Sip N' Shop" both booked a real
+    # named performer described inline ("live music from Christon Birge",
+    # "Live music by Weston Hines") but aren't a band's own name -- without
+    # this they fell into the "whole title is the performer" catch-all and
+    # saved the promo event's own name as if it were the act.
+    ("block_party", re.compile(r"\bblock\s+party\b", re.I)),
+    ("sip_n_shop",  re.compile(r"\bsip\s*(?:n'?|&|and)\s*shop\b", re.I)),
 ]
 
 # SoWal aggregates every Walton County community-calendar listing, not just
@@ -208,9 +216,11 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("childrens_play", re.compile(r"child(?:ren)?'?s\s+play\b", re.I)),
 ]
 
-# Strong, unambiguous performer indicators in free text.
+# Strong, unambiguous performer indicators in free text. "music from" added
+# after confirming a real SoWal listing ("live music from Christon Birge" at
+# WaterColor Package Store) phrased it that way instead of "music by".
 _DESC_STRONG_RE = re.compile(
-    r"\b(?:featuring|feat\.|ft\.|presents|performance by|music by)\s+(.+)", re.I
+    r"\b(?:featuring|feat\.|ft\.|presents|performance by|music by|music from)\s+(.+)", re.I
 )
 # 'with' is accepted only when what follows clearly reads as a credited act.
 _DESC_WITH_RE = re.compile(r"\bwith\s+(.+)", re.I)
