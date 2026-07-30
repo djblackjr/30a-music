@@ -47,6 +47,11 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Shelby's Beach Bar", "shelbysbeachbar"),
     # GPT-4o Vision reads the venue's fuller on-flyer name; same real venue.
     ("Shelby's Beach Bar", "Shelby's Beach Bar and Grill"),
+    # favorites_watch's OpenAI web_search reported the "&" spelling of the
+    # same fuller name -- confirmed live 2026-07-30, this venue is in
+    # venue_groups.csv as "Shelby's Beach Bar" so the "& Grill" variant was
+    # silently missing its favorite star.
+    ("Shelby's Beach Bar", "Shelby's Beach Bar & Grill"),
     # Same "read the Instagram handle off the flyer" pattern as papasurfburgerbar
     # above -- confirmed live 2026-07-30 on a Stevie Monce flyer reposted from
     # @chiringograyton.
@@ -106,6 +111,14 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # the same sowal.com URL (event ids 981/990/1004/1052/1061 vs
     # 2495/2496/2499/2506/2507, confirmed live 2026-07-22).
     ("Michael Johnson", "Michael Johnson at Havana Beach Bar & Grill"),
+    # favorites_watch's OpenAI web_search reported this act's name with a
+    # U+2011 non-breaking hyphen ("Martin‑Lane") instead of the space
+    # sowal.com uses ("Martin Lane") -- confirmed live 2026-07-30, same act,
+    # three rows (bare, "‑Lane", "‑Lane (acoustic duo)") that should collapse
+    # to two (the "(acoustic duo)" suffix is a distinct billing, same
+    # convention as "Blues Old Stand (acoustic)" elsewhere in this file).
+    ("Martin Lane", "Martin‑Lane"),
+    ("Martin Lane (acoustic duo)", "Martin‑Lane (acoustic duo)"),
 ]
 
 # variant (lowercased) -> canonical

@@ -98,6 +98,25 @@ def test_canonicalize_papasurf_no_space_variant():
     assert canonicalize("PAPASURF BURGER BAR") == "Papa Surf"
 
 
+def test_canonicalize_shelbys_ampersand_variant():
+    # favorites_watch's OpenAI web_search reported "Shelby's Beach Bar &
+    # Grill" -- confirmed live 2026-07-30, same real venue as the "and"
+    # spelling already in CANONICAL_FIXES, but the "&" variant was missing
+    # so it silently lost its favorite-venue star on the dashboard.
+    assert canonicalize("Shelby's Beach Bar & Grill") == "Shelby's Beach Bar"
+    assert canonicalize("Shelby's Beach Bar and Grill") == "Shelby's Beach Bar"
+
+
+def test_canonicalize_martin_lane_nonbreaking_hyphen():
+    # favorites_watch's OpenAI web_search reported this act as "Martin‑Lane"
+    # with a U+2011 non-breaking hyphen instead of sowal.com's "Martin Lane"
+    # (space) -- confirmed live 2026-07-30, produced three performer
+    # identities for one act instead of two ("(acoustic duo)" is a distinct
+    # billing, same convention as "Blues Old Stand (acoustic)").
+    assert canonicalize("Martin‑Lane") == "Martin Lane"
+    assert canonicalize("Martin‑Lane (acoustic duo)") == "Martin Lane (acoustic duo)"
+
+
 def test_identity_key_matches_for_instagram_handle_venue():
     nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
     handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]
