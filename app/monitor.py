@@ -102,12 +102,13 @@ def run_pipeline() -> dict:
         },
     }
 
-    # 6b. Push a notification for new/changed events involving a favorite
-    #    venue or performer specifically -- uses this same new/changed
-    #    result rather than a separate diffing pass, so there's one source
-    #    of truth for "did anything change." Best-effort: a notification
-    #    failure (missing NTFY_TOPIC, ntfy.sh down, ...) should never fail
-    #    the whole pipeline run.
+    # 6b. Push a notification for new/changed favorites_watch findings
+    #    specifically (not just any new/changed event at a favorite venue --
+    #    a live run confirmed that's far too broad, see pipeline_notify.py).
+    #    Still reuses this same new/changed result rather than a separate
+    #    diffing pass, so there's one source of truth for "did anything
+    #    change." Best-effort: a notification failure (missing NTFY_TOPIC,
+    #    ntfy.sh down, ...) should never fail the whole pipeline run.
     try:
         from app.favorites_watch.pipeline_notify import notify_favorites_changes
         notify_favorites_changes(changes)

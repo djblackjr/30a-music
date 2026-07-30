@@ -1,27 +1,35 @@
 """
 app/favorites_watch/pipeline_notify.py
-Filters app.monitor.run_pipeline()'s own new/changed events down to ones
-involving a favorite venue or performer, and sends a single ntfy.sh push
+Filters app.monitor.run_pipeline()'s own new/changed events down to the
+ones that came from the favorites_watch crawler specifically (the AI
+research over Tier 1 dated/sourced announcements -- see
+app/crawlers/favorites_watch.py), and sends a single ntfy.sh push
 notification summarizing them.
 
-This reuses the pipeline's existing new/changed detection (identity-keyed
-upsert in app/database/db.py) rather than keeping a second, separate
-diffing mechanism -- there's only one source of truth for "did anything
-change," and it applies to every event on the dashboard, not just the ones
-a favorites-specific crawler happened to find this run. A favorite booking
-that a *different* crawler (SoWal, AJ's Grayton, ...) surfaces first is
-just as notification-worthy as one the favorites_watch crawler finds.
+Deliberately NOT "any new/changed event at a favorite venue or by a
+favorite performer, regardless of source": that was the first version of
+this, and a live run confirmed it's the wrong scope -- SoWal/AJ's
+Grayton/etc. surface dozens of ordinary rotating-lineup bookings a day at
+popular favorite venues (Red Fish Taco, Shunk Gulley, ...), so that filter
+produced a 165-event, 10KB notification on its very first real run --
+which ntfy.sh silently turned into an unreadable file attachment rather
+than a real push. The whole point of Favorites Watch was a small number of
+specific, notable announcements, not every ordinary calendar row that
+happens to match a venue name.
 """
 import logging
 
-from app.dashboard.render import _load_favorite_venues, _load_performer_meta, _performer_favorite, _venue_favorite
 from app.favorites_watch.notify import send_notification
 
 logger = logging.getLogger(__name__)
 
+SOURCE = "favorites_watch"
 
-def _is_favorite_event(event: dict, venue_favs: set[str], performer_meta: dict) -> bool:
-    return _venue_favorite(event.get("venue"), venue_favs) or _performer_favorite(event.get("performer"), performer_meta)
+# Defensive cap even after the source filter above -- if a future change
+# ever widens scope again, this keeps the notification body from silently
+# degrading into an unreadable ntfy.sh file attachment (confirmed that's
+# what happens past ~4KB) instead of failing loudly/visibly.
+MAX_LINES = 20
 
 
 def _describe(event: dict) -> str:
@@ -29,23 +37,27 @@ def _describe(event: dict) -> str:
     return " ".join(str(b) for b in bits if b).strip()
 
 
+def _from_favorites_watch(event: dict) -> bool:
+    return event.get("source") == SOURCE
+
+
 def notify_favorites_changes(changes: dict) -> bool:
     """Returns True if a notification was actually sent (mirrors notify.send_notification)."""
-    venue_favs = _load_favorite_venues()
-    performer_meta = _load_performer_meta()
-
-    new_favs = [e for e in changes.get("new", []) if _is_favorite_event(e, venue_favs, performer_meta)]
+    new_favs = [e for e in changes.get("new", []) if _from_favorites_watch(e)]
     changed_favs = [
         c for c in changes.get("changed", [])
-        if _is_favorite_event(c.get("after") or {}, venue_favs, performer_meta)
+        if _from_favorites_watch(c.get("after") or {})
     ]
 
     if not new_favs and not changed_favs:
-        logger.info("No favorite-related new/changed events this run — no notification sent.")
+        logger.info("No new/changed favorites_watch findings this run — no notification sent.")
         return False
 
     lines = [f"NEW: {_describe(e)}" for e in new_favs]
     lines += [f"CHANGED: {_describe(c['after'])}" for c in changed_favs]
+    if len(lines) > MAX_LINES:
+        omitted = len(lines) - MAX_LINES
+        lines = lines[:MAX_LINES] + [f"...and {omitted} more (see the dashboard)"]
 
     title = f"30A Music: {len(new_favs)} new, {len(changed_favs)} changed (favorites)"
     sent = send_notification(title, "\n".join(lines))

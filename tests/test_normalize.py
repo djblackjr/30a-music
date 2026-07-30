@@ -81,6 +81,9 @@ def test_canonicalize_instagram_handle_venue_variants():
     assert canonicalize("papasurfburgerbar") == "Papa Surf"
     assert canonicalize("redfishtaco") == "Red Fish Taco"
     assert canonicalize("shelbysbeachbar") == "Shelby's Beach Bar"
+    # Confirmed live 2026-07-30: a Stevie Monce flyer reposted from
+    # @chiringograyton read the handle instead of the venue name too.
+    assert canonicalize("chiringograyton") == "Chiringo"
 
 
 def test_canonicalize_papasurf_no_space_variant():
