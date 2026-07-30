@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.crawlers.sowal import SoWalCrawler, parse_time, parse_when, split_title
+from app.crawlers.sowal import SoWalCrawler, parse_time, parse_when, resolve_performer, split_title
 from app.crawlers.policy import CrawlPolicy
 from app.crawlers.registry import ALL_CRAWLERS
 from app.normalize import normalize_events
@@ -225,3 +225,16 @@ def test_fetch_still_enriches_known_series_with_at_split_venue(monkeypatch):
     # The real, prose-lineup-resolved act -- not the fake series-title guess.
     assert "Scratch 2020" in perfs
     assert "Here Comes the Sun Summer Concert Series" not in perfs
+
+
+def test_resolve_performer_downgrades_known_recurring_series_with_no_lineup_match():
+    # Confirmed live 2026-07-30: these two bare series titles were missing
+    # from RECURRING_SERIES_TITLES, so classify_performer's "whole title is
+    # the performer" catch-all saved the series name itself as a fake
+    # performer -- 13 "LIVE MUSIC Mondays" rows and 22 "Sounds of Seaside"
+    # rows had accumulated on the live dashboard, most with no real per-date
+    # artist ever resolved at all (not just sitting next to a correct one).
+    for title in ("LIVE MUSIC Mondays at Fish Out of Water", "Sounds of Seaside at Seaside Amphitheater"):
+        result = resolve_performer(title, description="", target_date="2099-01-01")
+        assert result["performer"] is None
+        assert result["performer_status"] == "unresolved"

@@ -413,6 +413,13 @@ RECURRING_SERIES_TITLES = frozenset({
     # apart.
     "PCB Summer Concert Series",
     "Sounds Like Summer: 30A Songwriters Showcase",
+    # Same "bare series title with no per-date artist" problem, confirmed live
+    # 2026-07-30 -- both had accumulated dozens of fake-performer rows across
+    # weeks of re-crawls (13 "LIVE MUSIC Mondays" rows Aug-Oct, 22 "Sounds of
+    # Seaside" rows Aug-Dec), most with no real per-date artist ever resolved
+    # at all, not just sitting next to a correct one.
+    "LIVE MUSIC Mondays at Fish Out of Water",
+    "Sounds of Seaside at Seaside Amphitheater",
 })
 
 # Series whose sowal.com detail-page title becomes "<series> - <artist>" once
