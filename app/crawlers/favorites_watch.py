@@ -13,14 +13,26 @@ the performer field rather than being dropped, so they still show up
 somewhere on the dashboard instead of silently disappearing.
 """
 import logging
+from datetime import date
 
 logger = logging.getLogger(__name__)
+
+MONDAY = 0
 
 
 class FavoritesWatchCrawler:
     name = "favorites_watch"
 
     def fetch(self) -> list[dict]:
+        # Runs weekly instead of daily -- one OpenAI web_search call per
+        # favorite, every day, was the primary driver of this project's
+        # OpenAI cost (confirmed 2026-08-01). The main pipeline itself still
+        # runs daily via cron-job.org for the free scrapers (SoWal, AJ's
+        # Grayton, ...); this crawler just no-ops on every day but Monday.
+        if date.today().weekday() != MONDAY:
+            logger.info("[FavoritesWatchCrawler] skipped -- runs Monday mornings only")
+            return []
+
         from app.dashboard.render import _favorite_performer_names, _favorite_venue_names
         from app.favorites_watch.research import research_all_favorites
 

@@ -6,10 +6,12 @@ events down to favorites_watch's own findings for the push-notification
 step. No network/API calls -- send_notification is monkeypatched.
 """
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.crawlers.favorites_watch import FavoritesWatchCrawler
 from app.favorites_watch import pipeline_notify
 from app.favorites_watch.research import _parse_response
 
@@ -120,3 +122,34 @@ def test_notify_truncates_a_long_list_instead_of_producing_an_oversized_message(
     lines = sent[0][1].splitlines()
     assert len(lines) == pipeline_notify.MAX_LINES + 1
     assert "more" in lines[-1]
+
+
+# --- weekly cadence -----------------------------------------------------
+
+def test_crawler_skips_on_non_monday(monkeypatch):
+    # One OpenAI web_search call per favorite, every day, was the primary
+    # driver of this project's OpenAI cost (confirmed 2026-08-01) -- the
+    # crawler now only actually researches on Monday, and must not import
+    # research.py (which requires OPENAI_API_KEY) on any other day.
+    monkeypatch.setattr(
+        "app.crawlers.favorites_watch.date",
+        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 4))}),  # Tuesday
+    )
+    assert FavoritesWatchCrawler().fetch() == []
+
+
+def test_crawler_runs_on_monday(monkeypatch):
+    monkeypatch.setattr(
+        "app.crawlers.favorites_watch.date",
+        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 3))}),  # Monday
+    )
+    monkeypatch.setattr(
+        "app.dashboard.render._favorite_venue_names", lambda: ["Test Venue"]
+    )
+    monkeypatch.setattr(
+        "app.dashboard.render._favorite_performer_names", lambda: []
+    )
+    monkeypatch.setattr(
+        "app.favorites_watch.research.research_all_favorites", lambda venues, performers: []
+    )
+    assert FavoritesWatchCrawler().fetch() == []
