@@ -20,7 +20,12 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 
-MODEL = "gpt-4.1"
+# gpt-4.1-mini + a low web_search context window instead of the full model:
+# this crawler makes one call per favorite (26 today) EVERY DAY regardless of
+# whether it finds anything, and the full model + default "medium" search
+# context was the primary driver of this project's runaway OpenAI cost
+# (confirmed 2026-08-01 -- see the pipeline_notify cost review).
+MODEL = "gpt-4.1-mini"
 
 # gpt-4.1's training data extends well past this app's "today", so it must
 # be told the real current date explicitly -- otherwise it has no way to
@@ -88,7 +93,11 @@ def research_favorite(name: str, kind: str) -> dict | None:
     client = _client()
     prompt = PROMPT_TEMPLATE.format(today=date.today().isoformat(), name=name, kind=kind)
     try:
-        resp = client.responses.create(model=MODEL, tools=[{"type": "web_search"}], input=prompt)
+        resp = client.responses.create(
+            model=MODEL,
+            tools=[{"type": "web_search", "search_context_size": "low"}],
+            input=prompt,
+        )
     except Exception as exc:
         logger.warning("Research call failed for %r: %s", name, exc)
         return None
