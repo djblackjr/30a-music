@@ -15,6 +15,8 @@ somewhere on the dashboard instead of silently disappearing.
 import logging
 from datetime import date
 
+from app.crawlers.sowal import extract_performer_from_description
+
 logger = logging.getLogger(__name__)
 
 MONDAY = 0
@@ -42,7 +44,14 @@ class FavoritesWatchCrawler:
 
         events = []
         for f in findings:
-            performer = f.get("performer") or f["favorite_name"]
+            performer_raw = f.get("performer") or f["favorite_name"]
+            # The research model sometimes returns the venue's own promo title
+            # verbatim ("Late Night Music with Stranger Boy") instead of just
+            # the act's name -- confirmed live, where this duplicated a clean
+            # "Stranger Boy" identity already reported by the ajs_grayton
+            # crawler under a different identity_key. Reuse the same "with X"
+            # extractor ajs_grayton.py applies to its own raw titles.
+            performer = extract_performer_from_description(performer_raw) or performer_raw
             venue = f.get("venue") or f["favorite_name"]
             events.append({
                 "name": f"{performer} at {venue}",

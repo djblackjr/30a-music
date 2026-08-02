@@ -153,3 +153,30 @@ def test_crawler_runs_on_monday(monkeypatch):
         "app.favorites_watch.research.research_all_favorites", lambda venues, performers: []
     )
     assert FavoritesWatchCrawler().fetch() == []
+
+
+def test_crawler_strips_venue_promo_title_down_to_the_performer_name(monkeypatch):
+    # Confirmed live: the research model returned "Late Night Music with
+    # Stranger Boy" as the performer field, which saved under a different
+    # identity_key than the clean "Stranger Boy" already reported by the
+    # ajs_grayton crawler -- producing two dashboard cards for one show.
+    monkeypatch.setattr(
+        "app.crawlers.favorites_watch.date",
+        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 3))}),  # Monday
+    )
+    monkeypatch.setattr("app.dashboard.render._favorite_venue_names", lambda: ["AJ's Grayton Beach"])
+    monkeypatch.setattr("app.dashboard.render._favorite_performer_names", lambda: [])
+    monkeypatch.setattr(
+        "app.favorites_watch.research.research_all_favorites",
+        lambda venues, performers: [{
+            "favorite_name": "AJ's Grayton Beach",
+            "performer": "Late Night Music with Stranger Boy",
+            "venue": "AJ's Grayton Beach",
+            "date": "2026-08-01",
+            "time": "9:00 PM",
+            "source_url": "https://example.com",
+        }],
+    )
+    events = FavoritesWatchCrawler().fetch()
+    assert len(events) == 1
+    assert events[0]["performer"] == "Stranger Boy"
