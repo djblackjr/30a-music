@@ -127,6 +127,19 @@ def test_canonicalize_lane_martin_word_swap():
     assert canonicalize("Lane Martin") == "Martin Lane"
 
 
+def test_canonicalize_harrison_prentice_songwriter_variants():
+    # Found by detect_schedule_conflicts(): same venue/date/7PM slot billed
+    # under two different descriptive titles for the same act.
+    assert canonicalize("Harrison Prentice (songwriter)") == "Harrison Prentice"
+    assert canonicalize("Songwriter Harrison Prentice") == "Harrison Prentice"
+
+
+def test_canonicalize_mike_whitty_sunday_pickin_variant():
+    # Same detector, same pattern -- identical venue/date/4PM slot under a
+    # descriptive event title vs. the act's own billed name.
+    assert canonicalize("Sunday Pickin' w/ Mike Whitty & Friends") == "Mike Whitty & Friends"
+
+
 def test_identity_key_matches_for_instagram_handle_venue():
     nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
     handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]

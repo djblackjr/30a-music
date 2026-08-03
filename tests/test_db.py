@@ -9,7 +9,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database.db import init_db, recanonicalize_venues, recompute_aggregates, upsert_events
+from app.database.db import (
+    detect_schedule_conflicts,
+    init_db,
+    recanonicalize_venues,
+    recompute_aggregates,
+    upsert_events,
+)
 from app.normalize import normalize_events
 
 
@@ -97,3 +103,72 @@ def test_recanonicalize_venues_merges_and_gap_fills(tmp_path, monkeypatch):
     assert len(rows) == 1
     assert rows[0][0] == "Papa Surf"
     assert rows[0][1] == "6:00 - 9:00 PM"
+
+
+def test_detect_schedule_conflicts_flags_same_night_collision(tmp_path):
+    # Two different performers at the same venue on the same night -- the
+    # straightforward double-booking signal.
+    db = tmp_path / "test.db"
+    init_db(db)
+    events = normalize_events([
+        _raw("Harrison Prentice", "Red Fish Taco", date="2026-08-27"),
+        _raw("Reid Fisher", "Red Fish Taco", date="2026-08-27"),
+    ])
+    upsert_events(events, run_id="R1", path=db)
+
+    findings = detect_schedule_conflicts(db)
+    collisions = [f for f in findings if f["type"] == "same_night_collision"]
+    assert len(collisions) == 1
+    assert collisions[0]["date"] == "2026-08-27"
+    assert set(collisions[0]["performers"]) == {"Harrison Prentice", "Reid Fisher"}
+
+
+def test_detect_schedule_conflicts_flags_irregular_recurrence(tmp_path):
+    # Regression: the exact bug found live 2026-08-02 -- the same flyer
+    # misread by GPT-4o Vision across two runs landed "Brett Stafford" on
+    # both Sunday 8/9 and Monday 8/10 for the same venue, a day apart,
+    # instead of merging into a single Monday booking.
+    db = tmp_path / "test.db"
+    init_db(db)
+    events = normalize_events([
+        _raw("Brett Stafford", "Red Fish Taco", date="2026-08-03"),  # Mon
+        _raw("Brett Stafford", "Red Fish Taco", date="2026-08-09"),  # Sun (bad run)
+        _raw("Brett Stafford", "Red Fish Taco", date="2026-08-10"),  # Mon (good run)
+    ])
+    upsert_events(events, run_id="R1", path=db)
+
+    findings = detect_schedule_conflicts(db)
+    irregular = [f for f in findings if f["type"] == "irregular_recurrence"]
+    assert len(irregular) == 1
+    assert irregular[0]["performer"] == "Brett Stafford"
+    assert "2026-08-09" in irregular[0]["dates"]
+
+
+def test_detect_schedule_conflicts_ignores_clean_weekly_residency(tmp_path):
+    # A performer playing the same venue on the same weekday every week for
+    # months is completely normal and must not be flagged.
+    db = tmp_path / "test.db"
+    init_db(db)
+    events = normalize_events([
+        _raw("Dion Jones", "Stinky's Bait Shack", date="2026-08-01"),  # Sat
+        _raw("Dion Jones", "Stinky's Bait Shack", date="2026-08-08"),  # Sat
+        _raw("Dion Jones", "Stinky's Bait Shack", date="2026-08-15"),  # Sat
+    ])
+    upsert_events(events, run_id="R1", path=db)
+
+    assert detect_schedule_conflicts(db) == []
+
+
+def test_detect_schedule_conflicts_ignores_distant_different_weekday_bookings(tmp_path):
+    # A touring act legitimately playing the same venue on a different day
+    # of the week weeks apart isn't a misread -- only bookings close enough
+    # together (<=10 days) to plausibly be the same show read twice.
+    db = tmp_path / "test.db"
+    init_db(db)
+    events = normalize_events([
+        _raw("Casey Kearney", "Red Fish Taco", date="2026-08-04"),  # Tue
+        _raw("Casey Kearney", "Red Fish Taco", date="2026-09-19"),  # Sat, 46 days later
+    ])
+    upsert_events(events, run_id="R1", path=db)
+
+    assert detect_schedule_conflicts(db) == []

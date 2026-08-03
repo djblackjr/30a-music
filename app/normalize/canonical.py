@@ -128,6 +128,14 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # confirmed by the exact same identity (Shelby's Beach Bar, same dates)
     # already on record under the correct name from a separate flyer.
     ("Martin Lane", "Lane Martin"),
+    # Found by detect_schedule_conflicts()'s same_night_collision check: same
+    # venue, same date, same 7:00 PM billing under two differently-worded
+    # titles for what's clearly the one act.
+    ("Harrison Prentice", "Harrison Prentice (songwriter)"),
+    ("Harrison Prentice", "Songwriter Harrison Prentice"),
+    # Same detector, same pattern: identical venue/date/4:00 PM slot under a
+    # descriptive event title vs. the act's own name.
+    ("Mike Whitty & Friends", "Sunday Pickin' w/ Mike Whitty & Friends"),
 ]
 
 # variant (lowercased) -> canonical

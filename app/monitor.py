@@ -10,6 +10,7 @@ from pathlib import Path
 from app.crawlers.registry import run_all_crawlers
 from app.crawlers.sowal import partition_observations
 from app.database.db import (
+    detect_schedule_conflicts,
     init_db,
     load_events,
     purge_non_music_events,
@@ -152,17 +153,41 @@ def run_pipeline() -> dict:
     # 10. Drop events whose date has already passed. Unlike "removed" above,
     #    this isn't inferred from crawl absence — a past date is a fact, not
     #    a guess — so it's safe to delete outright rather than just hide.
-    logger.info("Step 9/11 — Purging past events")
+    logger.info("Step 9/12 — Purging past events")
     purged = purge_past_events()
     logger.info("Purged %d past events", purged)
 
-    # 11. Generate Excel
-    logger.info("Step 10/11 — Generating Excel report")
+    # 11. Read-only scan for the "same flyer misread two different ways"
+    #     bug class (confirmed 2026-08-02 on Red Fish Taco and Shelby's
+    #     Beach Bar) -- surfaces candidates in the log instead of requiring
+    #     a manual eyeball-every-venue review after each run. Never
+    #     modifies data; a real misread still needs a human to read the
+    #     actual flyer and correct it (see detect_schedule_conflicts()).
+    logger.info("Step 10/12 — Scanning for schedule conflicts")
+    schedule_conflicts = detect_schedule_conflicts()
+    if schedule_conflicts:
+        logger.warning("Found %d possible schedule conflict(s):", len(schedule_conflicts))
+        for f in schedule_conflicts:
+            if f["type"] == "same_night_collision":
+                logger.warning(
+                    "  [same night] %s on %s: %s",
+                    f["venue"], f["date"], " vs ".join(f["performers"]),
+                )
+            else:
+                logger.warning(
+                    "  [irregular recurrence] %s at %s: %s",
+                    f["performer"], f["venue"], ", ".join(f["dates"]),
+                )
+    else:
+        logger.info("No schedule conflicts found")
+
+    # 12. Generate Excel
+    logger.info("Step 11/12 — Generating Excel report")
     all_events  = load_events()          # canonical events (one row per identity)
     report_path = generate_report(all_events, changes, run_id)
 
-    # 12. Generate the dashboard from current knowledge (union across runs)
-    logger.info("Step 11/11 — Generating dashboard")
+    # 13. Generate the dashboard from current knowledge (union across runs)
+    logger.info("Step 12/12 — Generating dashboard")
     try:
         from app.dashboard.render import generate as generate_dashboard
         dashboard_path = generate_dashboard()
@@ -183,6 +208,7 @@ def run_pipeline() -> dict:
         "performers_merged":  performer_fix["merged"],
         "purged_non_music": purged_non_music,
         "purged_past":     purged,
+        "schedule_conflicts": len(schedule_conflicts),
         "new_or_changed":  changes["summary"]["total_delta"],
         "report_path":     str(report_path),
         "dashboard_path":  str(dashboard_path) if dashboard_path else None,

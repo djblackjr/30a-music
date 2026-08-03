@@ -5,6 +5,7 @@ Adds: stage, source, run_id columns (nullable so old rows still work).
 """
 import logging
 import sqlite3
+from datetime import date as _pydate
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -681,6 +682,99 @@ def resolve_sowal_conflicts(path: Path = DB_PATH) -> dict:
         conflicts, len(deleted_ids),
     )
     return {"conflicts_found": conflicts, "events_deleted": len(deleted_ids)}
+
+
+def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
+    """
+    Read-only diagnostic scan for the bug class that produced duplicate,
+    conflicting Red Fish Taco and Shelby's Beach Bar rows for August 2026
+    (confirmed 2026-08-02): a dense monthly-calendar flyer got its day
+    numbers misread by GPT-4o Vision -- sometimes inconsistently across two
+    separate runs of the SAME image -- landing the same real booking on the
+    wrong date, a day or two off from where it actually belongs.
+
+    Never modifies anything. Fixing a misread needs the actual flyer read by
+    hand (see recanonicalize / manual corrections in recent commits); this
+    only surfaces candidates so that doesn't require eyeballing every
+    venue's month by hand. Meant to run every pipeline execution and get
+    logged, not to be invoked ad hoc.
+
+    Two finding types:
+      - "same_night_collision": one (venue, date) has 2+ distinct performers
+        who all either share the same time_start or are missing one --
+        confirmed live: venues with genuinely separate slots (brunch +
+        dinner, a festival's parallel events) always give each act its own
+        distinct time, so requiring a time match/ambiguity is what tells a
+        real double-booking (or two differently-titled dupes of the same
+        act) apart from an ordinary multi-slot day. This also catches
+        un-canonicalized name variants of the same act billed at the same
+        time (e.g. "X" vs "Songwriter X").
+      - "irregular_recurrence": one (venue, performer) pair has both a
+        roughly-weekly gap (6-8 days) AND a short gap (1-3 days) somewhere
+        in its booking dates -- the signature of a single real weekly slot
+        that landed on two nearby-but-wrong dates. A true nightly/frequent
+        residency (gaps consistently 1-4 days) and a clean weekly residency
+        (gaps consistently ~7 days) never produce this specific mix, so
+        neither is flagged -- confirmed against this app's actual data
+        (Eric Knight nightly at The Village Door, Dion Jones weekly at
+        Stinky's Bait Shack) before landing on this rule.
+    """
+    conn = get_connection(path)
+    events = conn.execute(
+        "SELECT id, performer, venue, date, time_start FROM events "
+        "WHERE date IS NOT NULL AND venue IS NOT NULL AND performer IS NOT NULL"
+    ).fetchall()
+    conn.close()
+
+    findings: list[dict] = []
+
+    by_venue_date: dict[tuple, list] = {}
+    for e in events:
+        by_venue_date.setdefault(((e["venue"] or "").strip().lower(), e["date"]), []).append(e)
+    for (_v, date), rows in by_venue_date.items():
+        names = sorted({r["performer"] for r in rows if r["performer"]})
+        if len(names) < 2:
+            continue
+        times = [r["time_start"] for r in rows]
+        non_null = [t for t in times if t]
+        # Every act has its own distinct, known time -> an ordinary
+        # multi-slot day, not a conflict.
+        if len(non_null) == len(rows) and len(set(non_null)) == len(rows):
+            continue
+        findings.append({
+            "type": "same_night_collision",
+            "venue": rows[0]["venue"],
+            "date": date,
+            "performers": names,
+        })
+
+    by_venue_performer: dict[tuple, list] = {}
+    for e in events:
+        key = ((e["venue"] or "").strip().lower(), (e["performer"] or "").strip().lower())
+        by_venue_performer.setdefault(key, []).append(e)
+    for (_v, _p), rows in by_venue_performer.items():
+        if len(rows) < 2:
+            continue
+        dated = []
+        for r in rows:
+            try:
+                y, m, d = (int(x) for x in r["date"].split("-"))
+                dated.append((_pydate(y, m, d), r))
+            except (ValueError, AttributeError):
+                continue
+        dated.sort(key=lambda t: t[0])
+        gaps = [(dated[i + 1][0] - dated[i][0]).days for i in range(len(dated) - 1)]
+        has_weekly_gap = any(6 <= g <= 8 for g in gaps)
+        has_short_gap = any(1 <= g <= 3 for g in gaps)
+        if has_weekly_gap and has_short_gap:
+            findings.append({
+                "type": "irregular_recurrence",
+                "venue": dated[0][1]["venue"],
+                "performer": dated[0][1]["performer"],
+                "dates": [dt.isoformat() for dt, _ in dated],
+            })
+
+    return findings
 
 
 def purge_source_observations(source: str, path: Path = DB_PATH) -> dict:
