@@ -120,6 +120,13 @@ def test_canonicalize_martin_lane_nonbreaking_hyphen():
     assert canonicalize("Martin‑Lane (acoustic duo)") == "Martin Lane"
 
 
+def test_canonicalize_lane_martin_word_swap():
+    # GPT-4o Vision read Shelby's Instagram calendar grid with the duo's
+    # first/last words swapped -- confirmed live 2026-08-02 against the same
+    # identity already on record under the correct name.
+    assert canonicalize("Lane Martin") == "Martin Lane"
+
+
 def test_identity_key_matches_for_instagram_handle_venue():
     nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
     handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]

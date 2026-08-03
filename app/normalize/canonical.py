@@ -123,6 +123,11 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Martin Lane", "Martin‑Lane"),
     ("Martin Lane", "Martin Lane (acoustic duo)"),
     ("Martin Lane", "Martin‑Lane (acoustic duo)"),
+    # GPT-4o Vision read Shelby's Instagram calendar grid with the duo's
+    # first/last words swapped ("Lane Martin" instead of "Martin Lane") --
+    # confirmed by the exact same identity (Shelby's Beach Bar, same dates)
+    # already on record under the correct name from a separate flyer.
+    ("Martin Lane", "Lane Martin"),
 ]
 
 # variant (lowercased) -> canonical
