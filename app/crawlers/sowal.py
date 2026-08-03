@@ -200,7 +200,16 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     ("kids_activity",  re.compile(r"\bkids.?\s+night\s+out\b|\bpumpkin\s+carving\b|\bcostume\s+contest\b|\bbreakfast with santa\b", re.I)),
     ("stargazing",     re.compile(r"\bstar\s*gazing\b", re.I)),
     # An educational program hosted by South Walton Turtle Watch, no music.
-    ("nature_program", re.compile(r"\bwild sea turtle\b", re.I)),
+    # "back to nature" added for the EO Wilson Biophilia Center's own
+    # recurring program of the same name -- confirmed live 2026-08-02,
+    # showing up on the dashboard next to actual bands.
+    ("nature_program", re.compile(r"\bwild sea turtle\b|\bback to nature\b", re.I)),
+    # A pet-focused fitness class, not a performance -- confirmed live
+    # 2026-08-02 ("Puppies & Pilates" at Alaqua).
+    ("pet_fitness",    re.compile(r"\bpupp(?:y|ies)\s*(?:&|and)?\s*pilates\b|\bpuppy\s+yoga\b", re.I)),
+    # A health talk, not music -- confirmed live 2026-08-02 ("Back to School
+    # Nutrition & Wellness Talk" at Alys Beach).
+    ("wellness_talk",  re.compile(r"\bnutrition\s*(?:&|and)?\s*wellness\b|\bwellness\s+talk\b", re.I)),
     # A dining-only event ("menu items representing destinations around the
     # world") with no music at all -- not to be confused with any real
     # "Hemingway" *band* name, which this narrow full-phrase match avoids.

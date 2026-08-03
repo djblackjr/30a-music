@@ -138,6 +138,11 @@ def test_detect_non_music_more_community_calendar_categories():
     # A South Walton Turtle Watch educational program, confirmed no music.
     assert detect_non_music("Wild Sea Turtle Wednesday at The Big Chill 30A") == "nature_program"
     assert detect_non_music("Wild Sea Turtle Wednesday") == "nature_program"
+    # Confirmed live 2026-08-02: three community-calendar listings that
+    # slipped onto the dashboard next to actual bands.
+    assert detect_non_music("Biophilia Center Back to Nature") == "nature_program"
+    assert detect_non_music("Puppies & Pilates") == "pet_fitness"
+    assert detect_non_music("Back to School Nutrition & Wellness Talk") == "wellness_talk"
 
 
 def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():
