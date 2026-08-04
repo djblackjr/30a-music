@@ -700,13 +700,17 @@ def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     logged, not to be invoked ad hoc.
 
     Two finding types:
-      - "same_night_collision": one (venue, date) has 2+ distinct performers
-        who all either share the same time_start or are missing one --
-        confirmed live: venues with genuinely separate slots (brunch +
-        dinner, a festival's parallel events) always give each act its own
-        distinct time, so requiring a time match/ambiguity is what tells a
-        real double-booking (or two differently-titled dupes of the same
-        act) apart from an ordinary multi-slot day. This also catches
+      - "same_night_collision": within one (venue, date), 2+ distinct
+        performers share the same (stage, time_start) pairing -- confirmed
+        live: a multi-stage venue (AJ's Grayton's Main Stage/Courtyard
+        Stage/Round Room) can legitimately host several acts at the exact
+        same time, so two acts only collide if they're also on the same
+        stage (or stage is unknown for both). Venues with genuinely
+        separate slots and no stage info (brunch + dinner, a festival's
+        parallel events) always give each act its own distinct time, so
+        requiring a stage+time match/ambiguity is what tells a real
+        double-booking (or two differently-titled dupes of the same act)
+        apart from an ordinary multi-slot day. This also catches
         un-canonicalized name variants of the same act billed at the same
         time (e.g. "X" vs "Songwriter X").
       - "irregular_recurrence": one (venue, performer) pair has both a
@@ -721,7 +725,7 @@ def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     """
     conn = get_connection(path)
     events = conn.execute(
-        "SELECT id, performer, venue, date, time_start FROM events "
+        "SELECT id, performer, venue, date, time_start, stage FROM events "
         "WHERE date IS NOT NULL AND venue IS NOT NULL AND performer IS NOT NULL"
     ).fetchall()
     conn.close()
@@ -732,21 +736,20 @@ def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     for e in events:
         by_venue_date.setdefault(((e["venue"] or "").strip().lower(), e["date"]), []).append(e)
     for (_v, date), rows in by_venue_date.items():
-        names = sorted({r["performer"] for r in rows if r["performer"]})
-        if len(names) < 2:
+        if len({r["performer"] for r in rows if r["performer"]}) < 2:
             continue
-        times = [r["time_start"] for r in rows]
-        non_null = [t for t in times if t]
-        # Every act has its own distinct, known time -> an ordinary
-        # multi-slot day, not a conflict.
-        if len(non_null) == len(rows) and len(set(non_null)) == len(rows):
-            continue
-        findings.append({
-            "type": "same_night_collision",
-            "venue": rows[0]["venue"],
-            "date": date,
-            "performers": names,
-        })
+        by_slot: dict[tuple, set] = {}
+        for r in rows:
+            slot = ((r["stage"] or "").strip().lower() or None, r["time_start"] or None)
+            by_slot.setdefault(slot, set()).add(r["performer"])
+        colliding = {p for performers in by_slot.values() if len(performers) > 1 for p in performers}
+        if colliding:
+            findings.append({
+                "type": "same_night_collision",
+                "venue": rows[0]["venue"],
+                "date": date,
+                "performers": sorted(colliding),
+            })
 
     by_venue_performer: dict[tuple, list] = {}
     for e in events:

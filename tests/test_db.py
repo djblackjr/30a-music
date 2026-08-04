@@ -123,6 +123,23 @@ def test_detect_schedule_conflicts_flags_same_night_collision(tmp_path):
     assert set(collisions[0]["performers"]) == {"Harrison Prentice", "Reid Fisher"}
 
 
+def test_detect_schedule_conflicts_ignores_simultaneous_different_stages(tmp_path):
+    # Regression: confirmed live 2026-08-03 -- AJ's Grayton Beach's own
+    # multi-stage weekly flyer (Main Stage / Courtyard Stage / Round Room)
+    # legitimately has two different acts at the same time on different
+    # stages (e.g. Take 12 on Main Stage and DJ Babs in the Round Room, both
+    # 9PM). That's not a double-booking and must not be flagged.
+    db = tmp_path / "test.db"
+    init_db(db)
+    events = normalize_events([
+        _raw("Take 12", "AJ's Grayton Beach", date="2026-08-07", time_start="9PM", stage="Main Stage"),
+        _raw("DJ Babs", "AJ's Grayton Beach", date="2026-08-07", time_start="9PM", stage="Round Room"),
+    ])
+    upsert_events(events, run_id="R1", path=db)
+
+    assert detect_schedule_conflicts(db) == []
+
+
 def test_detect_schedule_conflicts_flags_irregular_recurrence(tmp_path):
     # Regression: the exact bug found live 2026-08-02 -- the same flyer
     # misread by GPT-4o Vision across two runs landed "Brett Stafford" on
