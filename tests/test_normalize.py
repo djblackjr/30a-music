@@ -140,6 +140,26 @@ def test_canonicalize_mike_whitty_sunday_pickin_variant():
     assert canonicalize("Sunday Pickin' w/ Mike Whitty & Friends") == "Mike Whitty & Friends"
 
 
+def test_canonicalize_lane_maury_music_suffix():
+    # The act's own promotional calendar bills itself "Lane Maury Music";
+    # every other source already uses the bare name -- confirmed live
+    # 2026-08-03, where this split one real North Beach Social show into
+    # two dashboard rows.
+    assert canonicalize("Lane Maury Music") == "Lane Maury"
+
+
+def test_canonicalize_north_beach_social_city_suffix_variants():
+    # Confirmed live 2026-08-03: two more descriptive-suffix variants of the
+    # same venue, from two different flyers, neither yet covered by the
+    # existing NORTH BEACH SOCIAL / northbeachsocial fixes.
+    assert canonicalize("North Beach Social, Santa Rosa") == "North Beach Social"
+    assert canonicalize("North Beach Social (Santa Rosa Beach, FL)") == "North Beach Social"
+
+
+def test_canonicalize_papa_surfs_santa_rosa_variant():
+    assert canonicalize("Papa Surf's, Santa Rosa") == "Papa Surf"
+
+
 def test_identity_key_matches_for_instagram_handle_venue():
     nice = normalize_events([_raw("Cade Pierce", "Papa Surf", date="2026-07-16")])[0]
     handle = normalize_events([_raw("Cade Pierce", "papasurfburgerbar", date="2026-07-16")])[0]

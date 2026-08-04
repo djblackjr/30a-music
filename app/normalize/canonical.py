@@ -44,6 +44,7 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Papa Surf", "papasurfburgerbar"),
     ("Papa Surf", "PapaSurf Burger Bar"),
     ("Papa Surf", "PAPASURF BURGER BAR"),
+    ("Papa Surf", "Papa Surf's, Santa Rosa"),
     ("Shelby's Beach Bar", "shelbysbeachbar"),
     # GPT-4o Vision reads the venue's fuller on-flyer name; same real venue.
     ("Shelby's Beach Bar", "Shelby's Beach Bar and Grill"),
@@ -63,6 +64,8 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("North Beach Social", "July Live Music Lineup"),
     ("North Beach Social", "july-live-music-lineup"),
     ("North Beach Social", "JULY LIVE MUSIC LINEUP"),
+    ("North Beach Social", "North Beach Social, Santa Rosa"),
+    ("North Beach Social", "North Beach Social (Santa Rosa Beach, FL)"),
     ("30Avenue", "30AVENUE"),
     ("Queens Handsome", "QUEENS HANDSOME"),
     ("Lips Manly", "LIPS MANLY"),
@@ -136,6 +139,9 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # Same detector, same pattern: identical venue/date/4:00 PM slot under a
     # descriptive event title vs. the act's own name.
     ("Mike Whitty & Friends", "Sunday Pickin' w/ Mike Whitty & Friends"),
+    # The act's own promotional calendar bills itself "Lane Maury Music";
+    # every other source (venue site, sowal) already uses the bare name.
+    ("Lane Maury", "Lane Maury Music"),
 ]
 
 # variant (lowercased) -> canonical
