@@ -684,6 +684,71 @@ def resolve_sowal_conflicts(path: Path = DB_PATH) -> dict:
     return {"conflicts_found": conflicts, "events_deleted": len(deleted_ids)}
 
 
+def resolve_stale_url_relistings(path: Path = DB_PATH) -> dict:
+    """
+    Policy: when the SAME source crawl re-describes the exact same
+    real-world listing (identical source + url + date) with a different
+    performer string across two separate daily runs -- a placeholder got
+    filled in, a redundant "at Venue" suffix got trimmed, or the site
+    itself corrected/changed the act -- that's one slot re-described, not
+    a double-booking. A differing performer produces a different
+    identity_key though, so the earlier wording never gets cleaned up on
+    its own and just sits next to the corrected row looking like two acts
+    booked at once (confirmed live 2026-08-07: Shunk Gulley's Tockify feed
+    reported "Chris Johnson" for the same slot/detail-link on Aug 6's crawl
+    and "David Dunavent" on Aug 7's; same pattern hit favorites_watch and
+    sowal the same day -- "Watersound Town Center" -> "Grayson Capps and
+    Kristy Lee Trio", "Bubbles & Beauty at The Pearl Hotel" -> "Bubbles &
+    Beauty"). Resolution: within each (source, url, date) group, keep only
+    the event with the most recent observation and drop the rest.
+
+    Deliberately keyed on (source, url, date), not url alone -- aggregators
+    like sowal reuse one series/category page URL across dozens of
+    unrelated dates and performers (e.g. a recurring residency's listing),
+    so grouping on url alone would wrongly collapse real distinct bookings
+    that merely share a page. Restricting to same date keeps only the
+    single-occurrence links this rule is meant for.
+
+    Safe to re-run. Returns {"groups_found", "events_deleted"}.
+    """
+    conn = get_connection(path)
+    rows = conn.execute("""
+        SELECT e.id AS id, e.source AS source, e.url AS url, e.date AS date,
+               MAX(eo.observed_at) AS latest_observed
+        FROM events e
+        JOIN event_observations eo ON eo.event_id = e.id
+        WHERE e.url IS NOT NULL AND e.url != '' AND e.source IS NOT NULL
+        GROUP BY e.id
+    """).fetchall()
+
+    groups: dict[tuple, list[dict]] = {}
+    for row in rows:
+        key = (row["source"], row["url"], row["date"])
+        groups.setdefault(key, []).append(dict(row))
+
+    deleted_ids: list[int] = []
+    groups_found = 0
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        groups_found += 1
+        keep = max(members, key=lambda r: r["latest_observed"])
+        deleted_ids.extend(r["id"] for r in members if r["id"] != keep["id"])
+
+    if deleted_ids:
+        placeholders = ",".join("?" * len(deleted_ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", deleted_ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", deleted_ids)
+        conn.commit()
+
+    conn.close()
+    logger.info(
+        "Resolved %d stale-relisting groups, deleted %d superseded events",
+        groups_found, len(deleted_ids),
+    )
+    return {"groups_found": groups_found, "events_deleted": len(deleted_ids)}
+
+
 def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     """
     Read-only diagnostic scan for the bug class that produced duplicate,

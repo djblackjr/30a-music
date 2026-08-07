@@ -30,6 +30,11 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Sunshine Wranglers", "SUNSHINE WRANLGERS"),
     ("Sunshine Wranglers", "The Sunshine Wranglers"),
     ("Boukou Groove", "BOUKOU GROOVE"),
+    # "Boucou Groove" was a GPT-4o Vision misread of a flyer (confirmed
+    # 2026-08-06): sowal's own North Beach Social booking widget has the
+    # correctly-spelled "Boukou Groove" for the same night, and this venue
+    # never double-books its single 6-9pm slot.
+    ("Boukou Groove", "Boucou Groove"),
     ("Harrison Prentice", "HARRISON PRENTICE"),
     ("Red Fish Taco", "RED FISH TACO"),
     # GPT-4o Vision isn't deterministic call-to-call: re-processing the exact

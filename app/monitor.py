@@ -19,6 +19,7 @@ from app.database.db import (
     recanonicalize_venues,
     record_run,
     resolve_sowal_conflicts,
+    resolve_stale_url_relistings,
     upsert_events,
 )
 from app.excel.exporter import generate_report
@@ -42,7 +43,7 @@ def run_pipeline() -> dict:
     init_db()
 
     # 2. Run crawlers
-    logger.info("Step 1/10 — Running crawlers")
+    logger.info("Step 1/13 — Running crawlers")
     crawler_events = run_all_crawlers()
     logger.info("Crawlers returned %d events", len(crawler_events))
 
@@ -62,7 +63,7 @@ def run_pipeline() -> dict:
         crawler_events = passthrough + partitioned["named"]
 
     # 3. Image inbox
-    logger.info("Step 2/10 — Processing image inbox")
+    logger.info("Step 2/13 — Processing image inbox")
     inbox_images = [
         f for f in INBOX_DIR.iterdir()
         if INBOX_DIR.exists() and f.suffix.lower() in SUPPORTED_EXTS
@@ -72,14 +73,14 @@ def run_pipeline() -> dict:
     logger.info("Images processed: %d files, %d events", len(inbox_images), len(image_events))
 
     # 4. Combine + normalise
-    logger.info("Step 3/10 — Normalising events")
+    logger.info("Step 3/13 — Normalising events")
     all_raw    = crawler_events + image_events
     normalised = normalize_events(all_raw)
     logger.info("Normalised event count: %d", len(normalised))
 
     # 5. Upsert by identity — observations accumulate onto existing events, so a
     #    second source corroborates rather than creating a duplicate.
-    logger.info("Step 4/10 — Upserting events (accumulating observations)")
+    logger.info("Step 4/13 — Upserting events (accumulating observations)")
     result = upsert_events(normalised, run_id=run_id)
     saved  = result["saved"]
     record_run(run_id=run_id, events_saved=saved)
@@ -88,7 +89,7 @@ def run_pipeline() -> dict:
     #    NOTE: a run is a PARTIAL view (one crawl), not a full snapshot of reality,
     #    so a source simply not re-observing an event does NOT mean it was removed.
     #    Removal is therefore never inferred here.
-    logger.info("Step 5/10 — Reconciling")
+    logger.info("Step 5/13 — Reconciling")
     changes = {
         "new":       result["new"],
         "changed":   result["changed"],
@@ -120,11 +121,26 @@ def run_pipeline() -> dict:
     #    report different performers at the exact same (venue, date, time),
     #    that's one real slot described two ways, not two bookings -- the
     #    site's own data wins and the sowal-only event is dropped.
-    logger.info("Step 6/11 — Resolving sowal/site time-slot conflicts")
+    logger.info("Step 6/13 — Resolving sowal/site time-slot conflicts")
     conflict_result = resolve_sowal_conflicts()
     logger.info(
         "Resolved %d conflicts, dropped %d sowal-only events",
         conflict_result["conflicts_found"], conflict_result["events_deleted"],
+    )
+
+    # 7b. Policy: when the SAME source re-describes the exact same listing
+    #    (source + url + date all match) with a different performer string
+    #    across two daily runs -- a placeholder got filled in, an "at Venue"
+    #    suffix got trimmed, or the site changed the act -- keep only the
+    #    most recently observed version; the earlier wording is stale, not
+    #    a second booking (confirmed live 2026-08-07: Shunk Gulley's Tockify
+    #    feed swapped "Chris Johnson" for "David Dunavent" on the same
+    #    slot/detail-link between two crawls).
+    logger.info("Step 7/13 — Resolving stale same-source relistings")
+    relisting_result = resolve_stale_url_relistings()
+    logger.info(
+        "Resolved %d stale-relisting groups, dropped %d superseded events",
+        relisting_result["groups_found"], relisting_result["events_deleted"],
     )
 
     # 8. Retroactive re-canonicalization: CANONICAL_FIXES and the all-caps
@@ -133,7 +149,7 @@ def run_pipeline() -> dict:
     #    folded) would otherwise sit next to its canonical form forever,
     #    showing up as an apparent duplicate on the dashboard. Safe to re-run
     #    every time -- a no-op once names have converged.
-    logger.info("Step 7/11 — Recanonicalizing venue/performer names")
+    logger.info("Step 8/13 — Recanonicalizing venue/performer names")
     venue_fix = recanonicalize_venues()
     performer_fix = recanonicalize_performers()
     logger.info(
@@ -146,14 +162,14 @@ def run_pipeline() -> dict:
     #    detect_non_music() learned their pattern -- see app/crawlers/sowal.py.
     #    Safe to re-run every time; only ever deletes rows the current
     #    patterns match.
-    logger.info("Step 8/11 — Purging non-music events")
+    logger.info("Step 9/13 — Purging non-music events")
     purged_non_music = purge_non_music_events()
     logger.info("Purged %d non-music events", purged_non_music)
 
     # 10. Drop events whose date has already passed. Unlike "removed" above,
     #    this isn't inferred from crawl absence — a past date is a fact, not
     #    a guess — so it's safe to delete outright rather than just hide.
-    logger.info("Step 9/12 — Purging past events")
+    logger.info("Step 10/13 — Purging past events")
     purged = purge_past_events()
     logger.info("Purged %d past events", purged)
 
@@ -163,7 +179,7 @@ def run_pipeline() -> dict:
     #     a manual eyeball-every-venue review after each run. Never
     #     modifies data; a real misread still needs a human to read the
     #     actual flyer and correct it (see detect_schedule_conflicts()).
-    logger.info("Step 10/12 — Scanning for schedule conflicts")
+    logger.info("Step 11/13 — Scanning for schedule conflicts")
     schedule_conflicts = detect_schedule_conflicts()
     if schedule_conflicts:
         logger.warning("Found %d possible schedule conflict(s):", len(schedule_conflicts))
@@ -182,12 +198,12 @@ def run_pipeline() -> dict:
         logger.info("No schedule conflicts found")
 
     # 12. Generate Excel
-    logger.info("Step 11/12 — Generating Excel report")
+    logger.info("Step 12/13 — Generating Excel report")
     all_events  = load_events()          # canonical events (one row per identity)
     report_path = generate_report(all_events, changes, run_id)
 
     # 13. Generate the dashboard from current knowledge (union across runs)
-    logger.info("Step 12/12 — Generating dashboard")
+    logger.info("Step 13/13 — Generating dashboard")
     try:
         from app.dashboard.render import generate as generate_dashboard
         dashboard_path = generate_dashboard()
