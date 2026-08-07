@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent: fires scripts/process_inbox.py whenever images/inbox/
+  changes (a screenshot dropped in via AirDrop, Finder, etc.), so it gets
+  processed within seconds instead of waiting for the once-daily pipeline.
+
+  Install (only needs doing once, or again after editing this file):
+      cp scripts/com.30amusic.inbox-watcher.plist ~/Library/LaunchAgents/
+      launchctl unload ~/Library/LaunchAgents/com.30amusic.inbox-watcher.plist 2>/dev/null
+      launchctl load ~/Library/LaunchAgents/com.30amusic.inbox-watcher.plist
+
+  Uninstall:
+      launchctl unload ~/Library/LaunchAgents/com.30amusic.inbox-watcher.plist
+      rm ~/Library/LaunchAgents/com.30amusic.inbox-watcher.plist
+
+  Logs: logs/process_inbox.log (script's own log) and
+  logs/inbox-watcher.{out,err}.log (launchd's stdout/stderr capture, mostly
+  useful if the script fails before its own logger is set up).
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.30amusic.inbox-watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/dannyblack/Documents/30a-music/.venv/bin/python3</string>
+        <string>/Users/dannyblack/Documents/30a-music/scripts/process_inbox.py</string>
+    </array>
+
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/dannyblack/Documents/30a-music/images/inbox</string>
+    </array>
+
+    <!-- WatchPaths already fires on every change to the directory; this just
+         also catches anything dropped in while the machine was asleep or the
+         agent wasn't loaded yet. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/dannyblack/Documents/30a-music/logs/inbox-watcher.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/dannyblack/Documents/30a-music/logs/inbox-watcher.err.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/dannyblack/Documents/30a-music</string>
+</dict>
+</plist>

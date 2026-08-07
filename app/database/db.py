@@ -749,6 +749,76 @@ def resolve_stale_url_relistings(path: Path = DB_PATH) -> dict:
     return {"groups_found": groups_found, "events_deleted": len(deleted_ids)}
 
 
+def resolve_stale_image_relistings(path: Path = DB_PATH) -> dict:
+    """
+    Rule of thumb (set 2026-08-07): when a venue's own screenshot/flyer gets
+    re-captured and it disagrees with an earlier capture of the same slot,
+    trust the more recent screenshot -- venues edit their own Instagram
+    lineup graphics after posting (confirmed live: North Beach Social's
+    August flyer read "12 Eleven" + "Tbd" for Aug 8/22 in an earlier capture
+    and "Cadillac Willy" + "The Typos" for the same two slots in a later
+    capture of the SAME post, provable because the later capture's like
+    count was strictly higher -- likes only accumulate, so it's unambiguous
+    which capture came second).
+
+    Deliberately scoped to image-vs-image collisions only -- within each
+    (venue, date, time_start, stage) group, if 2+ events came from an
+    "image:..." source with different performers, keep the one with the
+    latest observation and drop the rest. Does NOT touch collisions
+    involving a non-image source (sowal, a direct venue-site crawler):
+    unlike two captures of one venue-controlled graphic, an aggregator and
+    a screenshot updating at different paces isn't "the same post edited,"
+    so which one is stale needs a human call (see resolve_sowal_conflicts
+    for the analogous site-vs-sowal policy, and detect_schedule_conflicts's
+    same_night_collision for surfacing this kind of case for review).
+
+    Stage is part of the grouping key for the same reason
+    detect_schedule_conflicts uses it: a multi-stage venue can legitimately
+    host two acts at the same time on different stages, which must never
+    collapse into one.
+
+    Safe to re-run. Returns {"groups_found", "events_deleted"}.
+    """
+    conn = get_connection(path)
+    rows = conn.execute("""
+        SELECT e.id AS id, e.venue AS venue, e.date AS date, e.time_start AS time_start,
+               e.stage AS stage, MAX(eo.observed_at) AS latest_observed
+        FROM events e
+        JOIN event_observations eo ON eo.event_id = e.id
+        WHERE e.source LIKE 'image:%'
+          AND e.venue IS NOT NULL AND e.date IS NOT NULL AND e.time_start IS NOT NULL
+        GROUP BY e.id
+    """).fetchall()
+
+    groups: dict[tuple, list[dict]] = {}
+    for row in rows:
+        key = ((row["venue"] or "").strip().lower(), row["date"], row["time_start"],
+               (row["stage"] or "").strip().lower())
+        groups.setdefault(key, []).append(dict(row))
+
+    deleted_ids: list[int] = []
+    groups_found = 0
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        groups_found += 1
+        keep = max(members, key=lambda r: r["latest_observed"])
+        deleted_ids.extend(r["id"] for r in members if r["id"] != keep["id"])
+
+    if deleted_ids:
+        placeholders = ",".join("?" * len(deleted_ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", deleted_ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", deleted_ids)
+        conn.commit()
+
+    conn.close()
+    logger.info(
+        "Resolved %d stale-image-relisting groups, deleted %d superseded events",
+        groups_found, len(deleted_ids),
+    )
+    return {"groups_found": groups_found, "events_deleted": len(deleted_ids)}
+
+
 def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     """
     Read-only diagnostic scan for the bug class that produced duplicate,
