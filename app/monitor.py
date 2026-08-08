@@ -110,15 +110,28 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
     else:
         logger.info("No schedule conflicts found")
 
-    all_events  = load_events()          # canonical events (one row per identity)
-    report_path = generate_report(all_events, changes, run_id)
-
+    # Dashboard first, Excel second, each independently best-effort: a
+    # failure in either (e.g. a transient iCloud file-provider I/O error
+    # under ~/Documents -- confirmed live 2026-08-08, openpyxl's import hit
+    # "OSError: [Errno 11] Resource deadlock avoided" 4 seconds into an
+    # active brctl sync window) must never cost the OTHER artifact, and
+    # must never abort the run before it -- the actual event data is
+    # already committed to the db by this point, so losing just the report
+    # generation is far better than the whole run dying and leaving the
+    # dashboard stale too.
+    all_events = load_events()          # canonical events (one row per identity)
     try:
         from app.dashboard.render import generate as generate_dashboard
         dashboard_path = generate_dashboard()
     except Exception as exc:
         logger.warning("Dashboard generation failed: %s", exc)
         dashboard_path = None
+
+    try:
+        report_path = generate_report(all_events, changes, run_id)
+    except Exception as exc:
+        logger.warning("Excel report generation failed: %s", exc)
+        report_path = None
 
     return {
         "sowal_conflicts_resolved": conflict_result["events_deleted"],
@@ -131,7 +144,7 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
         "purged_non_music": purged_non_music,
         "purged_past":     purged_past,
         "schedule_conflicts": len(schedule_conflicts),
-        "report_path":     str(report_path),
+        "report_path":     str(report_path) if report_path else None,
         "dashboard_path":  str(dashboard_path) if dashboard_path else None,
     }
 
