@@ -1091,6 +1091,54 @@ def recanonicalize_venues(path: Path = DB_PATH) -> dict:
     return {"renamed": renamed, "merged": merged}
 
 
+def backfill_venue_default_times(path: Path = DB_PATH) -> int:
+    """
+    Fill in time_start for events at a venue with a known standard slot
+    (VENUE_DEFAULT_TIMES in app/normalize/times.py) that are still missing
+    one. apply_venue_default_time() already runs at ingest time, but it's an
+    exact string match on the CANONICAL venue name -- an event ingested
+    under an un-canonicalized variant (e.g. "PapaSurf" before that alias
+    existed) never matched, so it kept no time at all. recanonicalize_venues()
+    fixes the venue name, and recompute_aggregates() backfills the time for
+    any event that merged with a same-date counterpart that DID have one,
+    but a standalone renamed event with no such counterpart stays blank
+    forever unless something re-applies the default after the rename.
+    Confirmed live 2026-08-08: five Papa Surf bookings extracted from a
+    flyer that listed act + date with no time sat blank under "PapaSurf"
+    until the alias was added, and even after the rename three of them
+    (no same-date "Papa Surf" counterpart to inherit from) were still blank.
+
+    Deliberately only touches events whose venue IS a VENUE_DEFAULT_TIMES
+    key and whose time_start is currently missing -- never overwrites a
+    real captured time. Safe to re-run; a no-op once times have converged.
+    Returns the number of events backfilled.
+    """
+    from app.normalize.times import VENUE_DEFAULT_TIMES, apply_venue_default_time
+
+    if not VENUE_DEFAULT_TIMES:
+        return 0
+
+    conn = get_connection(path)
+    placeholders = ",".join("?" * len(VENUE_DEFAULT_TIMES))
+    rows = conn.execute(
+        f"SELECT id, venue, time_start FROM events WHERE venue IN ({placeholders})",
+        list(VENUE_DEFAULT_TIMES),
+    ).fetchall()
+
+    backfilled = 0
+    for row in rows:
+        new_time = apply_venue_default_time(row["venue"], row["time_start"])
+        if new_time != row["time_start"]:
+            conn.execute("UPDATE events SET time_start = ? WHERE id = ?", (new_time, row["id"]))
+            backfilled += 1
+
+    if backfilled:
+        conn.commit()
+    conn.close()
+    logger.info("Backfilled default time for %d venue-default-time events", backfilled)
+    return backfilled
+
+
 def recanonicalize_performers(path: Path = DB_PATH) -> dict:
     """
     Re-apply performer canonicalization (app.normalize.canonical.canonicalize)

@@ -10,6 +10,7 @@ from pathlib import Path
 from app.crawlers.registry import run_all_crawlers
 from app.crawlers.sowal import partition_observations
 from app.database.db import (
+    backfill_venue_default_times,
     detect_schedule_conflicts,
     init_db,
     load_events,
@@ -76,6 +77,13 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
     venue_fix = recanonicalize_venues()
     performer_fix = recanonicalize_performers()
 
+    # A venue rename above can newly match a VENUE_DEFAULT_TIMES entry (e.g.
+    # "PapaSurf" -> "Papa Surf"), but only an event that merged with a
+    # same-date counterpart inherits a time via recompute_aggregates(); a
+    # standalone renamed event stays blank otherwise (confirmed live
+    # 2026-08-08 -- see backfill_venue_default_times()). Safe to re-run.
+    backfilled_times = backfill_venue_default_times()
+
     # Retroactive cleanup for non-music community-calendar listings (county
     # fairs, air shows, wine tastings, ...) that were saved before
     # detect_non_music() learned their pattern. Safe to re-run every time;
@@ -141,6 +149,7 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
         "venues_merged":      venue_fix["merged"],
         "performers_renamed": performer_fix["renamed"],
         "performers_merged":  performer_fix["merged"],
+        "backfilled_times":   backfilled_times,
         "purged_non_music": purged_non_music,
         "purged_past":     purged_past,
         "schedule_conflicts": len(schedule_conflicts),
@@ -302,11 +311,12 @@ def run_pipeline() -> dict:
     logger.info(
         "Sowal conflicts: %d · URL relistings: %d · Image relistings: %d · "
         "Venues renamed/merged: %d/%d · Performers renamed/merged: %d/%d · "
-        "Purged non-music/past: %d/%d · Schedule conflicts: %d",
+        "Backfilled times: %d · Purged non-music/past: %d/%d · Schedule conflicts: %d",
         finalized["sowal_conflicts_resolved"], finalized["url_relistings_resolved"],
         finalized["image_relistings_resolved"],
         finalized["venues_renamed"], finalized["venues_merged"],
         finalized["performers_renamed"], finalized["performers_merged"],
+        finalized["backfilled_times"],
         finalized["purged_non_music"], finalized["purged_past"],
         finalized["schedule_conflicts"],
     )

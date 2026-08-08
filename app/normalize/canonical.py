@@ -50,6 +50,19 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("Papa Surf", "PapaSurf Burger Bar"),
     ("Papa Surf", "PAPASURF BURGER BAR"),
     ("Papa Surf", "Papa Surf's, Santa Rosa"),
+    # A no-space CamelCase read of a monthly lineup flyer (confirmed live
+    # 2026-08-08) -- same VISION_PROMPT quirk as papasurfburgerbar above,
+    # different flavor. Left un-canonicalized, this also silently broke
+    # apply_venue_default_time()'s exact-match lookup (times.py), which is
+    # why several of these landed with no time at all -- see
+    # backfill_venue_default_times() in app/database/db.py.
+    ("Papa Surf", "PapaSurf"),
+    # Same "use the Instagram username shown in the screenshot's UI chrome"
+    # fallback, but this time the account in the screenshot was the
+    # performer reposting the venue's announcement, not the venue's own
+    # account -- confirmed live 2026-08-08, a Stevie Monce repost of Papa
+    # Surf's own booking got the venue read as "steviemonce" instead.
+    ("Papa Surf", "steviemonce"),
     ("Shelby's Beach Bar", "shelbysbeachbar"),
     # GPT-4o Vision reads the venue's fuller on-flyer name; same real venue.
     ("Shelby's Beach Bar", "Shelby's Beach Bar and Grill"),
