@@ -282,7 +282,15 @@ def _rows_html(events: list[dict], path: Path) -> str:
         performer = html.escape(performer_raw)
         venue = ev.get("venue") or ""
         venue_e = html.escape(venue)
-        time_s = html.escape(ev.get("time_start") or "")
+        # time_start/time_end are stored as separate, independently-formatted
+        # fields (see normalize_stored_times() / provenance.py's ingest-time
+        # split) -- combine them for display rather than showing only the
+        # start, which silently dropped time_end for the ~75% of events that
+        # had it as a separate field instead of crammed into time_start.
+        time_display = ev.get("time_start") or ""
+        if ev.get("time_end"):
+            time_display = f"{time_display} - {ev['time_end']}" if time_display else ev["time_end"]
+        time_s = html.escape(time_display)
         date = ev.get("date") or ""
         favorite = _venue_favorite(venue, venue_favorites)
         fav_attr = "Y" if favorite else "N"

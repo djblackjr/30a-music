@@ -44,9 +44,16 @@ def test_recompute_aggregates_keeps_gap_filled_time(tmp_path):
 
     import sqlite3
     conn = sqlite3.connect(db)
-    row = conn.execute("SELECT time_start FROM events WHERE performer = 'Cade Pierce'").fetchone()
+    row = conn.execute(
+        "SELECT time_start, time_end FROM events WHERE performer = 'Cade Pierce'"
+    ).fetchone()
     conn.close()
-    assert row[0] == "6:00 - 9:00 PM"
+    # split_time_range() at ingest (added 2026-08-08) splits an in-band range
+    # into separate start/end fields rather than keeping it crammed into
+    # time_start -- the gap-filled value should carry through split just
+    # like a directly-ingested one would.
+    assert row[0] == "6:00 PM"
+    assert row[1] == "9:00 PM"
 
 
 def test_recanonicalize_venues_merges_and_gap_fills(tmp_path, monkeypatch):

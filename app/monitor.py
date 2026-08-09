@@ -14,6 +14,7 @@ from app.database.db import (
     detect_schedule_conflicts,
     init_db,
     load_events,
+    normalize_stored_times,
     purge_non_music_events,
     purge_past_events,
     recanonicalize_performers,
@@ -84,6 +85,11 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
     # 2026-08-08 -- see backfill_venue_default_times()). Safe to re-run.
     backfilled_times = backfill_venue_default_times()
 
+    # Reformat every time_start/time_end to canonical "H:MM AM/PM" (or a
+    # range), including splitting the default just backfilled above into a
+    # proper start/end pair. Safe to re-run.
+    times_normalized = normalize_stored_times()
+
     # Retroactive cleanup for non-music community-calendar listings (county
     # fairs, air shows, wine tastings, ...) that were saved before
     # detect_non_music() learned their pattern. Safe to re-run every time;
@@ -150,6 +156,7 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
         "performers_renamed": performer_fix["renamed"],
         "performers_merged":  performer_fix["merged"],
         "backfilled_times":   backfilled_times,
+        "times_normalized":   times_normalized,
         "purged_non_music": purged_non_music,
         "purged_past":     purged_past,
         "schedule_conflicts": len(schedule_conflicts),
@@ -311,12 +318,12 @@ def run_pipeline() -> dict:
     logger.info(
         "Sowal conflicts: %d · URL relistings: %d · Image relistings: %d · "
         "Venues renamed/merged: %d/%d · Performers renamed/merged: %d/%d · "
-        "Backfilled times: %d · Purged non-music/past: %d/%d · Schedule conflicts: %d",
+        "Backfilled times: %d · Times reformatted: %d · Purged non-music/past: %d/%d · Schedule conflicts: %d",
         finalized["sowal_conflicts_resolved"], finalized["url_relistings_resolved"],
         finalized["image_relistings_resolved"],
         finalized["venues_renamed"], finalized["venues_merged"],
         finalized["performers_renamed"], finalized["performers_merged"],
-        finalized["backfilled_times"],
+        finalized["backfilled_times"], finalized["times_normalized"],
         finalized["purged_non_music"], finalized["purged_past"],
         finalized["schedule_conflicts"],
     )

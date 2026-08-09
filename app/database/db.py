@@ -1139,6 +1139,60 @@ def backfill_venue_default_times(path: Path = DB_PATH) -> int:
     return backfilled
 
 
+def normalize_stored_times(path: Path = DB_PATH) -> int:
+    """
+    Reformat every event's time_start/time_end to the canonical "H:MM AM/PM"
+    (or "H:MM AM/PM - H:MM AM/PM") display format -- rule set added
+    2026-08-08 to collapse the dozens of variants that had accumulated
+    across sources ("6PM", "6-9 PM", "6:30 pm CT", "5:00 PM - 8:00 PM CST",
+    ...); see times.py's split_time_range()/format_time_range() docstrings
+    for the full parsing rules.
+
+    split_time_range()/format_time_range() already run at ingest time (see
+    provenance.py), so this is a one-time catch-up for rows saved before
+    that existed, plus a standing safety net: backfill_venue_default_times()
+    writes VENUE_DEFAULT_TIMES's raw string ("6:00 - 9:00 PM") straight into
+    time_start without going through this formatting, so running this AFTER
+    it (see resolve_and_finalize()) is what actually splits that default
+    into a proper time_start/time_end pair too.
+
+    Splits an in-band range crammed into time_start (e.g. "6-9 PM") into
+    separate time_start/time_end fields, same as ingest-time behavior, so a
+    stale pre-2026-08-08 row converges to the same shape a fresh one gets
+    today -- this is also what makes the dashboard's time column show the
+    full range instead of silently dropping time_end (render.py only ever
+    displayed time_start; see render.py's _rows_html).
+
+    Never touches a value split_time_range()/format_time_range() can't
+    confidently parse -- an unparseable time is left exactly as stored
+    rather than mangled. Safe to re-run; a no-op once times have converged.
+    Returns the number of events changed.
+    """
+    from app.normalize.times import format_time_range, split_time_range
+
+    conn = get_connection(path)
+    rows = conn.execute("SELECT id, time_start, time_end FROM events").fetchall()
+
+    changed = 0
+    for row in rows:
+        new_start, range_end = split_time_range(row["time_start"])
+        new_end = range_end or (
+            format_time_range(row["time_end"]) if row["time_end"] else row["time_end"]
+        )
+        if new_start != row["time_start"] or new_end != row["time_end"]:
+            conn.execute(
+                "UPDATE events SET time_start = ?, time_end = ? WHERE id = ?",
+                (new_start, new_end, row["id"]),
+            )
+            changed += 1
+
+    if changed:
+        conn.commit()
+    conn.close()
+    logger.info("Normalized stored time format for %d events", changed)
+    return changed
+
+
 def recanonicalize_performers(path: Path = DB_PATH) -> dict:
     """
     Re-apply performer canonicalization (app.normalize.canonical.canonicalize)

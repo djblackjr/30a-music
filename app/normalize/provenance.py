@@ -18,7 +18,7 @@ from app.normalize.confidence import (
     observation_confidence,
     source_confidence,
 )
-from app.normalize.times import apply_venue_default_time, normalize_time
+from app.normalize.times import apply_venue_default_time, format_time_range, normalize_time, split_time_range
 
 _AGG = ConfidenceAggregator()
 
@@ -89,9 +89,19 @@ def build_observation(raw: dict) -> dict | None:
     ev["source"] = ev.get("source") or "crawler"
     ev["observation_type"] = ev.get("observation_type") or infer_observation_type(ev["source"])
 
+    # normalize_time: 24h -> 12h. split_time_range: collapse every messy
+    # 12h variant ("6PM", "6-9 PM", "6:30 pm CT", ...) to clean "H:MM AM/PM",
+    # splitting an in-band range into (start, end) so time_end gets
+    # populated even when the source crammed both into one string (see
+    # times.py's module docstring for the full rule set, added 2026-08-08).
     time_val = normalize_time(ev.get("time_start") or ev.get("time"))
     time_val = apply_venue_default_time(venue, time_val)
-    ev["time_start"] = time_val
+    time_start, range_end = split_time_range(time_val)
+    ev["time_start"] = time_start
+    if range_end and not ev.get("time_end"):
+        ev["time_end"] = range_end
+    elif ev.get("time_end"):
+        ev["time_end"] = format_time_range(ev["time_end"])
 
     if not ev.get("name"):
         ev["name"] = f"{performer} at {venue}" if venue else performer
