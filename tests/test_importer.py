@@ -8,7 +8,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.images.importer import _call_gpt4o, _coerce_confidence, _normalise
+from datetime import date
+
+from app.images.importer import _call_gpt4o, _coerce_confidence, _current_week_date, _normalise
 from app.normalize import normalize_events
 
 IMG = Path("Shelbys_schedule.png")
@@ -88,6 +90,44 @@ def test_normalise_resolves_day_of_week_from_week_anchor():
     # week_of 7/6 (a Monday in 2026) + Wednesday -> 2026-07-08
     out = _normalise([{"artist": "X", "day_of_week": "Wednesday", "week_of": "7/6", "time_start": "6PM"}], IMG)
     assert out[0]["date"] == "2026-07-08"
+
+
+# --- same-week weekday fallback (no week_of grid, rule set 2026-08-09) ----
+
+def test_current_week_date_this_saturday_from_friday():
+    # Confirmed live: a flyer said only "This Saturday", captured Friday
+    # 2026-08-07 -- the very next day, 2026-08-08.
+    assert _current_week_date("Saturday", date(2026, 8, 7)) == date(2026, 8, 8)
+
+
+def test_current_week_date_monday_from_sunday():
+    # Sunday-start week: Monday is the day right after Sunday, same week.
+    assert _current_week_date("Monday", date(2026, 8, 9)) == date(2026, 8, 10)
+
+
+def test_current_week_date_wraps_back_to_earlier_in_week():
+    # Today mid-week, named day already passed this week -> still resolves
+    # backward within the same Sun-Sat week, not forward to next week's.
+    assert _current_week_date("Monday", date(2026, 8, 12)) == date(2026, 8, 10)
+
+
+def test_current_week_date_unrecognized_day_returns_none():
+    assert _current_week_date("Blursday", date(2026, 8, 7)) is None
+
+
+def test_normalise_resolves_day_of_week_without_week_anchor(monkeypatch):
+    # No week_of grid at all -- just a bare weekday name (e.g. "This
+    # Saturday") on a single-flyer image. Falls back to "today"'s week.
+    class _FixedDate(date):
+        @classmethod
+        def today(cls):
+            return date(2026, 8, 7)
+
+    monkeypatch.setattr("app.images.importer.date", _FixedDate)
+    out = _normalise(
+        [{"artist": "The Typos Nate & Matt", "venue": "Red Fish Taco", "day_of_week": "Saturday"}], IMG
+    )
+    assert out[0]["date"] == "2026-08-08"
 
 
 def test_normalise_missing_confidence_is_none():

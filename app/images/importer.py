@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import shutil
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -168,6 +168,32 @@ def _coerce_confidence(value) -> Optional[float]:
         return None
 
 
+_DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def _current_week_date(dow_name: str, today: date) -> Optional[date]:
+    """
+    Resolve a bare weekday name ("Saturday", "This Saturday") to its date
+    within the Sunday-Saturday week containing `today` -- the natural
+    reading of a flyer that names only a weekday with no absolute date and
+    no week-grid to anchor it against (rule set 2026-08-09: "if a
+    screenshot has a day name only and it is in the same week as the
+    current date, use the date of that weekday in that week." Confirmed
+    live: a Red Fish Taco flyer said only "This Saturday", captured the
+    Friday before -- i.e. the very next day).
+
+    Returns None for an unrecognized day name.
+    """
+    try:
+        idx = _DAY_ORDER.index(dow_name.title())  # Monday=0 .. Sunday=6
+    except ValueError:
+        return None
+    days_since_sunday = (today.weekday() + 1) % 7       # Mon=0..Sun=6 -> Mon=1..Sun=0
+    week_start = today - timedelta(days=days_since_sunday)  # this week's Sunday
+    offset_from_sunday = (idx + 1) % 7                   # Mon=1 .. Sat=6, Sun=0
+    return week_start + timedelta(days=offset_from_sunday)
+
+
 def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
     """
     Convert GPT-4o output into the standard event dict used by the pipeline.
@@ -214,11 +240,18 @@ def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
                     week_anchor.month,
                     week_anchor.day,
                 )
-                from datetime import timedelta
                 resolved = resolved + timedelta(days=delta)
                 event_date = resolved.isoformat()
             except (ValueError, Exception):
                 pass
+
+        # No week_of grid to anchor against (a single non-calendar flyer,
+        # e.g. "This Saturday" with no absolute date printed anywhere) --
+        # assume the current week, per rule set 2026-08-09.
+        if not event_date and dow:
+            resolved = _current_week_date(dow, date.today())
+            if resolved:
+                event_date = resolved.isoformat()
 
         name = f"{artist} at {venue}" if venue else artist
 
