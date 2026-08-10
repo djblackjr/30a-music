@@ -15,6 +15,7 @@ from app.database.db import (
     init_db,
     load_events,
     normalize_stored_times,
+    purge_dateless_events,
     purge_non_music_events,
     purge_past_events,
     recanonicalize_performers,
@@ -96,6 +97,12 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
     # only ever deletes rows the current patterns match.
     purged_non_music = purge_non_music_events()
 
+    # Catch any pre-existing dateless row build_observation()'s ISO-date
+    # guard wouldn't have caught (it only applies to events ingested after
+    # 2026-08-09) -- purge_past_events()'s `date < cutoff` never matches a
+    # NULL/non-comparable date, so this needs its own pass.
+    purged_dateless = purge_dateless_events()
+
     # Drop events whose date has already passed. Unlike "removed" above,
     # this isn't inferred from crawl absence — a past date is a fact, not
     # a guess — so it's safe to delete outright rather than just hide.
@@ -158,6 +165,7 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
         "backfilled_times":   backfilled_times,
         "times_normalized":   times_normalized,
         "purged_non_music": purged_non_music,
+        "purged_dateless": purged_dateless,
         "purged_past":     purged_past,
         "schedule_conflicts": len(schedule_conflicts),
         "report_path":     str(report_path) if report_path else None,
@@ -318,13 +326,14 @@ def run_pipeline() -> dict:
     logger.info(
         "Sowal conflicts: %d · URL relistings: %d · Image relistings: %d · "
         "Venues renamed/merged: %d/%d · Performers renamed/merged: %d/%d · "
-        "Backfilled times: %d · Times reformatted: %d · Purged non-music/past: %d/%d · Schedule conflicts: %d",
+        "Backfilled times: %d · Times reformatted: %d · "
+        "Purged non-music/dateless/past: %d/%d/%d · Schedule conflicts: %d",
         finalized["sowal_conflicts_resolved"], finalized["url_relistings_resolved"],
         finalized["image_relistings_resolved"],
         finalized["venues_renamed"], finalized["venues_merged"],
         finalized["performers_renamed"], finalized["performers_merged"],
         finalized["backfilled_times"], finalized["times_normalized"],
-        finalized["purged_non_music"], finalized["purged_past"],
+        finalized["purged_non_music"], finalized["purged_dateless"], finalized["purged_past"],
         finalized["schedule_conflicts"],
     )
 

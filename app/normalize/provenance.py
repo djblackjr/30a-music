@@ -55,16 +55,30 @@ def _checksum(ev: dict) -> str:
     return hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
 def build_observation(raw: dict) -> dict | None:
     """
     Normalise one raw event into an observation (a sighting from one source),
     attaching source_confidence, extraction_confidence, effective confidence and
-    a checksum. Returns None if it has no performer.
+    a checksum. Returns None if it has no performer or no resolvable ISO date.
     """
     ev = dict(raw)
 
     performer = canonicalize((ev.get("performer") or "").strip())
     if not performer:
+        return None
+
+    # VISION_PROMPT explicitly allows date=null when a flyer's date isn't
+    # determinable (e.g. "This Saturday" with no absolute date printed
+    # anywhere -- confirmed live 2026-08-09, a Red Fish Taco flyer for "The
+    # Typos Nate & Matt"). A dateless event is useless for a chronological
+    # calendar and, worse, breaks the dashboard's date-grouping JS outright
+    # (renders a bogus "undefined, undefined NaN" section header) -- so drop
+    # it here rather than at display time, matching the missing-performer
+    # guard above.
+    if not _ISO_DATE_RE.match((ev.get("date") or "").strip()):
         return None
 
     venue = canonicalize((ev.get("venue") or "").strip()) or None

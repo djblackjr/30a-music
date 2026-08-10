@@ -600,6 +600,31 @@ def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int
     return len(ids)
 
 
+def purge_dateless_events(path: Path = DB_PATH) -> int:
+    """
+    Delete events with no resolvable ISO date (NULL, empty, or anything not
+    matching YYYY-MM-DD). build_observation() now refuses to save one at
+    ingest time (confirmed live 2026-08-09: a "This Saturday"-dated flyer
+    with no absolute date anywhere landed with date=NULL and broke the
+    dashboard's date-grouping JS -- rendered a literal "undefined, undefined
+    NaN" section header), but purge_past_events()'s `date < cutoff` never
+    matches a NULL/non-comparable date, so a row saved before that guard
+    existed survives every run. Safe to re-run. Returns the number deleted.
+    """
+    conn = get_connection(path)
+    ids = [row["id"] for row in conn.execute(
+        "SELECT id FROM events WHERE date IS NULL OR date NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'"
+    ).fetchall()]
+    if ids:
+        placeholders = ",".join("?" * len(ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({placeholders})", ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
+        conn.commit()
+    conn.close()
+    logger.info("Purged %d dateless events", len(ids))
+    return len(ids)
+
+
 def purge_non_music_events(path: Path = DB_PATH) -> int:
     """
     One-time cleanup for events saved before app.crawlers.sowal learned to
