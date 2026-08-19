@@ -255,8 +255,20 @@ def aggregate_observations(observations: list[dict]) -> dict:
 
     Works on observation records, so it can be re-run whenever a new run adds an
     observation to an existing event (cross-run accumulation).
+
+    Tie-break on confidence is observed_at, most recent wins -- same "freshest
+    wins" policy as resolve_stale_url_relistings()/resolve_stale_image_relistings()
+    for the identical scenario (same source re-describing a listing). Without
+    this, a confidence tie falls back to whatever order SQLite happens to
+    return event_observations rows in (no ORDER BY), which in practice meant
+    an old observation saved before the 2026-08-08 time-format rules landed
+    could keep winning primary over every freshly re-normalized observation
+    of the same event forever, since its pre-fix checksum never matches a
+    new one and it never ages out (confirmed live 2026-08-19: a stale
+    "9:30AM"/"12:30 pm" observation from 2026-08-08 kept beating that day's
+    correctly formatted "9:30 AM"/"12:30 PM" re-observation on every run).
     """
-    primary = max(observations, key=lambda o: o.get("confidence") or 0.0)
+    primary = max(observations, key=lambda o: (o.get("confidence") or 0.0, o.get("observed_at") or ""))
 
     consensus_time  = primary.get("time_start")
     consensus_stage = (primary.get("stage") or "").strip().lower()
