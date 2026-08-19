@@ -219,12 +219,17 @@ def run_inbox_only(run_id: str | None = None) -> dict:
 
     finalized = resolve_and_finalize(run_id, changes)
 
+    from app.reconcile.changelog import write_changelog
+    changelog_path = write_changelog(run_id, changes)
+
     out = {
         "run_id":          run_id,
         "image_files":     len(inbox_images),
         "image_events":    len(image_events),
         "events_saved":    result["saved"],
         "new_or_changed":  changes["summary"]["total_delta"],
+        "changes":         changes,
+        "changelog_path":  str(changelog_path) if changelog_path else None,
         **finalized,
     }
     logger.info("Inbox-only run complete. %s", out)
@@ -323,6 +328,9 @@ def run_pipeline() -> dict:
     #    see resolve_and_finalize().
     logger.info("Step 6/6 — Resolving conflicts, recanonicalizing, purging, publishing")
     finalized = resolve_and_finalize(run_id, changes)
+
+    from app.reconcile.changelog import write_changelog
+    changelog_path = write_changelog(run_id, changes)
     logger.info(
         "Sowal conflicts: %d · URL relistings: %d · Image relistings: %d · "
         "Venues renamed/merged: %d/%d · Performers renamed/merged: %d/%d · "
@@ -345,6 +353,7 @@ def run_pipeline() -> dict:
         "events_saved":    saved,
         "new_or_changed":  changes["summary"]["total_delta"],
         "changes":         changes,
+        "changelog_path":  str(changelog_path) if changelog_path else None,
         **finalized,
     }
 

@@ -86,6 +86,10 @@ def print_summary(result: dict) -> None:
                 date   = ev.get("date") or "?"
                 time   = ev.get("time_start") or ""
                 print(f"    · {artist} @ {venue}  {date} {time}")
+
+        if result.get("changelog_path"):
+            print()
+            print(f"  \033[1mFull changelog:\033[0m         {result['changelog_path']}")
     else:
         print("  \033[90mNo changes since last run.\033[0m")
 

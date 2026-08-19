@@ -6,7 +6,15 @@ __pycache__/
 # data/events.db is TRACKED: it is the system of record the dashboard is
 # generated from, and CI needs it to regenerate docs/index.html.
 exports/
-logs/
+# logs/* (not logs/) so git still traverses into logs/changes/ below --
+# a plain "logs/" directory-level ignore prunes the whole subtree and a
+# later "!logs/changes/" negation can never re-include anything inside it.
+logs/*
+# logs/changes/*.json is TRACKED, unlike the rest of logs/: it's the only
+# durable record of what a scheduled GitHub Actions run changed -- that
+# runner is thrown away after the job finishes, so anything not committed
+# is lost, unlike a local run's log files which just sit on disk.
+!logs/changes/
 images/processed/
 images/failed/
 .pytest_cache/

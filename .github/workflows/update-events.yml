@@ -5,12 +5,22 @@ on:
     # GitHub's own `schedule` trigger has never reliably fired for this repo
     # (confirmed: the original Friday cron never ran once via `schedule` --
     # only manual/dispatch runs show up in the history). Kept only as a
-    # fallback in case it fires; the real trigger is now an external
-    # cron-job.org ping hitting workflow_dispatch directly (same fix as the
-    # sibling 331 Bridge Fishing Report app, where it's been running
-    # reliably). workflow_dispatch runs aren't subject to the same queue
-    # congestion as `schedule` is.
-    - cron: '17 12 * * *'  # Every day ~7am/8am Central, depending on DST
+    # fallback in case it fires; the real trigger is an external cron-job.org
+    # ping hitting workflow_dispatch directly (same fix as the sibling 331
+    # Bridge Fishing Report app, where it's been running reliably).
+    # workflow_dispatch runs aren't subject to the same queue congestion as
+    # `schedule` is.
+    #
+    # Weekly, not daily: the crawler side of the pipeline doesn't need
+    # daily freshness, and inbox screenshots no longer wait on this run at
+    # all -- scripts/process_inbox.py (the local launchd watcher) commits
+    # and pushes on its own the moment a new screenshot lands. This run is
+    # now just the weekly crawler sweep + safety-net publish.
+    #
+    # NOTE: cron-job.org's schedule is configured on cron-job.org itself and
+    # is not visible/editable from this repo -- update it there too so the
+    # actual trigger matches this fallback.
+    - cron: '17 12 * * 1'  # Weekly, Monday ~7am/8am Central, depending on DST
   workflow_dispatch:  # Allow manual trigger — this is what cron-job.org calls
 
 permissions:
@@ -51,6 +61,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/events.db docs/index.html
+          git add data/events.db docs/index.html logs/changes/
           git diff --staged --quiet || git commit -m "Auto-update events $(date +'%Y-%m-%d')"
           git push

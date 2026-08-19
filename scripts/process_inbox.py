@@ -3,13 +3,15 @@
 scripts/process_inbox.py
 Fired by a launchd WatchPaths agent (see scripts/com.30amusic.inbox-watcher.plist)
 every time images/inbox/ changes, so a screenshot gets processed within
-seconds of landing instead of waiting for the once-daily full pipeline.
+seconds of landing instead of waiting for the weekly full pipeline.
 
 Runs app.monitor.run_inbox_only(): image ingest (GPT-4o Vision) -> normalize
 -> upsert -> the same conflict-resolution/recanonicalize/purge chain the full
-pipeline uses -> dashboard + Excel regeneration. Does NOT touch git -- this
-only updates the local db/docs/exports; publishing to the live site is still
-the daily GitHub Actions job (or a manual `git push`).
+pipeline uses -> dashboard + Excel regeneration. If that produced a new or
+changed event, this also commits data/events.db + docs/index.html and pushes
+-- the same two files the scheduled GitHub Actions job commits -- so a
+screenshot landing in the inbox publishes to the live dashboard within
+seconds instead of waiting for the (now weekly) scheduled run.
 
 A non-blocking file lock skips a run if one is already in flight (a burst of
 several screenshots landing at once via AirDrop can fire the watcher more
@@ -18,6 +20,7 @@ time it starts, so a skipped duplicate firing costs nothing.
 """
 import fcntl
 import logging
+import subprocess
 import sys
 from pathlib import Path
 
@@ -40,6 +43,40 @@ logging.basicConfig(
 logger = logging.getLogger("process_inbox")
 
 
+def _publish() -> None:
+    """
+    Commit + push data/events.db, docs/index.html, and any new
+    logs/changes/<run_id>.json, mirroring the commit step in
+    .github/workflows/update-events.yml. No-ops quietly if there's nothing
+    staged (e.g. the inbox run only touched exports/) or if the push fails
+    (offline, conflict, etc.) -- a failed publish here just means the weekly
+    scheduled run picks it up later, same as before this existed.
+    """
+    def run(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(args, cwd=REPO_ROOT, capture_output=True, text=True)
+
+    run("git", "config", "user.name", "30A Music Inbox Watcher")
+    run("git", "config", "user.email", "actions@github.com")
+    run("git", "add", "data/events.db", "docs/index.html", "logs/changes/")
+
+    staged = run("git", "diff", "--staged", "--quiet")
+    if staged.returncode == 0:
+        logger.info("Nothing to publish (no changes to events.db/index.html)")
+        return
+
+    commit = run("git", "commit", "-m", "Auto-update events (inbox watcher)")
+    if commit.returncode != 0:
+        logger.error("git commit failed: %s", commit.stderr.strip())
+        return
+
+    push = run("git", "push")
+    if push.returncode != 0:
+        logger.error("git push failed: %s", push.stderr.strip())
+        return
+
+    logger.info("Published inbox update to origin/main")
+
+
 def main() -> int:
     sys.path.insert(0, str(REPO_ROOT))
     import os
@@ -58,6 +95,10 @@ def main() -> int:
         if result["image_files"] == 0:
             return 0
         logger.info("Done: %s", result)
+        if result.get("new_or_changed", 0) > 0:
+            _publish()
+        else:
+            logger.info("No new or changed events — skipping publish")
         return 0
     except Exception:
         logger.exception("process_inbox run failed")
