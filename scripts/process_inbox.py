@@ -3,7 +3,7 @@
 scripts/process_inbox.py
 Fired by a launchd WatchPaths agent (see scripts/com.30amusic.inbox-watcher.plist)
 every time images/inbox/ changes, so a screenshot gets processed within
-seconds of landing instead of waiting for the weekly full pipeline.
+seconds of landing instead of waiting for the scheduled full pipeline.
 
 Runs app.monitor.run_inbox_only(): image ingest (GPT-4o Vision) -> normalize
 -> upsert -> the same conflict-resolution/recanonicalize/purge chain the full
@@ -11,7 +11,7 @@ pipeline uses -> dashboard + Excel regeneration. If that produced a new or
 changed event, this also commits data/events.db + docs/index.html and pushes
 -- the same two files the scheduled GitHub Actions job commits -- so a
 screenshot landing in the inbox publishes to the live dashboard within
-seconds instead of waiting for the (now weekly) scheduled run.
+seconds instead of waiting for the (now every-2-days) scheduled run.
 
 A non-blocking file lock skips a run if one is already in flight (a burst of
 several screenshots landing at once via AirDrop can fire the watcher more
@@ -49,7 +49,7 @@ def _publish() -> None:
     logs/changes/<run_id>.json, mirroring the commit step in
     .github/workflows/update-events.yml. No-ops quietly if there's nothing
     staged (e.g. the inbox run only touched exports/) or if the push fails
-    (offline, conflict, etc.) -- a failed publish here just means the weekly
+    (offline, conflict, etc.) -- a failed publish here just means the next
     scheduled run picks it up later, same as before this existed.
     """
     def run(*args: str) -> subprocess.CompletedProcess:

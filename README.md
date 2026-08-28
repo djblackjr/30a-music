@@ -256,7 +256,9 @@ and pushes. GitHub Pages serves `docs/` from `main`.
 ## Suggested Workflow
 
 ```
-Weekly:
+Every 2 days (or anytime -- the inbox watcher auto-publishes screenshots
+the moment they land, and the scheduled CI run covers the crawler sweep
+on its own; this manual routine is a fallback, not a requirement):
   1. Download schedule screenshots from Instagram / venue sites
   2. cp screenshots images/inbox/
   3. python run_monitor.py
