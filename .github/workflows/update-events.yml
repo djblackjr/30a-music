@@ -11,25 +11,22 @@ on:
     # workflow_dispatch runs aren't subject to the same queue congestion as
     # `schedule` is.
     #
-    # Every two days, not daily: the crawler side of the pipeline doesn't
-    # need daily freshness, and inbox screenshots no longer wait on this
-    # run at all -- scripts/process_inbox.py (the local launchd watcher)
-    # commits and pushes on its own the moment a new screenshot lands. This
-    # run is the crawler sweep + safety-net publish that catches anything a
-    # venue changed on its own site (a schedule update with no screenshot
-    # dropped anywhere) -- weekly turned out too slow to catch that, so
-    # this is the tightened cadence.
-    #
-    # `*/2` in the day-of-month field is calendar-day parity (odd days),
-    # not a rolling 48h interval -- it can fire on two consecutive
-    # calendar days at a month boundary (e.g. the 31st then the 1st) and
-    # otherwise lands every other day. Good enough here; a true fixed
-    # interval isn't worth the complexity this cadence doesn't need.
+    # Daily: this repo is public, so GitHub Actions minutes are free
+    # regardless of frequency, and the pipeline's only paid dependency
+    # (OpenAI Vision, used just for the rare SoWal flyer-image-only page --
+    # see app/crawlers/sowal.py's _parse_flyer_image fallback) costs
+    # fractions of a cent per run either way. Daily is simplest to reason
+    # about and catches a venue changing its own site (no screenshot
+    # dropped anywhere) sooner than every-2-days did. Inbox screenshots
+    # still don't wait on this at all -- scripts/process_inbox.py (the
+    # local launchd watcher) commits and pushes on its own the moment a
+    # new screenshot lands; this run is the crawler sweep + safety-net
+    # publish on top of that.
     #
     # NOTE: cron-job.org's schedule is configured on cron-job.org itself and
     # is not visible/editable from this repo -- update it there too so the
     # actual trigger matches this fallback.
-    - cron: '17 12 */2 * *'  # Every 2 days, ~7am/8am Central, depending on DST
+    - cron: '17 12 * * *'  # Daily, ~7am/8am Central, depending on DST
   workflow_dispatch:  # Allow manual trigger — this is what cron-job.org calls
 
 permissions:

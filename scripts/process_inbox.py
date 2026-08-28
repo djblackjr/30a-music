@@ -11,7 +11,7 @@ pipeline uses -> dashboard + Excel regeneration. If that produced a new or
 changed event, this also commits data/events.db + docs/index.html and pushes
 -- the same two files the scheduled GitHub Actions job commits -- so a
 screenshot landing in the inbox publishes to the live dashboard within
-seconds instead of waiting for the (now every-2-days) scheduled run.
+seconds instead of waiting for the scheduled run.
 
 A non-blocking file lock skips a run if one is already in flight (a burst of
 several screenshots landing at once via AirDrop can fire the watcher more
