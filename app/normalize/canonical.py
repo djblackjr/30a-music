@@ -116,6 +116,11 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # GPT-4o Vision reads a flyer's short venue name; sowal.com uses the
     # full "Town Center" form. Same real venue.
     ("Watersound Town Center", "Watersound"),
+    # sowal.com uses the official "The Village of Baytowne Wharf" name; the
+    # venue's own flyers/Instagram just say "Baytowne Wharf" -- same real
+    # venue, confirmed live 2026-09-02 (The Typos, same date/time from both
+    # sowal and a venue flyer, produced two cards for one show).
+    ("Baytowne Wharf", "The Village of Baytowne Wharf"),
 
     # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
     ("Coconut Radio", "COCONUT RADIO"),
