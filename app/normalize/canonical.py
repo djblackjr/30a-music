@@ -75,6 +75,9 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # above -- confirmed live 2026-07-30 on a Stevie Monce flyer reposted from
     # @chiringograyton.
     ("Chiringo", "chiringograyton"),
+    # Same pattern again on AJ's own weekly-entertainment flyer -- confirmed
+    # live 2026-09-01.
+    ("AJ's Grayton Beach", "ajsgrayton"),
     ("North Beach Social", "NORTH BEACH SOCIAL"),
     ("North Beach Social", "northbeachsocial"),
     ("North Beach Social", "North Beach Social 1"),
