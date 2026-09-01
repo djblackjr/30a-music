@@ -1,0 +1,1154 @@
+{
+  "run_id": "20260901_101724",
+  "recorded_at": "2026-09-01T10:21:10",
+  "summary": {
+    "new": 137,
+    "changed": 3,
+    "removed": 0,
+    "unchanged": 516,
+    "total_delta": 140
+  },
+  "new": [
+    {
+      "performer": "Kevin Carson",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-09-07",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-01",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-06",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-07",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-08",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-13",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-14",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-15",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jonathan Puzan",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-20",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jonathan Puzan",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-21",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jonathan Puzan",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-22",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-27",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-08-28",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-01",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-02",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dion Jones Duo",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-09-02",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-03",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-09-04",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-09-04",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-04",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Stranger Boy",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-09-04",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Sean Williams",
+      "venue": "AJ's Grayton Beach Round Room",
+      "date": "2026-09-05",
+      "time_start": "4:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-05",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Stranger Boy",
+      "venue": "AJ's Grayton Beach Round Room",
+      "date": "2026-09-05",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-06",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-07",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-07",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-08",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "LuckyBird Pilates",
+      "venue": "North Beach Social",
+      "date": "2026-09-08",
+      "time_start": "5:30 PM",
+      "time_end": "6:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-08",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-09",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Saltwater Revival",
+      "venue": "The Village of Baytowne Wharf",
+      "date": "2026-09-09",
+      "time_start": "7:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-10",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-10",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-09-11",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-09-11",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-11",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-11",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-11",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-12",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-12",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-13",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-14",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-14",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-15",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-15",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-16",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-17",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-17",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-18",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "Red Fish Taco",
+      "date": "2026-09-18",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-18",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-18",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-19",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-19",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-20",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-21",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-21",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-22",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "LuckyBird Pilates",
+      "venue": "North Beach Social",
+      "date": "2026-09-22",
+      "time_start": "5:30 PM",
+      "time_end": "6:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-22",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-23",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Stinky's Bait Shack Live Music + Comedy Night",
+      "venue": "Stinky's Bait Shack",
+      "date": "2026-09-23",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-24",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-24",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-09-25",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-09-25",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-25",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-25",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-25",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Pickled Pickers",
+      "venue": "Red Fish Taco",
+      "date": "2026-09-26",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dueling Pianos",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-26",
+      "time_start": "7:00 PM",
+      "time_end": "10:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Dream Band",
+      "venue": "The Village Door",
+      "date": "2026-09-26",
+      "time_start": "9:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-27",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-28",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-28",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-29",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-29",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Alex Napier",
+      "venue": "Old Florida Fish House",
+      "date": "2026-09-30",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Dwayne O'Brien",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "SWFD Pancake Breakfas",
+      "venue": "SWFD Headquarters",
+      "date": "2026-10-10",
+      "time_start": "8:00 AM",
+      "time_end": "11:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-10-16",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Zack Miller",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-10-16",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-10-23",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-10-23",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Zack Miller",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-10-30",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-10-30",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-11-06",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Zack Miller",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-11-06",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-11-13",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-11-13",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Emily Bass",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-11-20",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-11-20",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-11-27",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-11-27",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Zack Miller",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-12-04",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Smith",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-12-04",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-12-11",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-12-11",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Harrison Prentice",
+      "venue": "The Shrimp Shack & Boardwalk Bar",
+      "date": "2026-12-18",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Pickle's Sandbar",
+      "date": "2026-12-18",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Crackings",
+      "date": "2026-08-01",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "TJ & Brad",
+      "venue": "Crackings",
+      "date": "2026-08-02",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jordan Chase",
+      "venue": "Crackings",
+      "date": "2026-08-03",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Christy Larsen",
+      "venue": "Crackings",
+      "date": "2026-08-04",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Laura Lane",
+      "venue": "Crackings",
+      "date": "2026-08-05",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Rayne",
+      "venue": "Crackings",
+      "date": "2026-08-06",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "TJ & Brad",
+      "venue": "Crackings",
+      "date": "2026-08-07",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Crackings",
+      "date": "2026-08-08",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Tim Roberts",
+      "venue": "Crackings",
+      "date": "2026-08-09",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Otha Allen Jr.",
+      "venue": "Crackings",
+      "date": "2026-08-10",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Christy Larsen",
+      "venue": "Crackings",
+      "date": "2026-08-11",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Laura Lane",
+      "venue": "Crackings",
+      "date": "2026-08-12",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Rayne",
+      "venue": "Crackings",
+      "date": "2026-08-13",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Steven Theriot",
+      "venue": "Crackings",
+      "date": "2026-08-14",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Crackings",
+      "date": "2026-08-15",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "TK Bardwell",
+      "venue": "Crackings",
+      "date": "2026-08-16",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Otha Allen Jr.",
+      "venue": "Crackings",
+      "date": "2026-08-17",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Christy Larsen",
+      "venue": "Crackings",
+      "date": "2026-08-18",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Laura Lane",
+      "venue": "Crackings",
+      "date": "2026-08-19",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Rayne",
+      "venue": "Crackings",
+      "date": "2026-08-20",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jordan Chase",
+      "venue": "Crackings",
+      "date": "2026-08-21",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jared Herzog",
+      "venue": "Crackings",
+      "date": "2026-08-22",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Tim Roberts",
+      "venue": "Crackings",
+      "date": "2026-08-23",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Otha Allen Jr.",
+      "venue": "Crackings",
+      "date": "2026-08-24",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Christy Larsen",
+      "venue": "Crackings",
+      "date": "2026-08-25",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Phil LaMay",
+      "venue": "Crackings",
+      "date": "2026-08-26",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Keylan Rayne",
+      "venue": "Crackings",
+      "date": "2026-08-27",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Steven Theriot",
+      "venue": "Crackings",
+      "date": "2026-08-28",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jordan Chase",
+      "venue": "Crackings",
+      "date": "2026-08-29",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Crackings",
+      "date": "2026-08-30",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Otha Allen Jr.",
+      "venue": "Crackings",
+      "date": "2026-08-31",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Typos",
+      "venue": "The Alice",
+      "date": "2026-08-28",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "The Typos",
+      "venue": "Papa Surf",
+      "date": "2026-09-10",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    }
+  ],
+  "changed": [
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-01",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null,
+      "diff": {
+        "time_end": {
+          "before": null,
+          "after": "9:00 PM"
+        }
+      }
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-03",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null,
+      "diff": {
+        "time_end": {
+          "before": null,
+          "after": "9:00 PM"
+        }
+      }
+    },
+    {
+      "performer": "Eric Knight",
+      "venue": "The Village Door",
+      "date": "2026-09-04",
+      "time_start": "5:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null,
+      "diff": {
+        "time_end": {
+          "before": null,
+          "after": "9:00 PM"
+        }
+      }
+    }
+  ],
+  "removed": []
+}
