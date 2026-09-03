@@ -223,6 +223,15 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     # play instances should be caught.
     ("theater_production", re.compile(r"\bectc\b|\bthe musical\b|\bnutcracker\b", re.I)),
     ("childrens_play", re.compile(r"child(?:ren)?'?s\s+play\b", re.I)),
+    # A shopping-district retail/dining promo, not music -- confirmed live
+    # 2026-09-04 ("Watersound Shop Dine Unwind" saved with venue=None and
+    # displayed on the dashboard as if it were a performer). Requires both
+    # "shop" and "dine" so it doesn't catch a themed party that DOES have
+    # real booked music, e.g. "Bubbles Sip N' Shop" (no "dine").
+    ("shop_dine_promo", re.compile(r"\bshop\b.{0,15}\bdine\b", re.I)),
+    # A charity paddleboard race, not music -- confirmed live 2026-09-04
+    # ("Paddle 4 Peace" saved with venue=None, same pattern as above).
+    ("paddle_event",   re.compile(r"\bpaddle\s*(?:for|4)\s*\w+\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text. "music from" added
