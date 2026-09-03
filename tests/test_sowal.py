@@ -234,7 +234,8 @@ def test_resolve_performer_downgrades_known_recurring_series_with_no_lineup_matc
     # performer -- 13 "LIVE MUSIC Mondays" rows and 22 "Sounds of Seaside"
     # rows had accumulated on the live dashboard, most with no real per-date
     # artist ever resolved at all (not just sitting next to a correct one).
-    for title in ("LIVE MUSIC Mondays at Fish Out of Water", "Sounds of Seaside at Seaside Amphitheater"):
+    for title in ("LIVE MUSIC Mondays at Fish Out of Water", "Sounds of Seaside at Seaside Amphitheater",
+                  "Watersound First Friday Concert Series"):
         result = resolve_performer(title, description="", target_date="2099-01-01")
         assert result["performer"] is None
         assert result["performer_status"] == "unresolved"

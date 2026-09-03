@@ -13,6 +13,7 @@ from app.database.db import (
     collapse_same_slot_duplicates_in_db,
     detect_schedule_conflicts,
     init_db,
+    purge_recurring_series_placeholder_events,
     recanonicalize_venues,
     recompute_aggregates,
     upsert_events,
@@ -213,6 +214,45 @@ def test_collapse_same_slot_duplicates_in_db_leaves_different_times_alone(tmp_pa
     count = conn.execute("SELECT COUNT(*) FROM events WHERE performer = 'The Typos'").fetchone()[0]
     conn.close()
     assert count == 2
+
+
+def test_purge_recurring_series_placeholder_events_removes_known_titles(tmp_path):
+    # Regression: adding a title to RECURRING_SERIES_TITLES only stops NEW
+    # crawls from saving it as a fake performer -- rows a past crawl already
+    # saved stay put until something retroactively purges them. Confirmed
+    # live 2026-09-03: "Watersound First Friday Concert Series" sat on the
+    # dashboard as a fake performer for four dates.
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([
+        _raw("Watersound First Friday Concert Series", None, date="2026-09-04"),
+        _raw("The Pink Stones", "Watersound Town Center", date="2026-09-04"),
+    ]), run_id="R1", path=db)
+
+    import sqlite3
+    conn = sqlite3.connect(db)
+    before = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
+    conn.close()
+    assert before == 2
+
+    purged = purge_recurring_series_placeholder_events(db)
+    assert purged == 1
+
+    conn = sqlite3.connect(db)
+    rows = [r[0] for r in conn.execute("SELECT performer FROM events").fetchall()]
+    conn.close()
+    assert rows == ["The Pink Stones"]
+
+
+def test_purge_recurring_series_placeholder_events_is_safe_to_rerun(tmp_path):
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([
+        _raw("Sounds of Seaside at Seaside Amphitheater", None, date="2026-09-09"),
+    ]), run_id="R1", path=db)
+
+    assert purge_recurring_series_placeholder_events(db) == 1
+    assert purge_recurring_series_placeholder_events(db) == 0
 
 
 def test_detect_schedule_conflicts_flags_same_night_collision(tmp_path):

@@ -448,6 +448,12 @@ RECURRING_SERIES_TITLES = frozenset({
     # at all, not just sitting next to a correct one.
     "LIVE MUSIC Mondays at Fish Out of Water",
     "Sounds of Seaside at Seaside Amphitheater",
+    # Same problem again, confirmed live 2026-09-03: four bare-title rows
+    # (Sep-Dec) sitting on the dashboard with venue=None, no per-date artist
+    # ever resolved -- spotted as a card reading "Watersound First Friday
+    # Concert Series" next to "The Pink Stones" (a real named act, same
+    # Watersound Town Center) as if the series title itself were a performer.
+    "Watersound First Friday Concert Series",
 })
 
 # Series whose sowal.com detail-page title becomes "<series> - <artist>" once

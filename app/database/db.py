@@ -625,6 +625,43 @@ def purge_dateless_events(path: Path = DB_PATH) -> int:
     return len(ids)
 
 
+def purge_recurring_series_placeholder_events(path: Path = DB_PATH) -> int:
+    """
+    One-time cleanup for events saved before a bare series/program title was
+    added to app.crawlers.sowal.RECURRING_SERIES_TITLES -- see that
+    frozenset's docstring: a crawl before a per-date lineup is announced (or
+    with no prose-lineup match) invents a fake performer out of the series
+    name itself (e.g. "Watersound First Friday Concert Series" saved as if
+    it were a real act, confirmed live 2026-09-03, four dates Sep-Dec, all
+    venue=None). Adding a title to that set only stops NEW crawls from
+    repeating the mistake -- same relationship as purge_non_music_events()
+    to detect_non_music() -- so a title added today doesn't retroactively
+    fix rows a past crawl already saved before the title was added; this
+    does that other half.
+
+    An exact performer-name match against a bare series title can never be
+    a real act's own name, so this never risks deleting anything else.
+    Safe to re-run; returns the number of events deleted.
+    """
+    from app.crawlers.sowal import RECURRING_SERIES_TITLES
+
+    conn = get_connection(path)
+    placeholders = ",".join("?" * len(RECURRING_SERIES_TITLES))
+    ids = [row["id"] for row in conn.execute(
+        f"SELECT id FROM events WHERE performer IN ({placeholders})",
+        list(RECURRING_SERIES_TITLES),
+    ).fetchall()]
+
+    if ids:
+        id_placeholders = ",".join("?" * len(ids))
+        conn.execute(f"DELETE FROM event_observations WHERE event_id IN ({id_placeholders})", ids)
+        conn.execute(f"DELETE FROM events WHERE id IN ({id_placeholders})", ids)
+        conn.commit()
+    conn.close()
+    logger.info("Purged %d recurring-series placeholder event(s)", len(ids))
+    return len(ids)
+
+
 def purge_non_music_events(path: Path = DB_PATH) -> int:
     """
     One-time cleanup for events saved before app.crawlers.sowal learned to
