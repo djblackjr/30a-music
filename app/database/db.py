@@ -844,6 +844,122 @@ def resolve_stale_image_relistings(path: Path = DB_PATH) -> dict:
     return {"groups_found": groups_found, "events_deleted": len(deleted_ids)}
 
 
+def collapse_same_slot_duplicates_in_db(path: Path = DB_PATH) -> dict:
+    """
+    Retroactive counterpart to app.normalize.provenance.collapse_same_slot_
+    duplicates(): that function only collapses variants seen together within
+    ONE run's raw batch, so a duplicate that already exists as separate rows
+    in the events table from an earlier run -- before this function existed,
+    or because a later run's crawl only re-observed one of the venue-text
+    variants at a time -- never gets merged, and just sits on the dashboard
+    forever (confirmed live: "The Typos" stayed listed at "Red Fish Taco",
+    "Papa Surf", and "Papa Surf (Nate & Matt)" for 2026-09-10 two days after
+    the in-batch fix shipped, because all three rows were already stored
+    from a run on 2026-09-01).
+
+    Groups by (performer, date, time_start) -- ignoring venue -- same as the
+    in-batch version. Winner precedence: highest-confidence flyer/screenshot
+    reading (observation_type "image"/"ocr") wins; a tie, or no event in the
+    group having one, falls through to whichever event's newest observation
+    was observed most recently. That's deliberately NOT the in-batch
+    version's "first-seen" fallback -- there's no real notion of "recency"
+    between events processed in the same run's batch, but here each event's
+    observations carry a real observed_at that can be days apart, so "most
+    recent wins" is the meaningful choice, and it's the same policy this
+    pipeline already uses for the identical class of conflict elsewhere
+    (resolve_stale_url_relistings/resolve_stale_image_relistings). Confirmed
+    this matters, not just tidier: on the real "The Typos" 2026-09-10 data,
+    two variants tied at flyer confidence 0.80 ("Red Fish Taco", observed
+    14:20, vs. "Papa Surf", observed 17:02) -- first-seen would have kept
+    the wrong, earlier one; most-recent picks "Papa Surf", matching what
+    commit 9c23041's manual investigation of this exact booking determined.
+
+    Every losing event's observations are reassigned onto the winner rather
+    than discarded, so provenance survives even though the losing venue
+    text doesn't; the winner's aggregate fields (confidence, source_count,
+    ...) are recomputed over the merged observation set, same as
+    upsert_events() does for two observations of the same event landing in
+    one run.
+
+    Safe to re-run. Returns {"groups_found", "events_merged"}.
+    """
+    from app.normalize.provenance import aggregate_observations
+
+    conn = get_connection(path)
+    groups_rows = conn.execute("""
+        SELECT LOWER(performer) AS p, date, time_start, GROUP_CONCAT(id) AS ids
+        FROM events
+        WHERE performer IS NOT NULL AND date IS NOT NULL AND time_start IS NOT NULL
+        GROUP BY p, date, time_start
+        HAVING COUNT(*) > 1
+    """).fetchall()
+
+    groups_found = 0
+    events_merged = 0
+    for group in groups_rows:
+        ids = [int(i) for i in group["ids"].split(",")]
+        placeholders = ",".join("?" * len(ids))
+        obs_by_event: dict[int, list[dict]] = {i: [] for i in ids}
+        for row in conn.execute(
+            f"SELECT * FROM event_observations WHERE event_id IN ({placeholders})", ids
+        ).fetchall():
+            obs_by_event[row["event_id"]].append(dict(row))
+
+        def flyer_confidence(event_id: int) -> float:
+            confidences = [
+                o.get("confidence") or 0.0
+                for o in obs_by_event[event_id]
+                if o.get("observation_type") in ("image", "ocr")
+            ]
+            return max(confidences) if confidences else -1.0
+
+        def latest_observed(event_id: int) -> str:
+            observed = [o.get("observed_at") or "" for o in obs_by_event[event_id]]
+            return max(observed) if observed else ""
+
+        winner_id = max(ids, key=lambda i: (flyer_confidence(i), latest_observed(i)))
+        loser_ids = [i for i in ids if i != winner_id]
+        if not loser_ids:
+            continue
+
+        groups_found += 1
+        events_merged += len(loser_ids)
+
+        loser_placeholders = ",".join("?" * len(loser_ids))
+        conn.execute(
+            f"UPDATE event_observations SET event_id = ? WHERE event_id IN ({loser_placeholders})",
+            [winner_id, *loser_ids],
+        )
+        conn.execute(f"DELETE FROM events WHERE id IN ({loser_placeholders})", loser_ids)
+
+        merged_obs = [dict(r) for r in conn.execute(
+            "SELECT * FROM event_observations WHERE event_id = ?", (winner_id,)
+        ).fetchall()]
+        agg = aggregate_observations(merged_obs)
+        resolved = agg["resolved_fields"]
+        conn.execute(
+            """UPDATE events SET time_start = ?, time_end = ?, stage = ?, url = ?, source = ?,
+                                 confidence = ?, confidence_reason = ?, source_count = ?,
+                                 verification_count = ?, conflict_flag = ?, conflict_reason = ?
+                WHERE id = ?""",
+            (
+                resolved.get("time_start"), resolved.get("time_end"), resolved.get("stage"),
+                resolved.get("url"), agg["primary"].get("source"),
+                agg["confidence"], agg["confidence_reason"], agg["source_count"],
+                agg["verification_count"], agg["conflict_flag"], agg["conflict_reason"],
+                winner_id,
+            ),
+        )
+
+    conn.commit()
+    conn.close()
+    logger.info(
+        "Collapsed %d same-slot duplicate group(s), merged %d event(s)",
+        groups_found, events_merged,
+    )
+    return {"groups_found": groups_found, "events_merged": events_merged}
+
+
 def detect_schedule_conflicts(path: Path = DB_PATH) -> list[dict]:
     """
     Read-only diagnostic scan for the bug class that produced duplicate,

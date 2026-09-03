@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database.db import (
+    collapse_same_slot_duplicates_in_db,
     detect_schedule_conflicts,
     init_db,
     recanonicalize_venues,
@@ -110,6 +111,108 @@ def test_recanonicalize_venues_merges_and_gap_fills(tmp_path, monkeypatch):
     assert len(rows) == 1
     assert rows[0][0] == "Papa Surf"
     assert rows[0][1] == "6:00 - 9:00 PM"
+
+
+def test_collapse_same_slot_duplicates_in_db_merges_pre_existing_rows(tmp_path):
+    # Regression: app.normalize.provenance.collapse_same_slot_duplicates()
+    # only merges venue-text variants seen together in ONE run's raw batch
+    # -- it can't retroactively merge rows already stored separately from
+    # earlier runs. Simulate that: three separate upsert_events() calls
+    # (one per "run"), each with different venue text, so three genuinely
+    # separate rows accumulate exactly like production did (confirmed live
+    # 2026-09-03: three rows from a 2026-09-01 run, still separate two days
+    # after the in-batch fix shipped since nothing re-observed all three
+    # together in one batch since).
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue A", source="sowal")]), run_id="R1", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue B", source="venue_site")]), run_id="R2", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue C", source="image:flyer.png")]), run_id="R3", path=db)
+
+    import sqlite3
+    conn = sqlite3.connect(db)
+    before = conn.execute("SELECT COUNT(*) FROM events WHERE performer = 'The Typos'").fetchone()[0]
+    conn.close()
+    assert before == 3
+
+    result = collapse_same_slot_duplicates_in_db(db)
+    assert result == {"groups_found": 1, "events_merged": 2}
+
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT * FROM events WHERE performer = 'The Typos'").fetchall()
+    conn.close()
+    assert len(rows) == 1
+    assert rows[0]["venue"] == "Venue C"  # flyer-backed variant wins
+    assert rows[0]["source_count"] == 3
+
+
+def test_collapse_same_slot_duplicates_in_db_breaks_flyer_tie_by_recency(tmp_path):
+    # Regression: on a flyer-confidence TIE between two variants, the more
+    # recently observed one must win, not lowest id / first-seen. Confirmed
+    # live on the real "The Typos" 2026-09-10 booking: two flyer
+    # observations tied at 0.80 confidence, and a first-seen tiebreak would
+    # have kept the wrong (earlier) venue -- the opposite of what a manual
+    # investigation of that exact booking (commit 9c23041) determined.
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue A", source="image:a.png")]), run_id="R1", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue B", source="image:b.png")]), run_id="R2", path=db)
+
+    import sqlite3
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    venue_to_id = {r["venue"]: r["id"] for r in conn.execute(
+        "SELECT id, venue FROM events WHERE performer = 'The Typos'"
+    ).fetchall()}
+    # Force an exact confidence tie; Venue B was observed later.
+    conn.execute(
+        "UPDATE event_observations SET confidence = 0.8, observed_at = '2026-09-01T10:00:00' WHERE event_id = ?",
+        (venue_to_id["Venue A"],),
+    )
+    conn.execute(
+        "UPDATE event_observations SET confidence = 0.8, observed_at = '2026-09-01T20:00:00' WHERE event_id = ?",
+        (venue_to_id["Venue B"],),
+    )
+    conn.commit()
+    conn.close()
+
+    result = collapse_same_slot_duplicates_in_db(db)
+    assert result == {"groups_found": 1, "events_merged": 1}
+
+    conn = sqlite3.connect(db)
+    row = conn.execute("SELECT venue FROM events WHERE performer = 'The Typos'").fetchone()
+    conn.close()
+    assert row[0] == "Venue B"
+
+
+def test_collapse_same_slot_duplicates_in_db_is_safe_to_rerun(tmp_path):
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue A", source="sowal")]), run_id="R1", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue B", source="venue_site")]), run_id="R2", path=db)
+
+    first = collapse_same_slot_duplicates_in_db(db)
+    assert first == {"groups_found": 1, "events_merged": 1}
+
+    second = collapse_same_slot_duplicates_in_db(db)
+    assert second == {"groups_found": 0, "events_merged": 0}
+
+
+def test_collapse_same_slot_duplicates_in_db_leaves_different_times_alone(tmp_path):
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue A", time_start="6PM", source="sowal")]), run_id="R1", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue B", time_start="9PM", source="venue_site")]), run_id="R2", path=db)
+
+    result = collapse_same_slot_duplicates_in_db(db)
+    assert result == {"groups_found": 0, "events_merged": 0}
+
+    import sqlite3
+    conn = sqlite3.connect(db)
+    count = conn.execute("SELECT COUNT(*) FROM events WHERE performer = 'The Typos'").fetchone()[0]
+    conn.close()
+    assert count == 2
 
 
 def test_detect_schedule_conflicts_flags_same_night_collision(tmp_path):

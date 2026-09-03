@@ -11,6 +11,7 @@ from app.crawlers.registry import run_all_crawlers
 from app.crawlers.sowal import partition_observations
 from app.database.db import (
     backfill_venue_default_times,
+    collapse_same_slot_duplicates_in_db,
     detect_schedule_conflicts,
     init_db,
     load_events,
@@ -69,6 +70,17 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
     # "Tbd" to "Cadillac Willy" + "The Typos" on its own Instagram post
     # between two captures).
     image_relisting_result = resolve_stale_image_relistings()
+
+    # Retroactive counterpart to the in-batch collapse in
+    # app.normalize.provenance.collapse_same_slot_duplicates(): that one
+    # only catches venue-text variants of the same booking seen together
+    # within a single run's raw batch, so a duplicate already sitting in
+    # the events table as separate rows from an earlier run never gets
+    # merged on its own (confirmed live 2026-09-03: "The Typos" stayed
+    # listed at three different venue spellings for the same date/time two
+    # days after the in-batch fix shipped, because all three rows already
+    # existed from a 2026-09-01 run). Safe to re-run.
+    same_slot_result = collapse_same_slot_duplicates_in_db()
 
     # Retroactive re-canonicalization: CANONICAL_FIXES and the all-caps
     # fold only apply to events ingested AFTER a fix exists, so a spelling
@@ -158,6 +170,7 @@ def resolve_and_finalize(run_id: str, changes: dict) -> dict:
         "sowal_conflicts_resolved": conflict_result["events_deleted"],
         "url_relistings_resolved": relisting_result["events_deleted"],
         "image_relistings_resolved": image_relisting_result["events_deleted"],
+        "same_slot_duplicates_merged": same_slot_result["events_merged"],
         "venues_renamed":     venue_fix["renamed"],
         "venues_merged":      venue_fix["merged"],
         "performers_renamed": performer_fix["renamed"],
@@ -333,11 +346,12 @@ def run_pipeline() -> dict:
     changelog_path = write_changelog(run_id, changes)
     logger.info(
         "Sowal conflicts: %d · URL relistings: %d · Image relistings: %d · "
+        "Same-slot duplicates merged: %d · "
         "Venues renamed/merged: %d/%d · Performers renamed/merged: %d/%d · "
         "Backfilled times: %d · Times reformatted: %d · "
         "Purged non-music/dateless/past: %d/%d/%d · Schedule conflicts: %d",
         finalized["sowal_conflicts_resolved"], finalized["url_relistings_resolved"],
-        finalized["image_relistings_resolved"],
+        finalized["image_relistings_resolved"], finalized["same_slot_duplicates_merged"],
         finalized["venues_renamed"], finalized["venues_merged"],
         finalized["performers_renamed"], finalized["performers_merged"],
         finalized["backfilled_times"], finalized["times_normalized"],
