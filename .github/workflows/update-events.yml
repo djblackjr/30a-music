@@ -29,6 +29,23 @@ on:
     - cron: '17 12 * * *'  # Daily, ~7am/8am Central, depending on DST
   workflow_dispatch:  # Allow manual trigger — this is what cron-job.org calls
 
+  # A screenshot committed straight into the repo (images/inbox/*, bypassing
+  # its own .gitignore entry -- how a session without shell access to this
+  # Mac adds one, e.g. "Add The Typos schedule screenshot to images/inbox
+  # for ingestion") previously had to wait for the next scheduled run to be
+  # processed -- worst case up to a day, and entirely at the mercy of
+  # cron-job.org's own schedule, which isn't visible from this repo. `push`
+  # is a native GitHub trigger (unlike `schedule`, which this repo's own
+  # history shows is unreliable -- see above), so this reacts within
+  # GitHub's normal queue time (seconds to low minutes), not a schedule
+  # cycle. Safe: the commit step below only ever touches data/events.db,
+  # docs/index.html, and logs/changes/, never images/inbox/, so this can't
+  # trigger itself into a loop.
+  push:
+    branches: [main]
+    paths:
+      - 'images/inbox/**'
+
 permissions:
   # Default GITHUB_TOKEN is read-only unless declared otherwise; without this
   # the pipeline step succeeds but "git push" 403s, silently leaving the live
