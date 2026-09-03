@@ -343,6 +343,92 @@ def merge_group(observations: list[dict]) -> dict:
     return event
 
 
+# observation_type values that mean "read off an actual flyer/screenshot"
+# (GPT-4o Vision or the Apple Vision OCR fallback) -- see infer_observation_type().
+_FLYER_OBSERVATION_TYPES = {"image", "ocr"}
+
+
+def _flyer_confidence(ev: dict) -> float:
+    """
+    Highest confidence among an event's flyer/screenshot-sourced observations,
+    or -1.0 if it has none. Used by collapse_same_slot_duplicates() to prefer
+    a flyer-backed variant -- "the venue's own flyer is the record of truth
+    on conflict" is the policy this pipeline already applies elsewhere
+    (resolve_stale_url_relistings/resolve_stale_image_relistings; also the
+    reasoning behind the manual Papa Surf fix in commit 9c23041). -1.0 sorts
+    below any real confidence, so max() falls through to first-seen when no
+    variant has a flyer observation at all.
+    """
+    confidences = [
+        obs.get("confidence") or 0.0
+        for obs in ev.get("observations", [])
+        if obs.get("observation_type") in _FLYER_OBSERVATION_TYPES
+    ]
+    return max(confidences) if confidences else -1.0
+
+
+def collapse_same_slot_duplicates(events: list[dict]) -> list[dict]:
+    """
+    Collapse canonical events that are really the same booking listed under
+    different venue text into one -- e.g. "The Typos" showed up as separate
+    cards at "Red Fish Taco" and "Papa Surf" for the same date and 6:00 PM
+    slot, because identity is performer + venue + date (see module
+    docstring): inconsistent venue text across sources creates multiple
+    distinct identities for one real show.
+
+    Groups already-merged events by (performer, date, time_start) --
+    deliberately ignoring venue -- and collapses any group of 2+ into one.
+
+    Precedence: whichever variant has the highest-confidence flyer/screenshot
+    observation wins (see _flyer_confidence) -- the venue's own flyer is the
+    most reliable source for its own venue name, same policy this pipeline
+    already applies to other same-source conflicts. If no variant has a
+    flyer observation, the first-seen variant wins. Every collapsed
+    variant's observations are merged onto the winner and source_count is
+    recomputed over the merged set, so provenance isn't lost even though the
+    losing venue text is.
+
+    Deliberately narrow, so this can't quietly merge two real events: a
+    different time for the same performer/date is a genuine double-booking
+    (not collapsed), and different performers at the same venue/time are
+    two different acts (not collapsed either) -- only an exact
+    (performer, date, time_start) match collapses.
+    """
+    groups: dict[tuple[str, str, str], list[dict]] = {}
+    order: list[tuple[str, str, str]] = []
+    for ev in events:
+        key = (
+            (ev.get("performer") or "").strip().lower(),
+            (ev.get("date") or "").strip(),
+            (ev.get("time_start") or "").strip().lower(),
+        )
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(ev)
+
+    collapsed: list[dict] = []
+    for key in order:
+        variants = groups[key]
+        if len(variants) == 1:
+            collapsed.append(variants[0])
+            continue
+
+        # max() keeps the first-encountered item on a tie, so this also
+        # covers the "no variant has a flyer observation" fallback (every
+        # variant scores -1.0) and the "flyer confidences tie" case: both
+        # resolve to first-seen, exactly the stated fallback precedence.
+        winner = max(variants, key=_flyer_confidence)
+        merged_observations = [obs for v in variants for obs in v.get("observations", [])]
+
+        winner = dict(winner)
+        winner["observations"] = merged_observations
+        winner["source_count"] = len({obs.get("source") or "unknown" for obs in merged_observations})
+        collapsed.append(winner)
+
+    return collapsed
+
+
 def normalize_and_group(events: list[dict]) -> list[dict]:
     """Raw events -> observations -> grouped -> canonical events (with observations)."""
     observations = [obs for obs in (build_observation(e) for e in events) if obs]
@@ -356,4 +442,5 @@ def normalize_and_group(events: list[dict]) -> list[dict]:
             order.append(key)
         groups[key].append(o)
 
-    return [merge_group(groups[key]) for key in order]
+    merged = [merge_group(groups[key]) for key in order]
+    return collapse_same_slot_duplicates(merged)

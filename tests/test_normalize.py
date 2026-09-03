@@ -324,6 +324,75 @@ def test_normalize_canonicalises_in_pass():
     assert out[0]["performer"] == "Stevie Monce"
 
 
+# ---------------------------------------------------------------------------
+# collapse_same_slot_duplicates() -- same booking under inconsistent venue
+# text (real-world case: "The Typos" listed at both "Red Fish Taco" and
+# "Papa Surf" for the same date/time), collapsing to one card. Winner
+# precedence: a flyer/screenshot-backed variant (observation_type
+# "image"/"ocr") over one that's not -- see _flyer_confidence()'s docstring
+# for why (matches this pipeline's existing "the venue's own flyer is the
+# record of truth" policy elsewhere).
+#
+# Uses synthetic venue names ("Venue A"/"B"/"C"), not real ones -- a real
+# venue name can get folded by canonical.py's CANONICAL_FIXES before it ever
+# reaches this function (confirmed: "Papa Surf Burger Bar" canonicalizes to
+# "Papa Surf", silently collapsing two "distinct" test variants upstream and
+# making the test not actually exercise this function).
+# ---------------------------------------------------------------------------
+
+def test_collapse_same_slot_venue_variants_become_one_event():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
+    ])
+    assert len(out) == 1
+
+
+def test_collapse_same_slot_flyer_backed_variant_wins_venue():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
+    ])
+    assert out[0]["venue"] == "Venue C"
+
+
+def test_collapse_same_slot_merges_observations_from_all_variants():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
+    ])
+    assert out[0]["source_count"] == 3
+    assert len(out[0]["observations"]) == 3
+
+
+def test_collapse_same_slot_first_seen_wins_without_a_flyer_variant():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+    ])
+    assert len(out) == 1
+    assert out[0]["venue"] == "Venue A"
+
+
+def test_collapse_same_slot_different_time_not_collapsed():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="9PM", source="venue_site"),
+    ])
+    assert len(out) == 2
+
+
+def test_collapse_same_slot_different_performer_not_collapsed():
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("Some Other Band", "Venue A", time_start="6PM", source="venue_site"),
+    ])
+    assert len(out) == 2
+
+
 # --- gap-filling: a weaker source can fill a field the primary left blank ---
 # sowal (trust 0.90) always outranks image:* (trust 0.80) as primary, so
 # without gap-filling a `stage` only the image observation reported would
