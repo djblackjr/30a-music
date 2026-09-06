@@ -64,7 +64,7 @@ _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # performer -- venues.txt has no "Papa Surf (Nate & Matt)" entry, so it also
 # broke apply_venue_default_time()'s exact-match lookup. The parenthetical is
 # a performer qualifier (which lineup of The Typos is playing), not part of
-# the venue's name, so it belongs on the performer: "The Typos Nate & Matt",
+# the venue's name, so it belongs on the performer: "The Typos (Nate & Matt)",
 # matching the manual fix in commit 9c23041 (later lost when a fresh crawl
 # re-derived the event from these same two flyers without it). A bare "The
 # Typos" booking with no such qualifier is untouched by this.
@@ -106,7 +106,7 @@ def build_observation(raw: dict) -> dict | None:
         if qualifier_match:
             venue = canonicalize(qualifier_match.group(1).strip()) or None
             ev["venue"] = venue
-            performer = canonicalize(f"{performer} Nate & Matt") or performer
+            performer = canonicalize(f"{performer} (Nate & Matt)") or performer
 
     # Some SoWal crawl paths capture "{performer} at {venue}" as the whole
     # performer field (the venue's own event-listing title) while other
