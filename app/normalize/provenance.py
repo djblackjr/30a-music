@@ -57,6 +57,19 @@ def _checksum(ev: dict) -> str:
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
+# GPT-4o Vision misread confirmed live 2026-08-31/2026-09-01: Papa Surf's own
+# flyer for The Typos' 2026-09-10 booking named which two members of the band
+# were playing that night ("Nate & Matt") and Vision attached that
+# parenthetical to the VENUE text ("Papa Surf (Nate & Matt)") instead of the
+# performer -- venues.txt has no "Papa Surf (Nate & Matt)" entry, so it also
+# broke apply_venue_default_time()'s exact-match lookup. The parenthetical is
+# a performer qualifier (which lineup of The Typos is playing), not part of
+# the venue's name, so it belongs on the performer: "The Typos Nate & Matt",
+# matching the manual fix in commit 9c23041 (later lost when a fresh crawl
+# re-derived the event from these same two flyers without it). A bare "The
+# Typos" booking with no such qualifier is untouched by this.
+_TYPOS_VENUE_QUALIFIER_RE = re.compile(r"^(.*?)\s*\(\s*nate\s*(?:&|and)\s*matt\s*\)\s*$", re.I)
+
 
 def build_observation(raw: dict) -> dict | None:
     """
@@ -83,6 +96,17 @@ def build_observation(raw: dict) -> dict | None:
 
     venue = canonicalize((ev.get("venue") or "").strip()) or None
     ev["venue"] = venue
+
+    # Move a "(Nate & Matt)" / "(Nate and Matt)" performer qualifier that
+    # landed on the venue field back onto the performer -- see
+    # _TYPOS_VENUE_QUALIFIER_RE above. Scoped to "The Typos" specifically
+    # (the one confirmed real case); every other venue's name is untouched.
+    if venue and performer.lower() == "the typos":
+        qualifier_match = _TYPOS_VENUE_QUALIFIER_RE.match(venue)
+        if qualifier_match:
+            venue = canonicalize(qualifier_match.group(1).strip()) or None
+            ev["venue"] = venue
+            performer = canonicalize(f"{performer} Nate & Matt") or performer
 
     # Some SoWal crawl paths capture "{performer} at {venue}" as the whole
     # performer field (the venue's own event-listing title) while other

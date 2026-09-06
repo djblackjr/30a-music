@@ -11,6 +11,14 @@ Applied to both `performer` and `venue` fields, case-insensitively.
 # on the left. Ported from process_inbox.py; kept as domain data.
 CANONICAL_FIXES: list[tuple[str, str]] = [
     ("The Typos", "THE TYPOS"),
+    # "The Typos" playing as a stripped-down duo (Nate & Matt) is a distinct,
+    # confirmed-live billing (2026-08-31/09-01, Papa Surf) -- same pattern as
+    # "Dion Jones" vs "Dion Jones & The Neon Tears" below: don't collapse the
+    # qualifier away, just fold every spelling of it to one canonical form.
+    # A bare "The Typos" booking has no qualifier and is untouched by these.
+    ("The Typos Nate & Matt", "The Typos (Nate & Matt)"),
+    ("The Typos Nate & Matt", "The Typos Nate and Matt"),
+    ("The Typos Nate & Matt", "The Typos (Nate and Matt)"),
     ("Stevie Monce", "STEVIE MONCE"),
     ("Casey Kearney", "CASEY KEARNEY"),
     ("Casey Kearney", "Casey Kearney Band"),
