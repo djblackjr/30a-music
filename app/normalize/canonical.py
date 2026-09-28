@@ -30,6 +30,12 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # is an exact string match with no fuzzy logic, so the "Band" suffix
     # broke the star (confirmed live 2026-07-22).
     ("Will Thompson", "Will Thompson Band"),
+    # sowal.com's own listing title for the Old Florida Fish House residency
+    # is a promotional phrase ("Will Thompson Band Boasting ...") rather than
+    # a bare act name, captured whole as the performer since split_title()
+    # only splits on " @ "/" at " -- confirmed live 2026-09-28, 26 rows
+    # against the venue's own "Will Thompson" listing for the same nights.
+    ("Will Thompson", "Will Thompson Band Boasting"),
     ("Brett Stafford", "BRETT STAFFORD"),
     ("Brett Stafford", "Brett Stafford Smith"),
     ("Cadillac Willy", "CADILLAC WILLY"),
