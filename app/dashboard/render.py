@@ -392,18 +392,27 @@ def _pick_featured_group(
 
     When include_all_performer_favorites is set (the week card) and at
     least one performer-favorite match exists in range, the single-best-
-    tier restriction is dropped for those matches: EVERY event whose
-    performer is a favorite (tier 0 or 1) is returned, sorted
-    chronologically first (soonest date), tier only breaking same-date ties
-    -- a starred artist playing a non-favorite venue is still a reason to
-    go, so it shouldn't lose its spot to an unrelated combo match later in
-    the week (confirmed live 2026-07-22: Will Thompson at Aaron Bessant
-    Park, a non-favorite venue, was crowded out entirely by four favorite-
-    venue combo matches elsewhere that same week). Tier-2 (venue-only)
-    matches are excluded whenever a performer favorite exists, but remain
-    the fallback (via the normal single-best-match path below) when NO
-    performer favorite is playing that week at all -- the card still
-    prefers showing a favorite venue's show over nothing.
+    tier restriction is dropped for those matches: every performer favorite
+    (tier 0 or 1) gets a slot, one per DISTINCT performer -- its single
+    soonest match in range, chronological order (tier only breaks a
+    same-date tie) -- a starred artist playing a non-favorite venue is
+    still a reason to go, so it shouldn't lose its spot to an unrelated
+    combo match later in the week (confirmed live 2026-07-22: Will Thompson
+    at Aaron Bessant Park, a non-favorite venue, was crowded out entirely
+    by four favorite-venue combo matches elsewhere that same week).
+
+    Capped to one slot per performer (confirmed live 2026-10-02: Will
+    Thompson's nightly Old Florida Fish House residency was filling the
+    whole card with 7 copies of the same favorite that week, crowding out
+    every OTHER favorite the card exists to surface -- the same "one
+    favorite dominates the list" problem the fix above addressed, just
+    from volume instead of tier-sorting). A residency is still represented
+    -- by its next show -- just not by every date of it at once.
+
+    Tier-2 (venue-only) matches are excluded whenever a performer favorite
+    exists, but remain the fallback (via the normal single-best-match path
+    below) when NO performer favorite is playing that week at all -- the
+    card still prefers showing a favorite venue's show over nothing.
 
     Returns [] when nothing in range qualifies.
     """
@@ -445,7 +454,15 @@ def _pick_featured_group(
         performer_matches = [t for t in scored if t[2]]
         if performer_matches:
             performer_matches.sort(key=lambda t: (t[1].get("date") or "", t[0][0], t[0][2], t[0][3], t[0][4]))
-            return [(e, pf, vf) for _, e, pf, vf in performer_matches]
+            seen_performers: set[str] = set()
+            deduped: list[tuple[dict, bool, bool]] = []
+            for key, e, pf, vf in performer_matches:
+                performer = (e.get("performer") or e.get("name") or "").strip().lower()
+                if performer in seen_performers:
+                    continue
+                seen_performers.add(performer)
+                deduped.append((e, pf, vf))
+            return deduped
         # No performer favorite in range at all -- fall through to the
         # normal single-best-match path below, which can still surface a
         # tier-2 venue-only match rather than showing nothing.

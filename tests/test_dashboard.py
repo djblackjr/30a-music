@@ -438,6 +438,34 @@ def test_hero_week_card_lists_every_combo_match_in_the_window(monkeypatch):
     assert "Also tonight" not in week
 
 
+def test_hero_week_card_caps_a_residency_to_one_slot(monkeypatch):
+    # Confirmed live 2026-10-02: a favorite artist's nightly residency (Will
+    # Thompson, 7 shows that week) filled the whole week card with repeats
+    # of the same favorite, crowding out every OTHER favorite the card
+    # exists to surface -- same "one favorite dominates" problem the combo-
+    # vs-tier fix above already solved, just from volume instead of sort
+    # order. A residency still earns a slot -- its next show -- just not
+    # one slot per date.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "resident act": True,
+        "other favorite": True,
+    })
+    html, _ = _render_to_temp([
+        {"performer": "Resident Act", "venue": "Nightly Venue", "date": _d(1),
+         "time_start": "5PM", "source": "venue"},
+        {"performer": "Resident Act", "venue": "Nightly Venue", "date": _d(2),
+         "time_start": "5PM", "source": "venue"},
+        {"performer": "Resident Act", "venue": "Nightly Venue", "date": _d(3),
+         "time_start": "5PM", "source": "venue"},
+        {"performer": "Other Favorite", "venue": "Some Venue", "date": _d(4),
+         "time_start": "7PM", "source": "venue"},
+    ])
+    _, week = _hero_chunks(html)
+    assert week.count("Resident Act") == 1
+    assert "Other Favorite" in week
+
+
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
         "venue-only venue",
