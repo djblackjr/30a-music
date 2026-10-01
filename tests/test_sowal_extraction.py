@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.crawlers.sowal import (
     SoWalCrawler,
+    _page_description,
     classify_performer,
     detect_category,
     detect_non_music,
@@ -240,6 +241,30 @@ def test_extract_rejects_generic_and_empty():
     assert extract_performer_from_description("featuring live music all night") is None
     assert extract_performer_from_description("") is None
     assert extract_performer_from_description(None) is None
+
+
+def test_page_description_joins_paragraphs_with_newline_not_space():
+    # Regression, confirmed live 2026-10-01: _page_description() joined
+    # paragraphs with a plain space, so an unrelated restaurant-description
+    # paragraph immediately following the real lineup paragraph read as one
+    # run-on sentence. SoWal's actual Old Florida Fish House page has
+    # "...with Will Thompson Band" end one <p>, then "Boasting incredible
+    # views of Eastern Lake..." (pure venue marketing copy, no performer)
+    # start the next -- joined with a space, extract_performer_from_
+    # description's capitalized-token match bled across the boundary and
+    # saved "Will Thompson Band Boasting" as a fake performer every single
+    # day this recurring page got crawled. _clean_name() already splits on
+    # "\n" as a hard boundary and the description regexes already stop at a
+    # newline (no DOTALL) -- both assume this join already used "\n".
+    soup = BeautifulSoup(
+        "<p>Thursday at OFFH 6-9PM: Motown Tribute with Will Thompson Band</p>"
+        "<p>Boasting incredible views of Eastern Lake, Old Florida Fish House "
+        "is focused on providing a memorable dining experience.</p>",
+        "lxml",
+    )
+    desc = _page_description(soup)
+    assert "\n" in desc
+    assert extract_performer_from_description(desc) == "Will Thompson Band"
 
 
 # --- classify_performer end to end -----------------------------------------

@@ -126,9 +126,9 @@ def test_collapse_same_slot_duplicates_in_db_merges_pre_existing_rows(tmp_path):
     # together in one batch since).
     db = tmp_path / "test.db"
     init_db(db)
-    upsert_events(normalize_events([_raw("The Typos", "Venue A", source="sowal")]), run_id="R1", path=db)
-    upsert_events(normalize_events([_raw("The Typos", "Venue B", source="venue_site")]), run_id="R2", path=db)
-    upsert_events(normalize_events([_raw("The Typos", "Venue C", source="image:flyer.png")]), run_id="R3", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue A", source="image:flyer.png")]), run_id="R1", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue B", source="sowal")]), run_id="R2", path=db)
+    upsert_events(normalize_events([_raw("The Typos", "Venue C", source="venue")]), run_id="R3", path=db)
 
     import sqlite3
     conn = sqlite3.connect(db)
@@ -144,7 +144,7 @@ def test_collapse_same_slot_duplicates_in_db_merges_pre_existing_rows(tmp_path):
     rows = conn.execute("SELECT * FROM events WHERE performer = 'The Typos'").fetchall()
     conn.close()
     assert len(rows) == 1
-    assert rows[0]["venue"] == "Venue C"  # flyer-backed variant wins
+    assert rows[0]["venue"] == "Venue C"  # highest overall confidence (source "venue") wins
     assert rows[0]["source_count"] == 3
 
 
@@ -214,6 +214,38 @@ def test_collapse_same_slot_duplicates_in_db_leaves_different_times_alone(tmp_pa
     count = conn.execute("SELECT COUNT(*) FROM events WHERE performer = 'The Typos'").fetchone()[0]
     conn.close()
     assert count == 2
+
+
+def test_collapse_same_slot_duplicates_in_db_blank_time_joins_the_single_real_time(tmp_path):
+    # Regression, confirmed live 2026-10-01: a monthly Stinky's flyer listed
+    # dozens of acts with no per-act time at all. Each landed as its own
+    # row with time_start=NULL, which the old `time_start IS NOT NULL`
+    # grouping filter excluded from consideration entirely -- these never
+    # even became candidates for merging with SoWal's fully-timed listing
+    # of the same booking, so they piled up as permanent duplicates no
+    # retroactive pass ever touched.
+    db = tmp_path / "test.db"
+    init_db(db)
+    upsert_events(normalize_events([
+        _raw("Dion Jones & The Neon Tears", "Stinky's Bait Shack", time_start="7PM", source="sowal"),
+    ]), run_id="R1", path=db)
+    upsert_events(normalize_events([
+        _raw("Dion Jones & The Neon Tears", "Stinky's Fish Camp", time_start=None, source="image:flyer.png"),
+    ]), run_id="R2", path=db)
+
+    result = collapse_same_slot_duplicates_in_db(db)
+    assert result == {"groups_found": 1, "events_merged": 1}
+
+    import sqlite3
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT * FROM events WHERE performer = 'Dion Jones & The Neon Tears'"
+    ).fetchone()
+    conn.close()
+    assert row["venue"] == "Stinky's Bait Shack"  # higher-confidence, timed listing wins
+    assert row["time_start"] == "7:00 PM"
+    assert row["source_count"] == 2
 
 
 def test_purge_recurring_series_placeholder_events_removes_known_titles(tmp_path):

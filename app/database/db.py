@@ -894,22 +894,31 @@ def collapse_same_slot_duplicates_in_db(path: Path = DB_PATH) -> dict:
     the in-batch fix shipped, because all three rows were already stored
     from a run on 2026-09-01).
 
-    Groups by (performer, date, time_start) -- ignoring venue -- same as the
-    in-batch version. Winner precedence: highest-confidence flyer/screenshot
-    reading (observation_type "image"/"ocr") wins; a tie, or no event in the
-    group having one, falls through to whichever event's newest observation
-    was observed most recently. That's deliberately NOT the in-batch
-    version's "first-seen" fallback -- there's no real notion of "recency"
-    between events processed in the same run's batch, but here each event's
-    observations carry a real observed_at that can be days apart, so "most
-    recent wins" is the meaningful choice, and it's the same policy this
-    pipeline already uses for the identical class of conflict elsewhere
-    (resolve_stale_url_relistings/resolve_stale_image_relistings). Confirmed
-    this matters, not just tidier: on the real "The Typos" 2026-09-10 data,
-    two variants tied at flyer confidence 0.80 ("Red Fish Taco", observed
-    14:20, vs. "Papa Surf", observed 17:02) -- first-seen would have kept
-    the wrong, earlier one; most-recent picks "Papa Surf", matching what
-    commit 9c23041's manual investigation of this exact booking determined.
+    Groups by (performer, date) -- ignoring venue throughout -- then by
+    time_start within each group, with the same blank-time tolerance as the
+    in-batch version: a missing time_start isn't evidence of a DIFFERENT
+    time, just missing data, so it joins a group's single real time if there
+    is exactly one; 2+ distinct real times stay apart as genuine ambiguity,
+    and an untimed event in that case is left alone rather than guessed into
+    one of them (see app.normalize.provenance.collapse_same_slot_duplicates'
+    docstring for the full reasoning -- same policy, same wording).
+
+    An earlier version of both this function and the in-batch one required
+    an EXACT time_start match and picked the winner by flyer-observation
+    confidence alone. Both were confirmed wrong on real data 2026-10-01:
+    SoWal's specific, corroborated "Stinky's Bait Shack" listing (overall
+    confidence 0.9, real showtime) lost to a generic monthly flyer's
+    "Stinky's Fish Camp" guess (0.75, no time at all) for every single
+    weekly act that month -- once because the blank time never even
+    entered the same group (excluded by time_start IS NOT NULL), and would
+    have lost the tiebreak anyway (flyer-only confidence ignores that the
+    other side, not being a flyer, scored -1 regardless of its real,
+    higher confidence). Winner precedence is now simply the event's own
+    overall confidence (already the number this pipeline trusts for "which
+    account of this event is more reliable" everywhere else); only a tie
+    falls through to whichever event's newest observation was observed
+    most recently (matches resolve_stale_url_relistings/resolve_stale_
+    image_relistings' policy for the identical class of conflict).
 
     Every losing event's observations are reassigned onto the winner rather
     than discarded, so provenance survives even though the losing venue
@@ -923,41 +932,32 @@ def collapse_same_slot_duplicates_in_db(path: Path = DB_PATH) -> dict:
     from app.normalize.provenance import aggregate_observations
 
     conn = get_connection(path)
-    groups_rows = conn.execute("""
-        SELECT LOWER(performer) AS p, date, time_start, GROUP_CONCAT(id) AS ids
+    pd_rows = conn.execute("""
+        SELECT LOWER(performer) AS p, date, GROUP_CONCAT(id) AS ids
         FROM events
-        WHERE performer IS NOT NULL AND date IS NOT NULL AND time_start IS NOT NULL
-        GROUP BY p, date, time_start
+        WHERE performer IS NOT NULL AND date IS NOT NULL
+        GROUP BY p, date
         HAVING COUNT(*) > 1
     """).fetchall()
 
-    groups_found = 0
-    events_merged = 0
-    for group in groups_rows:
-        ids = [int(i) for i in group["ids"].split(",")]
-        placeholders = ",".join("?" * len(ids))
-        obs_by_event: dict[int, list[dict]] = {i: [] for i in ids}
-        for row in conn.execute(
-            f"SELECT * FROM event_observations WHERE event_id IN ({placeholders})", ids
-        ).fetchall():
-            obs_by_event[row["event_id"]].append(dict(row))
+    def latest_observed(conn, event_id: int) -> str:
+        row = conn.execute(
+            "SELECT MAX(observed_at) AS m FROM event_observations WHERE event_id = ?", (event_id,)
+        ).fetchone()
+        return (row["m"] or "") if row else ""
 
-        def flyer_confidence(event_id: int) -> float:
-            confidences = [
-                o.get("confidence") or 0.0
-                for o in obs_by_event[event_id]
-                if o.get("observation_type") in ("image", "ocr")
-            ]
-            return max(confidences) if confidences else -1.0
-
-        def latest_observed(event_id: int) -> str:
-            observed = [o.get("observed_at") or "" for o in obs_by_event[event_id]]
-            return max(observed) if observed else ""
-
-        winner_id = max(ids, key=lambda i: (flyer_confidence(i), latest_observed(i)))
+    def merge_group(conn, ids: list[int]) -> None:
+        nonlocal groups_found, events_merged
+        if len(ids) < 2:
+            return
+        confidence_by_id = {
+            row["id"]: row["confidence"] or 0.0
+            for row in conn.execute(
+                f"SELECT id, confidence FROM events WHERE id IN ({','.join('?' * len(ids))})", ids
+            ).fetchall()
+        }
+        winner_id = max(ids, key=lambda i: (confidence_by_id.get(i, 0.0), latest_observed(conn, i)))
         loser_ids = [i for i in ids if i != winner_id]
-        if not loser_ids:
-            continue
 
         groups_found += 1
         events_merged += len(loser_ids)
@@ -987,6 +987,31 @@ def collapse_same_slot_duplicates_in_db(path: Path = DB_PATH) -> dict:
                 winner_id,
             ),
         )
+
+    groups_found = 0
+    events_merged = 0
+    for pd_row in pd_rows:
+        ids = [int(i) for i in pd_row["ids"].split(",")]
+        placeholders = ",".join("?" * len(ids))
+        time_by_id = {
+            row["id"]: (row["time_start"] or "").strip().lower()
+            for row in conn.execute(
+                f"SELECT id, time_start FROM events WHERE id IN ({placeholders})", ids
+            ).fetchall()
+        }
+        timed: dict[str, list[int]] = {}
+        blanks: list[int] = []
+        for eid in ids:
+            t = time_by_id.get(eid, "")
+            (timed.setdefault(t, []) if t else blanks).append(eid)
+
+        if len(timed) <= 1:
+            merge_group(conn, ids)
+        else:
+            for group_ids in timed.values():
+                merge_group(conn, group_ids)
+            # blanks left untouched -- can't be confidently attributed to
+            # any one of 2+ distinct real times.
 
     conn.commit()
     conn.close()

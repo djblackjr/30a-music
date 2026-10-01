@@ -1178,11 +1178,26 @@ class SoWalCrawler:
 
 
 def _page_description(soup) -> str:
-    """Join the page's non-label paragraph text (excludes When/Time/Where lines)."""
+    """Join the page's non-label paragraph text (excludes When/Time/Where lines).
+
+    Joined with "\\n", not a plain space -- confirmed live 2026-10-01: SoWal's
+    Old Florida Fish House page has the real lineup line ("...with Will
+    Thompson Band") in one <p>, immediately followed by an unrelated
+    restaurant-description paragraph starting "Boasting incredible views of
+    Eastern Lake..." in the next <p>. Joined with a space those read as one
+    run-on sentence, and _NAME_RE's capitalized-token match (capped at 5
+    tokens) bled across the paragraph boundary to swallow "Boasting" as if
+    it were part of the act's name, saving "Will Thompson Band Boasting" as
+    a fake performer every single day this recurring page got crawled.
+    _clean_name() already splits on "\\n" as a hard boundary and
+    extract_performer_from_description()'s regexes already stop at a
+    newline (no DOTALL) -- both assume this join already used "\\n"; only
+    this function wasn't actually producing one.
+    """
     parts = []
     for p in soup.find_all("p"):
         txt = p.get_text(" ", strip=True)
         if not txt or re.match(r"^(when|time|where)\s*:", txt, re.I):
             continue
         parts.append(txt)
-    return " ".join(parts)
+    return "\n".join(parts)

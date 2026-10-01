@@ -30,6 +30,18 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # is an exact string match with no fuzzy logic, so the "Band" suffix
     # broke the star (confirmed live 2026-07-22).
     ("Will Thompson", "Will Thompson Band"),
+    # A genuine crawler bug (fixed 2026-10-01, see _page_description() in
+    # app/crawlers/sowal.py): SoWal's Old Florida Fish House page has the
+    # real lineup paragraph end "...with Will Thompson Band" immediately
+    # followed, in the very next <p>, by unrelated restaurant-marketing
+    # copy starting "Boasting incredible views of Eastern Lake..." -- joined
+    # without a paragraph boundary, the extraction bled across into
+    # "Will Thompson Band Boasting". The crawler fix stops NEW crawls from
+    # repeating this; this entry retroactively folds every already-stored
+    # row (every day in October 2026 this recurring page was crawled, all
+    # with the identical garbled name) to the same canonical "Will Thompson"
+    # the fixed extraction + the rule above would now produce.
+    ("Will Thompson", "Will Thompson Band Boasting"),
     ("Brett Stafford", "BRETT STAFFORD"),
     ("Brett Stafford", "Brett Stafford Smith"),
     ("Cadillac Willy", "CADILLAC WILLY"),

@@ -32,6 +32,15 @@ def test_canonicalize_unknown_passthrough():
     assert canonicalize("Some New Artist") == "Some New Artist"
 
 
+def test_canonicalize_will_thompson_band_boasting_extraction_bug():
+    # Confirmed live 2026-10-01: a paragraph-boundary crawler bug (see
+    # _page_description() in app/crawlers/sowal.py) bled unrelated venue
+    # marketing copy into the performer name every day this page was
+    # crawled. Retroactive CANONICAL_FIXES entry folds it the same place
+    # "Will Thompson Band" already resolves to.
+    assert canonicalize("Will Thompson Band Boasting") == "Will Thompson"
+
+
 def test_canonicalize_folds_smart_quotes_to_straight():
     # GPT-4o Vision reads stylized flyer text and reports "smart" typographic
     # quotes (e.g. U+2019) while SoWal's plain text uses a straight apostrophe
@@ -328,10 +337,12 @@ def test_normalize_canonicalises_in_pass():
 # collapse_same_slot_duplicates() -- same booking under inconsistent venue
 # text (real-world case: "The Typos" listed at both "Red Fish Taco" and
 # "Papa Surf" for the same date/time), collapsing to one card. Winner
-# precedence: a flyer/screenshot-backed variant (observation_type
-# "image"/"ocr") over one that's not -- see _flyer_confidence()'s docstring
-# for why (matches this pipeline's existing "the venue's own flyer is the
-# record of truth" policy elsewhere).
+# precedence: highest overall confidence wins -- see
+# _merge_same_slot_variants()'s docstring for why this is NOT "a flyer
+# always wins": that earlier policy was confirmed wrong on real data
+# 2026-10-01 (a generic flyer guess beat SoWal's specific, corroborated,
+# higher-confidence listing for the same booking, for every act at
+# Stinky's that month).
 #
 # Uses synthetic venue names ("Venue A"/"B"/"C"), not real ones -- a real
 # venue name can get folded by canonical.py's CANONICAL_FIXES before it ever
@@ -343,17 +354,20 @@ def test_normalize_canonicalises_in_pass():
 def test_collapse_same_slot_venue_variants_become_one_event():
     out = normalize_events([
         _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="crawler"),
         _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
     ])
     assert len(out) == 1
 
 
-def test_collapse_same_slot_flyer_backed_variant_wins_venue():
+def test_collapse_same_slot_highest_confidence_variant_wins_venue():
+    # The flyer-sourced variant is listed FIRST and has the lowest source
+    # trust (image: 0.8) of the three -- if a prior "flyer always wins"
+    # policy regressed, this would wrongly return "Venue A" instead.
     out = normalize_events([
-        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
-        _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
+        _raw("The Typos", "Venue A", time_start="6PM", source="image:flyer.png"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue C", time_start="6PM", source="venue"),
     ])
     assert out[0]["venue"] == "Venue C"
 
@@ -361,17 +375,17 @@ def test_collapse_same_slot_flyer_backed_variant_wins_venue():
 def test_collapse_same_slot_merges_observations_from_all_variants():
     out = normalize_events([
         _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="crawler"),
         _raw("The Typos", "Venue C", time_start="6PM", source="image:flyer.png"),
     ])
     assert out[0]["source_count"] == 3
     assert len(out[0]["observations"]) == 3
 
 
-def test_collapse_same_slot_first_seen_wins_without_a_flyer_variant():
+def test_collapse_same_slot_first_seen_wins_on_confidence_tie():
     out = normalize_events([
         _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("The Typos", "Venue B", time_start="6PM", source="venue_site"),
+        _raw("The Typos", "Venue B", time_start="6PM", source="sowal"),
     ])
     assert len(out) == 1
     assert out[0]["venue"] == "Venue A"
@@ -380,7 +394,7 @@ def test_collapse_same_slot_first_seen_wins_without_a_flyer_variant():
 def test_collapse_same_slot_different_time_not_collapsed():
     out = normalize_events([
         _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("The Typos", "Venue B", time_start="9PM", source="venue_site"),
+        _raw("The Typos", "Venue B", time_start="9PM", source="crawler"),
     ])
     assert len(out) == 2
 
@@ -388,9 +402,40 @@ def test_collapse_same_slot_different_time_not_collapsed():
 def test_collapse_same_slot_different_performer_not_collapsed():
     out = normalize_events([
         _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
-        _raw("Some Other Band", "Venue A", time_start="6PM", source="venue_site"),
+        _raw("Some Other Band", "Venue A", time_start="6PM", source="crawler"),
     ])
     assert len(out) == 2
+
+
+# --- blank time_start: missing data, not a different slot -- confirmed live
+# 2026-10-01: a monthly Stinky's flyer listing dozens of acts with no
+# per-act time anywhere on it, so every single one landed as its own
+# "duplicate" next to SoWal's fully-timed listing of the same booking. ---
+
+def test_collapse_same_slot_blank_time_joins_the_single_real_time():
+    out = normalize_events([
+        _raw("Dion Jones & The Neon Tears", "Stinky's Bait Shack", time_start="7PM", source="sowal"),
+        _raw("Dion Jones & The Neon Tears", "Stinky's Fish Camp", time_start=None, source="image:flyer.png"),
+    ])
+    assert len(out) == 1
+    # SoWal's specific, higher-confidence, timed listing wins over the
+    # untimed flyer guess -- not "flyer always wins".
+    assert out[0]["venue"] == "Stinky's Bait Shack"
+    assert out[0]["time_start"] == "7:00 PM"
+    assert out[0]["source_count"] == 2
+
+
+def test_collapse_same_slot_blank_time_not_guessed_across_multiple_real_times():
+    # Two DIFFERENT real times plus a blank -- genuine ambiguity. The two
+    # real times stay apart (not collapsed into each other), and the blank
+    # can't be confidently attributed to either, so it stays its own event
+    # too: 3 distinct results, not 1 and not a guess.
+    out = normalize_events([
+        _raw("The Typos", "Venue A", time_start="6PM", source="sowal"),
+        _raw("The Typos", "Venue B", time_start="9PM", source="crawler"),
+        _raw("The Typos", "Venue C", time_start=None, source="image:flyer.png"),
+    ])
+    assert len(out) == 3
 
 
 # --- gap-filling: a weaker source can fill a field the primary left blank ---

@@ -367,28 +367,38 @@ def merge_group(observations: list[dict]) -> dict:
     return event
 
 
-# observation_type values that mean "read off an actual flyer/screenshot"
-# (GPT-4o Vision or the Apple Vision OCR fallback) -- see infer_observation_type().
-_FLYER_OBSERVATION_TYPES = {"image", "ocr"}
-
-
-def _flyer_confidence(ev: dict) -> float:
+def _merge_same_slot_variants(variants: list[dict]) -> dict:
     """
-    Highest confidence among an event's flyer/screenshot-sourced observations,
-    or -1.0 if it has none. Used by collapse_same_slot_duplicates() to prefer
-    a flyer-backed variant -- "the venue's own flyer is the record of truth
-    on conflict" is the policy this pipeline already applies elsewhere
-    (resolve_stale_url_relistings/resolve_stale_image_relistings; also the
-    reasoning behind the manual Papa Surf fix in commit 9c23041). -1.0 sorts
-    below any real confidence, so max() falls through to first-seen when no
-    variant has a flyer observation at all.
+    Collapse 2+ canonical events already confirmed to be the same real
+    booking into one. Winner precedence: highest overall confidence wins
+    (the event's own already-aggregated `confidence`, which already blends
+    source trust + extraction clarity + corroboration -- the same number
+    everywhere else in this pipeline that needs "which account of this
+    event do we trust more"). First-seen wins a tie (stable: max() keeps
+    the first-encountered item on equal keys).
+
+    Deliberately NOT "prefer any flyer observation, regardless of overall
+    confidence" (an earlier version of this function did that, matching
+    "the venue's own flyer is the record of truth" elsewhere in this
+    pipeline) -- confirmed wrong on real data 2026-10-01: SoWal's specific,
+    corroborated "Stinky's Bait Shack" listing (confidence 0.9) lost to a
+    flyer's generic "Stinky's Fish Camp" guess (confidence 0.75) for every
+    single weekly act that month, because the flyer-preference rule treated
+    "is a flyer" as an unconditional trump card instead of one signal among
+    several. Overall confidence already accounts for source reliability
+    without that blind spot.
+
+    Every variant's observations are merged onto the winner and
+    source_count is recomputed over the merged set, so provenance isn't
+    lost even though the losing venue text is.
     """
-    confidences = [
-        obs.get("confidence") or 0.0
-        for obs in ev.get("observations", [])
-        if obs.get("observation_type") in _FLYER_OBSERVATION_TYPES
-    ]
-    return max(confidences) if confidences else -1.0
+    winner = max(variants, key=lambda v: v.get("confidence") or 0.0)
+    merged_observations = [obs for v in variants for obs in v.get("observations", [])]
+
+    winner = dict(winner)
+    winner["observations"] = merged_observations
+    winner["source_count"] = len({obs.get("source") or "unknown" for obs in merged_observations})
+    return winner
 
 
 def collapse_same_slot_duplicates(events: list[dict]) -> list[dict]:
@@ -400,55 +410,60 @@ def collapse_same_slot_duplicates(events: list[dict]) -> list[dict]:
     docstring): inconsistent venue text across sources creates multiple
     distinct identities for one real show.
 
-    Groups already-merged events by (performer, date, time_start) --
-    deliberately ignoring venue -- and collapses any group of 2+ into one.
+    Groups by (performer, date), then within each group by time_start --
+    deliberately ignoring venue throughout -- and collapses any group of 2+
+    into one (see _merge_same_slot_variants for winner precedence).
 
-    Precedence: whichever variant has the highest-confidence flyer/screenshot
-    observation wins (see _flyer_confidence) -- the venue's own flyer is the
-    most reliable source for its own venue name, same policy this pipeline
-    already applies to other same-source conflicts. If no variant has a
-    flyer observation, the first-seen variant wins. Every collapsed
-    variant's observations are merged onto the winner and source_count is
-    recomputed over the merged set, so provenance isn't lost even though the
-    losing venue text is.
+    A blank/missing time_start is NOT treated as its own distinct time: a
+    flyer that just lists "Dion Jones & The Neon Tears -- 10/3" with no time
+    at all isn't asserting a different showtime than SoWal's "7:00 PM" for
+    the same performer/date, it's just missing that detail -- confirmed
+    live 2026-10-01, a monthly flyer graphic covering dozens of acts with no
+    per-act time anywhere on it. So: if a (performer, date) group has at
+    most one distinct real time among its members, every blank-time member
+    joins that single slot. If it has two or more DIFFERENT real times,
+    that's genuine ambiguity (a real double-booking, or a blank-time entry
+    that can't be confidently attributed to either) -- each real-time
+    cluster of 2+ collapses on its own, and blanks are left alone rather
+    than guessed into one of them.
 
-    Deliberately narrow, so this can't quietly merge two real events: a
-    different time for the same performer/date is a genuine double-booking
-    (not collapsed), and different performers at the same venue/time are
-    two different acts (not collapsed either) -- only an exact
-    (performer, date, time_start) match collapses.
+    Different performers at the same venue/time are never collapsed either
+    -- only an exact performer+date match (with a time-compatible group, as
+    above) collapses.
     """
-    groups: dict[tuple[str, str, str], list[dict]] = {}
-    order: list[tuple[str, str, str]] = []
+    pd_groups: dict[tuple[str, str], list[dict]] = {}
+    pd_order: list[tuple[str, str]] = []
     for ev in events:
-        key = (
-            (ev.get("performer") or "").strip().lower(),
-            (ev.get("date") or "").strip(),
-            (ev.get("time_start") or "").strip().lower(),
-        )
-        if key not in groups:
-            groups[key] = []
-            order.append(key)
-        groups[key].append(ev)
+        key = ((ev.get("performer") or "").strip().lower(), (ev.get("date") or "").strip())
+        if key not in pd_groups:
+            pd_groups[key] = []
+            pd_order.append(key)
+        pd_groups[key].append(ev)
 
     collapsed: list[dict] = []
-    for key in order:
-        variants = groups[key]
-        if len(variants) == 1:
-            collapsed.append(variants[0])
+    for key in pd_order:
+        members = pd_groups[key]
+        if len(members) == 1:
+            collapsed.append(members[0])
             continue
 
-        # max() keeps the first-encountered item on a tie, so this also
-        # covers the "no variant has a flyer observation" fallback (every
-        # variant scores -1.0) and the "flyer confidences tie" case: both
-        # resolve to first-seen, exactly the stated fallback precedence.
-        winner = max(variants, key=_flyer_confidence)
-        merged_observations = [obs for v in variants for obs in v.get("observations", [])]
+        timed: dict[str, list[dict]] = {}
+        blanks: list[dict] = []
+        for ev in members:
+            t = (ev.get("time_start") or "").strip().lower()
+            (timed.setdefault(t, []) if t else blanks).append(ev)
 
-        winner = dict(winner)
-        winner["observations"] = merged_observations
-        winner["source_count"] = len({obs.get("source") or "unknown" for obs in merged_observations})
-        collapsed.append(winner)
+        if len(timed) <= 1:
+            # 0 or 1 distinct real time across the whole group -- a blank
+            # time is missing data, not a different slot, so it's safe to
+            # treat everyone here as the same booking.
+            collapsed.append(_merge_same_slot_variants(members))
+        else:
+            # 2+ distinct real times -- keep each apart; don't guess which
+            # one an untimed entry belongs to.
+            for group in timed.values():
+                collapsed.append(_merge_same_slot_variants(group) if len(group) > 1 else group[0])
+            collapsed.extend(blanks)
 
     return collapsed
 
