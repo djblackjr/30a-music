@@ -1,0 +1,135 @@
+{
+  "run_id": "20261003_051516",
+  "recorded_at": "2026-10-03T05:16:11",
+  "summary": {
+    "new": 15,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 207,
+    "total_delta": 15
+  },
+  "new": [
+    {
+      "performer": "Bryan Bludworth",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-02",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-03",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-04",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-10",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-11",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-16",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-17",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-23",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Logan Bonds",
+      "venue": "Red Fish Taco",
+      "date": "2026-10-02",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronni Kay",
+      "venue": "Crackings",
+      "date": "2026-10-01",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "Laura Lane",
+      "venue": "Crackings",
+      "date": "2026-10-28",
+      "time_start": "9:30 AM",
+      "time_end": "12:30 PM",
+      "stage": null
+    },
+    {
+      "performer": "The Pink Stones",
+      "venue": "The Pavilion at Watersound Town Center",
+      "date": "2026-09-04",
+      "time_start": "6:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
