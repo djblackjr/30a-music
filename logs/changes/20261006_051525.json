@@ -1,0 +1,87 @@
+{
+  "run_id": "20261006_051525",
+  "recorded_at": "2026-10-06T05:15:28",
+  "summary": {
+    "new": 9,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 83,
+    "total_delta": 9
+  },
+  "new": [
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-10",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-11",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-16",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-17",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-23",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-02",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Wine & Spirit Education Trust Level 1 in Wines Course",
+      "venue": "The Bay",
+      "date": "2026-11-05",
+      "time_start": "9:00 AM",
+      "time_end": "5:15 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
