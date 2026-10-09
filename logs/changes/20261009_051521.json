@@ -1,0 +1,95 @@
+{
+  "run_id": "20261009_051521",
+  "recorded_at": "2026-10-09T05:15:24",
+  "summary": {
+    "new": 10,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 83,
+    "total_delta": 10
+  },
+  "new": [
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-10",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-11",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-16",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-17",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-23",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-02",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-07",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson - Cancelled due to Hurricane Isaias",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
