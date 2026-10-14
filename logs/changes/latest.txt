@@ -1,8 +1,9 @@
-Changelog: 20261014_051522
-Recorded: 2026-10-14T05:15:26
-+8 new  ~0 changed  -0 removed  82 unchanged
+Changelog: 20261014_171627
+Recorded: 2026-10-14T17:16:32
++9 new  ~1 changed  -0 removed  80 unchanged
 
-New (8):
+New (9):
+  · Live Muisc @ AJ's Grayton Beach  2026-10-16 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-16 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-17 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-18 4:00 PM
@@ -11,3 +12,9 @@ New (8):
   · Chris Johnson @ Shunk Gulley  2026-10-07 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-10-08 4:00 PM
   · Chris Johnson - Cancelled due to Hurricane Isaias @ Shunk Gulley  2026-10-09 4:00 PM
+
+Changed (1):
+  · Sunday Funday @ AJ's Grayton Beach  2026-10-18 12:00 PM
+      time_start: '10:00 AM' -> '12:00 PM'
+      time_end: '10:00 PM' -> '8:00 PM'
+      confidence: 0.5 -> 0.425

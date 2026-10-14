@@ -1,0 +1,110 @@
+{
+  "run_id": "20261014_171627",
+  "recorded_at": "2026-10-14T17:16:32",
+  "summary": {
+    "new": 9,
+    "changed": 1,
+    "removed": 0,
+    "unchanged": 80,
+    "total_delta": 10
+  },
+  "new": [
+    {
+      "performer": "Live Muisc",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-10-16",
+      "time_start": "4:00 PM",
+      "time_end": "2:00 AM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-16",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-17",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-18",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-09-23",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-02",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-07",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-08",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson - Cancelled due to Hurricane Isaias",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [
+    {
+      "performer": "Sunday Funday",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-10-18",
+      "time_start": "12:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "10:00 AM",
+          "after": "12:00 PM"
+        },
+        "time_end": {
+          "before": "10:00 PM",
+          "after": "8:00 PM"
+        },
+        "confidence": {
+          "before": 0.5,
+          "after": 0.425
+        }
+      }
+    }
+  ],
+  "removed": []
+}
