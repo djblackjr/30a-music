@@ -1,9 +1,8 @@
-Changelog: 20261017_051521
-Recorded: 2026-10-17T05:15:24
-+11 new  ~0 changed  -0 removed  81 unchanged
+Changelog: 20261017_153938
+Recorded: 2026-10-17T15:39:42
++11 new  ~0 changed  -0 removed  80 unchanged
 
 New (11):
-  · Live Muisc @ AJ's Grayton Beach  2026-10-23 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-16 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-17 4:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-09-18 4:00 PM
@@ -14,3 +13,4 @@ New (11):
   · Chris Johnson - Cancelled due to Hurricane Isaias @ Shunk Gulley  2026-10-09 4:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-14 4:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-15 4:00 PM
+  · Trevor Finlay @ Shunk Gulley  2026-10-16 4:00 PM
