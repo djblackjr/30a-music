@@ -3,6 +3,7 @@ tests/test_dashboard.py
 Tests for the dumb dashboard renderer: it renders precomputed DB values
 (confidence, provenance, conflicts) into the preserved shell.
 """
+import re
 import sys
 import tempfile
 from datetime import timedelta
@@ -174,6 +175,21 @@ def test_render_rows_carry_data_performer_favorite():
         {"performer": "A", "venue": "Chiringo", "date": "2026-07-11", "time_start": "6PM", "source": "sowal"},
     ])
     assert 'data-performer-favorite="' in html
+
+
+def test_same_date_rows_put_favorite_performers_first(monkeypatch):
+    # Within one date, a starred artist must sort ahead of non-favorites
+    # sharing that date rather than wherever insertion order happened to
+    # land it -- otherwise a favorite several rows down a busy date is easy
+    # to miss entirely.
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"c": True})
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+        {"performer": "B", "venue": "V", "date": "2026-07-11", "time_start": "7PM", "source": "seed"},
+        {"performer": "C", "venue": "V", "date": "2026-07-11", "time_start": "8PM", "source": "seed"},
+    ])
+    performers = re.findall(r'data-performer="([^"]*)"', html)
+    assert performers == ["C", "A", "B"]
 
 
 def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():

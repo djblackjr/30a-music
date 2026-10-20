@@ -561,8 +561,15 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
     """Render the dashboard for current knowledge (or a specific run) into out_path."""
     template = TEMPLATE.read_text(encoding="utf-8")
     events = load_events(run_id=run_id, path=path) if run_id else load_current_events(path=path)
-    # date ascending, then insertion order — matches the curated layout
-    events.sort(key=lambda e: ((e.get("date") or ""), e.get("id") or 0))
+    # date ascending; within a date, favorite performers first, then
+    # insertion order -- so a starred artist never gets buried below a
+    # run of non-favorites sharing the same date.
+    performer_meta = _load_performer_meta()
+    events.sort(key=lambda e: (
+        (e.get("date") or ""),
+        not _performer_favorite(e.get("performer") or e.get("name"), performer_meta),
+        e.get("id") or 0,
+    ))
 
     h = _health(events, path)
 
