@@ -42,6 +42,16 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # with the identical garbled name) to the same canonical "Will Thompson"
     # the fixed extraction + the rule above would now produce.
     ("Will Thompson", "Will Thompson Band Boasting"),
+    # Same "Band" suffix issue as Will Thompson above, on the same favorites_watch
+    # source -- confirmed live 2026-09-29 by detect_schedule_conflicts flagging
+    # "Forrest Williams" and "Forrest Williams Band" as a same_night_collision
+    # at Baytowne Wharf (identical date/time, so clearly one booking read twice).
+    ("Forrest Williams", "Forrest Williams Band"),
+    # favorites_watch's web_search reported a leading "The" that sowal.com's
+    # own listing for the same night/venue doesn't use -- confirmed live
+    # 2026-10-20 by detect_schedule_conflicts flagging a same_night_collision
+    # at The Pavilion at Watersound Town Center (identical date/time).
+    ("Webb Wilder Band", "The Webb Wilder Band"),
     ("Brett Stafford", "BRETT STAFFORD"),
     ("Brett Stafford", "Brett Stafford Smith"),
     ("Cadillac Willy", "CADILLAC WILLY"),
@@ -147,6 +157,11 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     # venue, confirmed live 2026-09-02 (The Typos, same date/time from both
     # sowal and a venue flyer, produced two cards for one show).
     ("Baytowne Wharf", "The Village of Baytowne Wharf"),
+    # venue_groups.csv (and the venue's own site) use the full "Bar & Grill"
+    # name; a sowal.com crawl of the Cadillac Willy listing shortened it to
+    # just "Local Catch" -- confirmed live 2026-09-29, same venue/date/time
+    # as the venue's own Instagram flyer for the same show.
+    ("Local Catch Bar & Grill", "Local Catch"),
 
     # Performer spelling/formatting variants (same SoWal port, 2026-07-13).
     ("Coconut Radio", "COCONUT RADIO"),

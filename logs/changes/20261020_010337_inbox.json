@@ -1,0 +1,55 @@
+{
+  "run_id": "20261020_010337_inbox",
+  "recorded_at": "2026-10-20T01:03:38",
+  "summary": {
+    "new": 5,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 0,
+    "total_delta": 5
+  },
+  "new": [
+    {
+      "performer": "Stevie Monce",
+      "venue": "Grace O'Malleys",
+      "date": "2026-10-21",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Watercolor Beach Club",
+      "date": "2026-10-22",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Papa Surf",
+      "date": "2026-10-23",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Moe's Original BBQ",
+      "date": "2026-10-24",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "T's on Thomas",
+      "date": "2026-10-25",
+      "time_start": "12:00 PM",
+      "time_end": null,
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
