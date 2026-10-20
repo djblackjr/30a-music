@@ -118,12 +118,7 @@ def test_current_week_date_unrecognized_day_returns_none():
 def test_normalise_resolves_day_of_week_without_week_anchor(monkeypatch):
     # No week_of grid at all -- just a bare weekday name (e.g. "This
     # Saturday") on a single-flyer image. Falls back to "today"'s week.
-    class _FixedDate(date):
-        @classmethod
-        def today(cls):
-            return date(2026, 8, 7)
-
-    monkeypatch.setattr("app.images.importer.date", _FixedDate)
+    monkeypatch.setattr("app.images.importer.local_date", lambda: date(2026, 8, 7))
     out = _normalise(
         [{"artist": "The Typos Nate & Matt", "venue": "Red Fish Taco", "day_of_week": "Saturday"}], IMG
     )

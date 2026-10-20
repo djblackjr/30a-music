@@ -16,7 +16,8 @@ favorite costs more calls but far better precision.
 import json
 import logging
 import os
-from datetime import date
+
+from app.local_clock import local_date
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ def _parse_response(raw: str) -> dict | None:
 def research_favorite(name: str, kind: str) -> dict | None:
     """kind is 'a venue' or 'an artist' -- fed straight into the prompt."""
     client = _client()
-    prompt = PROMPT_TEMPLATE.format(today=date.today().isoformat(), name=name, kind=kind)
+    prompt = PROMPT_TEMPLATE.format(today=local_date().isoformat(), name=name, kind=kind)
     try:
         resp = client.responses.create(
             model=MODEL,

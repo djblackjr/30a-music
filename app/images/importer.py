@@ -20,6 +20,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from app.local_clock import local_date
+
 logger = logging.getLogger(__name__)
 
 INBOX_DIR     = Path("images/inbox")
@@ -102,7 +104,7 @@ def _call_gpt4o(image_path: Path) -> list[dict]:
     client = OpenAI(api_key=api_key)
     b64 = _encode_image(image_path)
     mime = _mime_type(image_path)
-    prompt = VISION_PROMPT.format(today=date.today().isoformat())
+    prompt = VISION_PROMPT.format(today=local_date().isoformat())
 
     logger.info("Sending %s to OpenAI Vision (%s)...", image_path.name, VISION_MODEL)
 
@@ -211,7 +213,7 @@ def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
         if wow and "/" in wow:
             try:
                 m, d = wow.split("/")[:2]
-                week_anchor = date(date.today().year, int(m), int(d))
+                week_anchor = date(local_date().year, int(m), int(d))
             except Exception:
                 pass
         if week_anchor:
@@ -249,7 +251,7 @@ def _normalise(raw_events: list[dict], image_path: Path) -> list[dict]:
         # e.g. "This Saturday" with no absolute date printed anywhere) --
         # assume the current week, per rule set 2026-08-09.
         if not event_date and dow:
-            resolved = _current_week_date(dow, date.today())
+            resolved = _current_week_date(dow, local_date())
             if resolved:
                 event_date = resolved.isoformat()
 

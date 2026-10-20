@@ -26,6 +26,7 @@ from app.database.db import (
     load_event_observations,
     load_events,
 )
+from app.local_clock import local_now
 from app.normalize.confidence import confidence_band
 
 logger = logging.getLogger(__name__)
@@ -478,7 +479,7 @@ def _pick_featured_group(
 def _hero_meta_html(ev: dict) -> str:
     """'at <b>Venue</b> · Today · 7:00 pm' -- pre-escaped HTML, safe to
     insert directly into the template."""
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = local_now().strftime("%Y-%m-%d")
     when = "Tonight" if ev.get("date") == today else _fmt_date(ev.get("date"))
     venue = html.escape(_venue_display_name(ev.get("venue")))
     parts = [p for p in [when, ev.get("time_start")] if p]
@@ -565,9 +566,9 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
 
     h = _health(events, path)
 
-    today = datetime.now().strftime("%Y-%m-%d")
-    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    week_end = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+    today = local_now().strftime("%Y-%m-%d")
+    tomorrow = (local_now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    week_end = (local_now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
     tonight_group = _pick_featured_group(events, today, today, allow_ties_at_tier_0=True)
     week_group = _pick_featured_group(events, tomorrow, week_end, include_all_performer_favorites=True)
@@ -591,7 +592,7 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
 
     out = (
         template
-        .replace("TODAY_DATE_PLACEHOLDER", _fmt_ordinal_date(datetime.now()))
+        .replace("TODAY_DATE_PLACEHOLDER", _fmt_ordinal_date(local_now()))
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
         .replace("HERO_TONIGHT_KICKER_PLACEHOLDER", hero_tonight["kicker"])
         .replace("HERO_TONIGHT_PERFORMER_PLACEHOLDER", hero_tonight["performer"])

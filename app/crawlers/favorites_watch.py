@@ -13,9 +13,9 @@ the performer field rather than being dropped, so they still show up
 somewhere on the dashboard instead of silently disappearing.
 """
 import logging
-from datetime import date
 
 from app.crawlers.sowal import extract_performer_from_description
+from app.local_clock import local_date
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class FavoritesWatchCrawler:
         # OpenAI cost (confirmed 2026-08-01). The main pipeline itself still
         # runs daily via cron-job.org for the free scrapers (SoWal, AJ's
         # Grayton, ...); this crawler just no-ops on every day but Monday.
-        if date.today().weekday() != MONDAY:
+        if local_date().weekday() != MONDAY:
             logger.info("[FavoritesWatchCrawler] skipped -- runs Monday mornings only")
             return []
 

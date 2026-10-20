@@ -5,12 +5,13 @@ Tests for the dumb dashboard renderer: it renders precomputed DB values
 """
 import sys
 import tempfile
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database.db import init_db, record_run, save_events
+from app.local_clock import local_now
 from app.normalize import normalize_events
 from app.dashboard import render
 
@@ -222,7 +223,11 @@ def test_render_includes_both_hero_cards():
 # show just because it's the only thing on. --------------------------------
 
 def _d(offset_days):
-    return (datetime.now() + timedelta(days=offset_days)).strftime("%Y-%m-%d")
+    # Match render.py's own notion of "today" (Central time, see
+    # app/local_clock.py) rather than the test runner's bare local/UTC
+    # clock -- otherwise this drifts a day out of sync with render.py for
+    # several hours every evening and these hero/"Tonight" assertions flake.
+    return (local_now() + timedelta(days=offset_days)).strftime("%Y-%m-%d")
 
 
 def _hero_chunks(html):

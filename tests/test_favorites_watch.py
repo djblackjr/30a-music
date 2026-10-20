@@ -132,16 +132,14 @@ def test_crawler_skips_on_non_monday(monkeypatch):
     # crawler now only actually researches on Monday, and must not import
     # research.py (which requires OPENAI_API_KEY) on any other day.
     monkeypatch.setattr(
-        "app.crawlers.favorites_watch.date",
-        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 4))}),  # Tuesday
+        "app.crawlers.favorites_watch.local_date", lambda: date(2026, 8, 4),  # Tuesday
     )
     assert FavoritesWatchCrawler().fetch() == []
 
 
 def test_crawler_runs_on_monday(monkeypatch):
     monkeypatch.setattr(
-        "app.crawlers.favorites_watch.date",
-        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 3))}),  # Monday
+        "app.crawlers.favorites_watch.local_date", lambda: date(2026, 8, 3),  # Monday
     )
     monkeypatch.setattr(
         "app.dashboard.render._favorite_venue_names", lambda: ["Test Venue"]
@@ -161,8 +159,7 @@ def test_crawler_strips_venue_promo_title_down_to_the_performer_name(monkeypatch
     # identity_key than the clean "Stranger Boy" already reported by the
     # ajs_grayton crawler -- producing two dashboard cards for one show.
     monkeypatch.setattr(
-        "app.crawlers.favorites_watch.date",
-        type("FixedDate", (), {"today": staticmethod(lambda: date(2026, 8, 3))}),  # Monday
+        "app.crawlers.favorites_watch.local_date", lambda: date(2026, 8, 3),  # Monday
     )
     monkeypatch.setattr("app.dashboard.render._favorite_venue_names", lambda: ["AJ's Grayton Beach"])
     monkeypatch.setattr("app.dashboard.render._favorite_performer_names", lambda: [])

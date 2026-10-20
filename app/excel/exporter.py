@@ -4,8 +4,10 @@ Generate a formatted Excel workbook in exports/.
 Sheets: All Events, Upcoming, Changes, By Venue
 """
 import logging
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
+
+from app.local_clock import local_today
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +80,7 @@ def _write_events_sheet(ws, events: list[dict], title: str):
     ws.row_dimensions[3].height = 20
 
     # Data rows
-    today = date.today().isoformat()
+    today = local_today()
     for i, ev in enumerate(events, start=4):
         ev_date = ev.get("date") or ""
         is_past = ev_date and ev_date < today
@@ -237,7 +239,7 @@ def generate_report(
 
     wb = Workbook()
 
-    today = date.today().isoformat()
+    today = local_today()
     upcoming = [e for e in all_events if (e.get("date") or "") >= today]
 
     # Sheet 1: All Events

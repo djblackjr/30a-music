@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from app.local_clock import local_today
+
 logger = logging.getLogger(__name__)
 
 DB_PATH = Path("data/events.db")
@@ -585,7 +587,7 @@ def purge_past_events(before: Optional[str] = None, path: Path = DB_PATH) -> int
     inference; it's an unambiguous fact. Safe to re-run. Returns the number
     of events deleted.
     """
-    cutoff = before or datetime.now().strftime("%Y-%m-%d")
+    cutoff = before or local_today()
     conn = get_connection(path)
     ids = [row["id"] for row in conn.execute(
         "SELECT id FROM events WHERE date < ?", (cutoff,)

@@ -16,10 +16,11 @@ Requires (macOS):  pip install pyobjc-framework-Vision
 import logging
 import re
 import shutil
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
 from app.images.importer import FAILED_DIR, INBOX_DIR, PROCESSED_DIR, SUPPORTED_EXTS
+from app.local_clock import local_date
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ def parse_two_column(items: list[dict], artist: str, year: int | None = None) ->
     event. Ported from ocr_and_rebuild.parse_two_column.
     """
     if year is None:
-        year = date.today().year
+        year = local_date().year
 
     left  = sorted([i for i in items if i["x"] < 0.45],  key=lambda i: -i["y"])
     right = sorted([i for i in items if i["x"] >= 0.45], key=lambda i: -i["y"])
