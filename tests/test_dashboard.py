@@ -180,8 +180,13 @@ def test_render_rows_carry_data_performer_favorite():
 def test_same_date_rows_put_favorite_performers_first(monkeypatch):
     # Within one date, a starred artist must sort ahead of non-favorites
     # sharing that date rather than wherever insertion order happened to
-    # land it -- otherwise a favorite several rows down a busy date is easy
-    # to miss entirely.
+    # land it. Note: this only covers the hidden #tb <table> (.wrap{display:
+    # none}) that rr() below reads as its data source -- it alone is NOT
+    # visible to a user (confirmed live 2026-10-20: this order shipped
+    # without the matching fix to rr()'s own re-sort, so the real on-page
+    # card view was untouched). See
+    # test_card_view_sorts_favorite_performers_first_within_a_date for the
+    # one that actually guards what's on screen.
     monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {"c": True})
     html, _ = _render_to_temp([
         {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
@@ -190,6 +195,25 @@ def test_same_date_rows_put_favorite_performers_first(monkeypatch):
     ])
     performers = re.findall(r'data-performer="([^"]*)"', html)
     assert performers == ["C", "A", "B"]
+
+
+def test_card_view_sorts_favorite_performers_first_within_a_date():
+    # rr() rebuilds the actual on-screen "Tuesday, October 20 · 9 shows"
+    # card list from #tb on every render/filter/sort change, and used to
+    # re-sort purely by start time -- a favorite later in the evening (or
+    # even earlier, as here) wasn't pulled to the top of its date the way
+    # the hidden <table>'s row order already was (confirmed live 2026-10-20:
+    # a non-favorite 9:30 AM show led the day ahead of two starred artists).
+    # Guard the comparator itself, not just its output, since rr() is pure
+    # client-side JS this test suite can't execute.
+    html, _ = _render_to_temp([
+        {"performer": "A", "venue": "V", "date": "2026-07-11", "time_start": "6PM", "source": "seed"},
+    ])
+    assert (
+        "if(a.performerFavorite!==b.performerFavorite)return a.performerFavorite?-1:1;"
+        in html
+    )
+    assert "return _startMins(a.time)-_startMins(b.time);" in html
 
 
 def test_favorites_filters_combine_like_the_other_filters_and_and_not_or():

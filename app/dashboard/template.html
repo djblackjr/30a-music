@@ -488,7 +488,14 @@ function rr(){
   } else {
     order.forEach(function(dt,gi){
       var shows=groups[dt];
-      shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
+      // Favorite performers first within the date, then by start time --
+      // this is the primary card view (the server-rendered <table> row
+      // order alone isn't enough, since this function rebuilds the list
+      // from scratch on every filter/sort change).
+      shows.sort(function(a,b){
+        if(a.performerFavorite!==b.performerFavorite)return a.performerFavorite?-1:1;
+        return _startMins(a.time)-_startMins(b.time);
+      });
       var d=_dateFromKey(dt);
       var label=(dt===T?'Today — ':'')+days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
       var hint=shows.length+' show'+(shows.length!==1?'s':'')+'<span class="tn-sub"> · Tap a venue for directions</span>';

@@ -1129,7 +1129,7 @@ tr.now td:first-child{border-left:4px solid var(--coral);}
 <span class="legchip"><span class="ld" style="background:#1565c0"></span>30Avenue</span>
 </div>
 <div class="stats"><div class="stat"><div class="n">392</div><div class="l">Total</div></div><div class="stat"><div class="n" id="ss">0</div><div class="l">Showing</div></div><div class="stat"><div class="n" id="sv">0</div><div class="l">Venues</div></div><div class="stat"><div class="n" id="sa">0</div><div class="l">Artists</div></div></div>
-<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-10-20 01:19:35</p></div>
+<div class="ftr"><p class="upd-badge" id="upd"></p><p class="upd-badge">Build 2026-10-20 01:26:50</p></div>
 </main>
 <div class="mm" id="mm" role="dialog" aria-modal="true" aria-labelledby="mmt"><div class="mmbox"><div class="mmhd"><b id="mmt"></b><button class="mmx" onclick="closeMap()" aria-label="Close directions">&times;</button></div><iframe class="mmfr" id="mmf" src="" title="Venue location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mmft"><a id="mme" href="#" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div></div>
 <button type="button" class="top-btn" id="topBtn" onclick="scrollToTop()" aria-label="Back to top">↑</button>
@@ -1271,7 +1271,14 @@ function rr(){
   } else {
     order.forEach(function(dt,gi){
       var shows=groups[dt];
-      shows.sort(function(a,b){return _startMins(a.time)-_startMins(b.time);});
+      // Favorite performers first within the date, then by start time --
+      // this is the primary card view (the server-rendered <table> row
+      // order alone isn't enough, since this function rebuilds the list
+      // from scratch on every filter/sort change).
+      shows.sort(function(a,b){
+        if(a.performerFavorite!==b.performerFavorite)return a.performerFavorite?-1:1;
+        return _startMins(a.time)-_startMins(b.time);
+      });
       var d=_dateFromKey(dt);
       var label=(dt===T?'Today — ':'')+days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
       var hint=shows.length+' show'+(shows.length!==1?'s':'')+'<span class="tn-sub"> · Tap a venue for directions</span>';
