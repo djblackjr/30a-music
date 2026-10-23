@@ -1,5 +1,5 @@
-Changelog: 20261022_171509
-Recorded: 2026-10-22T17:15:13
+Changelog: 20261023_171306
+Recorded: 2026-10-23T17:13:09
 +9 new  ~0 changed  -0 removed  81 unchanged
 
 New (9):
@@ -11,4 +11,4 @@ New (9):
   · Trevor Finlay @ Shunk Gulley  2026-10-14 4:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-15 4:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-16 4:00 PM
-  · Mike Whitty & Friends @ The Bay  2027-10-03 4:00 PM
+  · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
