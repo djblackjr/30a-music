@@ -13,7 +13,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.crawlers.favorites_watch import FavoritesWatchCrawler
 from app.favorites_watch import pipeline_notify
-from app.favorites_watch.research import _parse_response
+from app.favorites_watch import research
+from app.favorites_watch.research import _parse_response, _source_year_mismatch
 
 
 def _event(performer, venue, date="2026-08-03", time_start="7PM", source="favorites_watch"):
@@ -68,6 +69,64 @@ def test_parse_response_drops_a_link_description_masquerading_as_a_source_url():
 
 def test_parse_response_returns_none_on_garbage():
     assert _parse_response("not json at all") is None
+
+
+# --- source-page year verification --------------------------------------
+
+class _FakeResponse:
+    def __init__(self, text, status=200):
+        self.text = text
+        self.status_code = status
+
+    def raise_for_status(self):
+        pass
+
+
+def test_source_year_mismatch_catches_a_stale_page(monkeypatch):
+    # Confirmed live: a real, still-live 30a.com page for a one-time 2023
+    # event, with no visible year in its body text, fooled the research
+    # model into dating it to the current year ("Killer Robot @ Chiringo").
+    body = '{"@type":"Event","startDate":"2023-10-27T17:00:00-05:00"}'
+    monkeypatch.setattr(research.requests, "get", lambda *a, **k: _FakeResponse(body))
+    assert _source_year_mismatch("https://30a.com/events/x/", "2026-10-27") is True
+
+
+def test_source_year_mismatch_allows_a_matching_page(monkeypatch):
+    body = '{"@type":"Event","startDate":"2026-10-27T17:00:00-05:00"}'
+    monkeypatch.setattr(research.requests, "get", lambda *a, **k: _FakeResponse(body))
+    assert _source_year_mismatch("https://30a.com/events/x/", "2026-10-27") is False
+
+
+def test_source_year_mismatch_fails_open_with_no_structured_date(monkeypatch):
+    monkeypatch.setattr(research.requests, "get", lambda *a, **k: _FakeResponse("<html>no json-ld here</html>"))
+    assert _source_year_mismatch("https://30a.com/events/x/", "2026-10-27") is False
+
+
+def test_source_year_mismatch_fails_open_on_network_error(monkeypatch):
+    def _raise(*a, **k):
+        raise OSError("boom")
+    monkeypatch.setattr(research.requests, "get", _raise)
+    assert _source_year_mismatch("https://30a.com/events/x/", "2026-10-27") is False
+
+
+def test_research_favorite_drops_a_stale_page_finding(monkeypatch):
+    raw = (
+        '{"found": true, "performer": "Killer Robot", "venue": "Chiringo", '
+        '"date": "2026-10-27", "time": "5:00 PM", '
+        '"source_url": "https://30a.com/events/happy-hour-pop-up-chiringo/"}'
+    )
+
+    class _FakeOutput:
+        output_text = raw
+
+    monkeypatch.setattr(research, "_client", lambda: type(
+        "FakeClient", (), {"responses": type("R", (), {"create": staticmethod(lambda **k: _FakeOutput())})()}
+    )())
+    monkeypatch.setattr(
+        research.requests, "get",
+        lambda *a, **k: _FakeResponse('{"startDate":"2023-10-27T17:00:00-05:00"}'),
+    )
+    assert research.research_favorite("Chiringo", "a venue") is None
 
 
 def test_notify_ignores_new_events_from_other_crawlers_even_at_a_favorite_venue(monkeypatch):

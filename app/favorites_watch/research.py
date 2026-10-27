@@ -16,8 +16,11 @@ favorite costs more calls but far better precision.
 import json
 import logging
 import os
+import re
 
 from app.local_clock import local_date
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +92,29 @@ def _parse_response(raw: str) -> dict | None:
     return data
 
 
+def _source_year_mismatch(source_url: str, claimed_date: str) -> bool:
+    """True if the source page's own schema.org Event startDate contradicts
+    the claimed date's year.
+
+    Confirmed live: the research model found a real, still-live (200 OK)
+    30a.com page for a one-time 2023 event whose visible body text never
+    states a year ("Friday October 27"), and matched it to the current
+    year anyway -- saving "Killer Robot @ Chiringo" as happening tonight,
+    three years late. The page's own JSON-LD startDate ("2023-10-27")
+    would have caught this.
+    """
+    try:
+        resp = requests.get(source_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+    except Exception as exc:
+        logger.warning("Could not verify source date for %r: %s", source_url, exc)
+        return False  # fail open -- a network hiccup shouldn't drop a real finding
+    match = re.search(r'"startDate"\s*:\s*"(\d{4})-\d{2}-\d{2}', resp.text)
+    if not match:
+        return False
+    return match.group(1) != claimed_date[:4]
+
+
 def research_favorite(name: str, kind: str) -> dict | None:
     """kind is 'a venue' or 'an artist' -- fed straight into the prompt."""
     client = _client()
@@ -103,8 +129,15 @@ def research_favorite(name: str, kind: str) -> dict | None:
         logger.warning("Research call failed for %r: %s", name, exc)
         return None
     finding = _parse_response(resp.output_text)
-    if finding:
-        finding["favorite_name"] = name
+    if finding is None:
+        return None
+    if _source_year_mismatch(finding["source_url"], finding["date"]):
+        logger.warning(
+            "Dropping finding whose source page's own date contradicts the claimed year: %r",
+            finding,
+        )
+        return None
+    finding["favorite_name"] = name
     return finding
 
 
