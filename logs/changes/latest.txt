@@ -1,9 +1,8 @@
-Changelog: 20261027_180318
-Recorded: 2026-10-27T18:03:21
-+11 new  ~0 changed  -0 removed  78 unchanged
+Changelog: 20261028_182206
+Recorded: 2026-10-28T18:22:13
++10 new  ~0 changed  -0 removed  79 unchanged
 
-New (11):
-  · Contractors Connect @ AJ's Grayton Beach  2026-11-05 4:30 PM
+New (10):
   · Ronnie Presley @ Shunk Gulley  2026-10-02 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-10-07 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-10-08 4:00 PM
