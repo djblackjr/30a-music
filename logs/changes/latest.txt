@@ -1,5 +1,5 @@
-Changelog: 20261029_183036
-Recorded: 2026-10-29T18:30:40
+Changelog: 20261030_180235
+Recorded: 2026-10-30T18:02:40
 +11 new  ~0 changed  -0 removed  79 unchanged
 
 New (11):
@@ -13,4 +13,4 @@ New (11):
   · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
   · Brent Varner @ Shunk Gulley  2026-10-22 4:00 PM
   · Brittany Bell @ Shunk Gulley  2026-10-23 4:00 PM
-  · Mike Whitty & Friends @ The Bay  2027-10-17 4:00 PM
+  · David Dunavent @ Shunk Gulley  2026-10-28 4:00 PM
