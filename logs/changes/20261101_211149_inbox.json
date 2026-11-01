@@ -1,0 +1,175 @@
+{
+  "run_id": "20261101_211149_inbox",
+  "recorded_at": "2026-11-01T21:11:50",
+  "summary": {
+    "new": 20,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 0,
+    "total_delta": 20
+  },
+  "new": [
+    {
+      "performer": "Casey Kearney",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-03",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Zack Miller",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-04",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Cadillac Willy",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-06",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Jon Blackdog",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-07",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Casey Kearney",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-10",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Queens Handsome",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-11",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-13",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Nate Kelly",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-14",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Brett Stafford",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-16",
+      "time_start": "6:30 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Casey Kearney",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-17",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Donnie Sundal",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-18",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Cadillac Willy",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-20",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "River Dan",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-21",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Catalyst Dance Band",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-22",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Brett Stafford",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-23",
+      "time_start": "6:30 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Casey Kearney",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-24",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Queens Handsome",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-25",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "River Dan",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-26",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Lips Manly",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-27",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Nate Kelly",
+      "venue": "Red Fish Taco",
+      "date": "2026-11-28",
+      "time_start": "6:00 PM",
+      "time_end": "9:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
