@@ -1,25 +1,28 @@
-Changelog: 20261101_211149_inbox
-Recorded: 2026-11-01T21:11:50
-+20 new  ~0 changed  -0 removed  0 unchanged
+Changelog: 20261101_211320_inbox
+Recorded: 2026-11-01T21:13:21
++23 new  ~0 changed  -0 removed  0 unchanged
 
-New (20):
-  · Casey Kearney @ Red Fish Taco  2026-11-03 6:00 PM
-  · Zack Miller @ Red Fish Taco  2026-11-04 6:00 PM
-  · Cadillac Willy @ Red Fish Taco  2026-11-06 6:00 PM
-  · Jon Blackdog @ Red Fish Taco  2026-11-07 6:00 PM
-  · Casey Kearney @ Red Fish Taco  2026-11-10 6:00 PM
-  · Queens Handsome @ Red Fish Taco  2026-11-11 6:00 PM
-  · Stevie Monce @ Red Fish Taco  2026-11-13 6:00 PM
-  · Nate Kelly @ Red Fish Taco  2026-11-14 6:00 PM
-  · Brett Stafford @ Red Fish Taco  2026-11-16 6:30 PM
-  · Casey Kearney @ Red Fish Taco  2026-11-17 6:00 PM
-  · Donnie Sundal @ Red Fish Taco  2026-11-18 6:00 PM
-  · Cadillac Willy @ Red Fish Taco  2026-11-20 6:00 PM
-  · River Dan @ Red Fish Taco  2026-11-21 6:00 PM
-  · Catalyst Dance Band @ Red Fish Taco  2026-11-22 6:00 PM
-  · Brett Stafford @ Red Fish Taco  2026-11-23 6:30 PM
-  · Casey Kearney @ Red Fish Taco  2026-11-24 6:00 PM
-  · Queens Handsome @ Red Fish Taco  2026-11-25 6:00 PM
-  · River Dan @ Red Fish Taco  2026-11-26 6:00 PM
-  · Lips Manly @ Red Fish Taco  2026-11-27 6:00 PM
-  · Nate Kelly @ Red Fish Taco  2026-11-28 6:00 PM
+New (23):
+  · Steenos + John Reinlie @ Stinky's Bait Shack  2026-11-01 11:00 AM
+  · Meco @ Stinky's Bait Shack  2026-11-03 6:00 PM
+  · Outro @ Stinky's Bait Shack  2026-11-05 6:00 PM
+  · Rhino Jockeys + Matt Miller @ Stinky's Bait Shack  2026-11-06 7:00 PM
+  · Dion Jones & The Neon Tears @ Stinky's Bait Shack  2026-11-07 7:00 PM
+  · Steenos + John Reinlie @ Stinky's Bait Shack  2026-11-08 11:00 AM
+  · Meco @ Stinky's Bait Shack  2026-11-10 6:00 PM
+  · Outro @ Stinky's Bait Shack  2026-11-12 6:00 PM
+  · Rhino Jockeys + Matt Miller @ Stinky's Bait Shack  2026-11-13 7:00 PM
+  · Dion Jones & The Neon Tears @ Stinky's Bait Shack  2026-11-14 7:00 PM
+  · Steenos + John Reinlie @ Stinky's Bait Shack  2026-11-15 11:00 AM
+  · Meco @ Stinky's Bait Shack  2026-11-17 6:00 PM
+  · Outro @ Stinky's Bait Shack  2026-11-19 6:00 PM
+  · Rhino Jockeys + Matt Miller @ Stinky's Bait Shack  2026-11-20 7:00 PM
+  · Dion Jones & The Neon Tears @ Stinky's Bait Shack  2026-11-21 7:00 PM
+  · Steenos + John Reinlie @ Stinky's Bait Shack  2026-11-22 11:00 AM
+  · The Typos @ Stinky's Bait Shack  2026-11-22 6:00 PM
+  · Zack Miller @ Stinky's Bait Shack  2026-11-23 6:00 PM
+  · Meco @ Stinky's Bait Shack  2026-11-24 6:00 PM
+  · Gage Cowart @ Stinky's Bait Shack  2026-11-25 6:00 PM
+  · Rhino Jockeys + Matt Miller @ Stinky's Bait Shack  2026-11-27 7:00 PM
+  · Dion Jones & The Neon Tears @ Stinky's Bait Shack  2026-11-28 7:00 PM
+  · Steenos + John Reinlie @ Stinky's Bait Shack  2026-11-29 11:00 AM
