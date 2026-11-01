@@ -1,17 +1,25 @@
-Changelog: 20261031_171553
-Recorded: 2026-10-31T17:15:56
-+12 new  ~0 changed  -0 removed  78 unchanged
+Changelog: 20261101_010720_inbox
+Recorded: 2026-11-01T01:07:21
++13 new  ~1 changed  -0 removed  0 unchanged
 
-New (12):
-  · Ronnie Presley @ Shunk Gulley  2026-10-02 4:00 PM
-  · Chris Johnson @ Shunk Gulley  2026-10-07 4:00 PM
-  · Chris Johnson @ Shunk Gulley  2026-10-08 4:00 PM
-  · Chris Johnson - Cancelled due to Hurricane Isaias @ Shunk Gulley  2026-10-09 4:00 PM
-  · Trevor Finlay @ Shunk Gulley  2026-10-14 4:00 PM
-  · Trevor Finlay @ Shunk Gulley  2026-10-15 4:00 PM
-  · Trevor Finlay @ Shunk Gulley  2026-10-16 4:00 PM
-  · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
-  · Brent Varner @ Shunk Gulley  2026-10-22 4:00 PM
-  · Brittany Bell @ Shunk Gulley  2026-10-23 4:00 PM
-  · David Dunavent @ Shunk Gulley  2026-10-28 4:00 PM
-  · David Dunavent @ Shunk Gulley  2026-10-29 4:00 PM
+New (13):
+  · Lane Maury @ Papa Surf  2026-11-04 6:00 PM
+  · The Kennedys @ Papa Surf  2026-11-05 6:00 PM
+  · Dion Jones @ Papa Surf  2026-11-06 6:00 PM
+  · Stevie Monce @ Papa Surf  2026-11-07 6:00 PM
+  · Lane Maury @ Papa Surf  2026-11-11 6:00 PM
+  · The Kennedys @ Papa Surf  2026-11-12 6:00 PM
+  · Dion Jones @ Papa Surf  2026-11-13 6:00 PM
+  · Stevie Monce @ Papa Surf  2026-11-14 6:00 PM
+  · Brett Stafford @ Papa Surf  2026-11-18 6:00 PM
+  · The Kennedys @ Papa Surf  2026-11-19 6:00 PM
+  · Loose Cannon @ Papa Surf  2026-11-22 6:00 PM
+  · Stevie Monce @ Papa Surf  2026-11-25 6:00 PM
+  · Dion Jones @ Papa Surf  2026-11-27 6:00 PM
+
+Changed (1):
+  · Stevie Monce @ Papa Surf  2026-11-20 6:00 PM
+      time_start: '5:00 PM' -> '6:00 PM'
+      confidence: 0.5 -> 0.663
+      source: 'favorites_watch' -> 'image:papasurf_november_calendar_2026-11-01.jpg'
+      source_count: 1 -> 2
