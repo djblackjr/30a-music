@@ -1,10 +1,9 @@
-Changelog: 20261102_195848
-Recorded: 2026-11-02T20:00:24
-+20 new  ~0 changed  -0 removed  79 unchanged
+Changelog: 20261102_214415
+Recorded: 2026-11-02T21:45:43
++19 new  ~1 changed  -0 removed  81 unchanged
 
-New (20):
+New (19):
   · Contractors Connect @ AJ's Grayton Beach  2026-11-05 4:30 PM
-  · Sunday Funday @ AJ's Grayton Beach  2026-11-08 12:00 PM
   · Ronnie Presley @ Shunk Gulley  2026-10-02 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-10-07 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-10-08 4:00 PM
@@ -19,7 +18,12 @@ New (20):
   · David Dunavent @ Shunk Gulley  2026-10-29 4:00 PM
   · David Dunavent @ Shunk Gulley  2026-10-30 4:00 PM
   · Wine & Spirit Education Trust Level 1 in Wines Course @ The Bay  2026-11-05 9:00 AM
-  · Mike Whitty & Friends @ The Bay  2027-10-24 4:00 PM
-  · Christon Birge Duo @ AJ's Grayton Beach  2026-11-15 12:00 PM
-  · Jessica Willis Fisher and the Webb Wilder Trio @ The Pavilion at Watersound Town Center  2026-11-06 6:00 PM
-  · Webb Wilder Band @ Watersound Town Center  2026-11-06 6:00 PM
+  · Black Creek String Band @ North Beach Social  2026-12-27 12:00 PM
+  · Flow Tribe @ Seaside Amphitheater  2026-11-11 4:00 PM
+  · Steenos + John Reinlie @ Stinky's Fish Camp  2026-11-08 11:00 AM
+  · The Typos (Nate & Matt) @ Stinky's Bait Shack  2026-11-22 6:00 PM
+
+Changed (1):
+  · Jessica Willis Fisher and Webb Wilder Trio @ The Pavilion at Watersound Town Center  2026-11-06 6:00 PM
+      time_start: 'TBD' -> '6:00 PM'
+      url: 'https://30a.com/events/34th-annual-flutterby-arts-festival/' -> 'https://sowal.com/stories/flutterby-arts-festival-at-watersound-town-center-nov-9'
