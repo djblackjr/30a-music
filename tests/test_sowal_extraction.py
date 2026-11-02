@@ -149,6 +149,11 @@ def test_detect_non_music_more_community_calendar_categories():
     # the dashboard as if the event title were a performer.
     assert detect_non_music("Watersound Shop Dine Unwind") == "shop_dine_promo"
     assert detect_non_music("Paddle 4 Peace") == "paddle_event"
+    # Confirmed live 2026-11-02: a community fishing event saved with
+    # performer = the whole raw title (no venue split to catch it) and shown
+    # on the dashboard next to actual bands.
+    assert detect_non_music("Harbor Docks Take a Kid Fishing Day") == "fishing_event"
+    assert detect_non_music("Battle for the Buckle Fishing Tournament") == "fishing_event"
 
 
 def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():

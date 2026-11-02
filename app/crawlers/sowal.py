@@ -232,6 +232,11 @@ _NON_MUSIC_PATTERNS: list[tuple[str, "re.Pattern"]] = [
     # A charity paddleboard race, not music -- confirmed live 2026-09-04
     # ("Paddle 4 Peace" saved with venue=None, same pattern as above).
     ("paddle_event",   re.compile(r"\bpaddle\s*(?:for|4)\s*\w+\b", re.I)),
+    # A charity/community fishing event, not music -- confirmed live
+    # 2026-11-02 ("Harbor Docks Take a Kid Fishing Day" saved with performer
+    # = the whole raw title, no " @ "/" at " to split on, same as every
+    # other no-act community listing above).
+    ("fishing_event",  re.compile(r"\bfishing\s+(?:tournament|derby|day|rodeo)\b|\bkid\s+fishing\b", re.I)),
 ]
 
 # Strong, unambiguous performer indicators in free text. "music from" added
