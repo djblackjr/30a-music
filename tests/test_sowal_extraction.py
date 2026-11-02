@@ -154,6 +154,12 @@ def test_detect_non_music_more_community_calendar_categories():
     # on the dashboard next to actual bands.
     assert detect_non_music("Harbor Docks Take a Kid Fishing Day") == "fishing_event"
     assert detect_non_music("Battle for the Buckle Fishing Tournament") == "fishing_event"
+    # Confirmed live 2026-11-02: these two came from direct venue crawlers
+    # (the_bay, ajs_grayton), not sowal -- detect_non_music() is still what
+    # catches them, via purge_non_music_events()'s global, source-agnostic
+    # sweep, not a sowal-only classification path.
+    assert detect_non_music("Wine & Spirit Education Trust Level 1 in Wines Course") == "wine_education"
+    assert detect_non_music("Contractors Connect") == "networking_event"
 
 
 def test_detect_non_music_does_not_catch_themed_parties_with_real_booked_music():
