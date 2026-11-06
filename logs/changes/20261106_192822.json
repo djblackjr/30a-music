@@ -1,0 +1,119 @@
+{
+  "run_id": "20261106_192822",
+  "recorded_at": "2026-11-06T19:28:26",
+  "summary": {
+    "new": 13,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 74,
+    "total_delta": 13
+  },
+  "new": [
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-07",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-08",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson - Cancelled due to Hurricane Isaias",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-09",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-14",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-15",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-16",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Brent Varner",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-21",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Brent Varner",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-22",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Brittany Bell",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-23",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-28",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-29",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-30",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-04",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
