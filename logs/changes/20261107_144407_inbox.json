@@ -1,0 +1,348 @@
+{
+  "run_id": "20261107_144407_inbox",
+  "recorded_at": "2026-11-07T14:44:08",
+  "summary": {
+    "new": 2,
+    "changed": 12,
+    "removed": 0,
+    "unchanged": 0,
+    "total_delta": 14
+  },
+  "new": [
+    {
+      "performer": "Lane Maury",
+      "venue": "Papa Surf",
+      "date": "2026-11-04",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "The Kennedys",
+      "venue": "Papa Surf",
+      "date": "2026-11-05",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null
+    }
+  ],
+  "changed": [
+    {
+      "performer": "Dion Jones",
+      "venue": "Papa Surf",
+      "date": "2026-11-06",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Papa Surf",
+      "date": "2026-11-07",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.866,
+          "after": 0.736
+        },
+        "source": {
+          "before": "image:steviemonce_this_week_2026-11-05.png",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 2,
+          "after": 3
+        }
+      }
+    },
+    {
+      "performer": "Lane Maury",
+      "venue": "Papa Surf",
+      "date": "2026-11-11",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "The Kennedys",
+      "venue": "Papa Surf",
+      "date": "2026-11-12",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Dion Jones",
+      "venue": "Papa Surf",
+      "date": "2026-11-13",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Papa Surf",
+      "date": "2026-11-14",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Brett Stafford",
+      "venue": "Papa Surf",
+      "date": "2026-11-18",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "The Kennedys",
+      "venue": "Papa Surf",
+      "date": "2026-11-19",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Papa Surf",
+      "date": "2026-11-20",
+      "time_start": "5:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.663,
+          "after": 0.71
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 2,
+          "after": 3
+        },
+        "verification_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Loose Cannon",
+      "venue": "Papa Surf",
+      "date": "2026-11-22",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Papa Surf",
+      "date": "2026-11-25",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    },
+    {
+      "performer": "Dion Jones",
+      "venue": "Papa Surf",
+      "date": "2026-11-27",
+      "time_start": "5:00 PM",
+      "time_end": null,
+      "stage": null,
+      "diff": {
+        "time_start": {
+          "before": "6:00 PM",
+          "after": "5:00 PM"
+        },
+        "confidence": {
+          "before": 0.78,
+          "after": 0.663
+        },
+        "source": {
+          "before": "image:papasurf_november_calendar_2026-11-01.jpg",
+          "after": "image:papasurfburgerbar_november_post_2026-11-07.png"
+        },
+        "source_count": {
+          "before": 1,
+          "after": 2
+        }
+      }
+    }
+  ],
+  "removed": []
+}
