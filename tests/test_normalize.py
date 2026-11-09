@@ -68,6 +68,16 @@ def test_canonicalize_all_caps_preserves_short_known_tokens():
     assert canonicalize("TJ & BRAD") == "TJ & Brad"
 
 
+def test_canonicalize_preserves_3hg_instead_of_title_casing_to_chemistry_symbol():
+    # Confirmed live 2026-11-09: AJ's Grayton Beach's own flyer bills an
+    # act "3HG" -- before _PRESERVE_UPPER_TOKENS knew about it,
+    # _fold_all_caps() mangled this into "3Hg" (str.title() treats "HG"
+    # as its own word after the digit).
+    assert canonicalize("3HG") == "3HG"
+    # Retroactive fix folds the already-mangled spelling back.
+    assert canonicalize("3Hg") == "3HG"
+
+
 def test_canonicalize_all_caps_fixes_possessive_apostrophe():
     # str.title() alone would wrongly give "Stinky'S" -- the apostrophe
     # looks like a fresh word boundary to it.

@@ -130,6 +130,14 @@ CANONICAL_FIXES: list[tuple[str, str]] = [
     ("River Dan", "RIVER DAN"),
     ("Catalyst Dance Band", "CATALYST DANCE BAND"),
     ("Black Creek String Band", "BLACK CREEK STRING BAND"),
+    # favorites_watch's web_search spelled this "Christon"; AJ's own weekly
+    # entertainment flyer (the venue's own listing, the record of truth)
+    # spells it "Christin" -- confirmed live 2026-11-09, same date/venue/
+    # time (11/15, AJ's Grayton Beach, 12 PM Courtyard Stage).
+    ("Christin Birge Duo", "Christon Birge Duo"),
+    # Retroactive fix for rows already mangled by _fold_all_caps() before
+    # "3HG" was added to _PRESERVE_UPPER_TOKENS below.
+    ("3HG", "3Hg"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / Vine Illers"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / Corey Hall Trio"),
     ("Bill Garrett", "Bill Garrett + John Reinlie @ Brunch / Harrison Prentice"),
@@ -238,8 +246,10 @@ def _fold_typography(value: str) -> str:
 # catches variants someone has already noticed and added. Only fires when
 # the WHOLE value is uppercase, so it can never touch an already-correctly-
 # cased name. Short all-caps tokens common in this dataset are preserved
-# rather than title-cased into "Dj"/"Tj"/"Aj".
-_PRESERVE_UPPER_TOKENS = {"DJ", "TJ", "AJ"}
+# rather than title-cased into "Dj"/"Tj"/"Aj"/"3Hg" (the last one confirmed
+# live 2026-11-09 -- AJ's Grayton Beach's own flyer bills an act "3HG",
+# which str.title() mangled into something reading like a chemistry symbol).
+_PRESERVE_UPPER_TOKENS = {"DJ", "TJ", "AJ", "3HG"}
 
 # str.title() mis-capitalizes the letter right after an apostrophe
 # ("STINKY'S" -> "Stinky'S" -- wrong, should stay "Stinky's"), since it
