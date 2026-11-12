@@ -1,0 +1,23 @@
+{
+  "run_id": "20261112_193229_inbox",
+  "recorded_at": "2026-11-12T19:32:30",
+  "summary": {
+    "new": 1,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 0,
+    "total_delta": 1
+  },
+  "new": [
+    {
+      "performer": "Stroop",
+      "venue": "Chiringo",
+      "date": "2026-11-13",
+      "time_start": "8:00 PM",
+      "time_end": null,
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}

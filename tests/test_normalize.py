@@ -78,6 +78,13 @@ def test_canonicalize_preserves_3hg_instead_of_title_casing_to_chemistry_symbol(
     assert canonicalize("3Hg") == "3HG"
 
 
+def test_canonicalize_preserves_stroop_stylized_dj_stage_name():
+    # Same bug class, confirmed live 2026-11-12: Chiringo's own flyer bills
+    # a DJ "STROOP" (a stylized all-caps stage name, not Vision noise).
+    assert canonicalize("STROOP") == "STROOP"
+    assert canonicalize("Stroop") == "STROOP"
+
+
 def test_canonicalize_all_caps_fixes_possessive_apostrophe():
     # str.title() alone would wrongly give "Stinky'S" -- the apostrophe
     # looks like a fresh word boundary to it.
