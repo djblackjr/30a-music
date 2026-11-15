@@ -1,9 +1,8 @@
-Changelog: 20261114_181120
-Recorded: 2026-11-14T18:11:21
-+14 new  ~0 changed  -0 removed  69 unchanged
+Changelog: 20261115_185438
+Recorded: 2026-11-15T18:54:41
++13 new  ~0 changed  -0 removed  69 unchanged
 
-New (14):
-  · Trevor Finlay @ Shunk Gulley  2026-10-14 4:00 PM
+New (13):
   · Trevor Finlay @ Shunk Gulley  2026-10-15 4:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-16 4:00 PM
   · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
@@ -16,4 +15,4 @@ New (14):
   · Ronnie Presley @ Shunk Gulley  2026-11-05 4:00 PM
   · Justin Fobes @ Shunk Gulley  2026-11-06 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-12 4:00 PM
-  · Mike Whitty & Friends @ The Bay  2027-11-14 4:00 PM
+  · Chris Johnson @ Shunk Gulley  2026-11-13 4:00 PM
