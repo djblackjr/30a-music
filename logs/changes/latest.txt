@@ -1,9 +1,9 @@
-Changelog: 20261115_185438
-Recorded: 2026-11-15T18:54:41
-+13 new  ~0 changed  -0 removed  69 unchanged
+Changelog: 20261116_221200
+Recorded: 2026-11-16T22:13:41
++19 new  ~0 changed  -0 removed  72 unchanged
 
-New (13):
-  · Trevor Finlay @ Shunk Gulley  2026-10-15 4:00 PM
+New (19):
+  · Sunday Funday @ AJ's Grayton Beach  2026-11-22 12:00 PM
   · Trevor Finlay @ Shunk Gulley  2026-10-16 4:00 PM
   · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
   · Brent Varner @ Shunk Gulley  2026-10-22 4:00 PM
@@ -16,3 +16,9 @@ New (13):
   · Justin Fobes @ Shunk Gulley  2026-11-06 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-12 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-13 4:00 PM
+  · Dion Jones and The Neon Tears @ AJ's Grayton Beach  2026-11-18 6:00 PM
+  · Otha Allen Jr. @ Crackings.  2026-11-20 9:30 AM
+  · Fred Domulot @ Seaside Amphitheater  2026-12-16 4:00 PM
+  · Tanner Lee Gray @ The Red Bar  2026-11-22 8:00 PM
+  · Jessica Willis Fisher and Webb Wilder Trio @ Watersound Town Center Pavilion  2026-12-04 6:00 PM
+  · Will Thompson @ Local Catch Bar & Grill  2026-11-22 2:00 PM
