@@ -1,0 +1,39 @@
+{
+  "run_id": "20261117_140929_inbox",
+  "recorded_at": "2026-11-17T14:09:30",
+  "summary": {
+    "new": 3,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 1,
+    "total_delta": 3
+  },
+  "new": [
+    {
+      "performer": "Stevie Monce",
+      "venue": "Grace O'Malleys",
+      "date": "2026-11-18",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "Chiringo",
+      "date": "2026-11-19",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    },
+    {
+      "performer": "Stevie Monce",
+      "venue": "No Wake Zone Bar",
+      "date": "2026-11-21",
+      "time_start": "6:00 PM",
+      "time_end": null,
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
