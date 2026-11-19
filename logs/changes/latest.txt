@@ -1,8 +1,8 @@
-Changelog: 20261118_203723
-Recorded: 2026-11-18T20:37:31
-+11 new  ~0 changed  -0 removed  68 unchanged
+Changelog: 20261119_204257
+Recorded: 2026-11-19T20:43:00
++12 new  ~0 changed  -0 removed  65 unchanged
 
-New (11):
+New (12):
   · Brent Varner @ Shunk Gulley  2026-10-21 4:00 PM
   · Brent Varner @ Shunk Gulley  2026-10-22 4:00 PM
   · Brittany Bell @ Shunk Gulley  2026-10-23 4:00 PM
@@ -14,3 +14,4 @@ New (11):
   · Justin Fobes @ Shunk Gulley  2026-11-06 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-12 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-13 4:00 PM
+  · Thanksgiving @ The Bay  2026-11-26 11:00 AM
