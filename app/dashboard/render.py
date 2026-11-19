@@ -402,13 +402,17 @@ def _pick_featured_group(
     at Aaron Bessant Park, a non-favorite venue, was crowded out entirely
     by four favorite-venue combo matches elsewhere that same week).
 
-    Capped to one slot per performer (confirmed live 2026-10-02: Will
-    Thompson's nightly Old Florida Fish House residency was filling the
-    whole card with 7 copies of the same favorite that week, crowding out
-    every OTHER favorite the card exists to surface -- the same "one
-    favorite dominates the list" problem the fix above addressed, just
-    from volume instead of tier-sorting). A residency is still represented
-    -- by its next show -- just not by every date of it at once.
+    Capped to one slot per (performer, venue) pair (confirmed live
+    2026-10-02: Will Thompson's nightly Old Florida Fish House residency
+    was filling the whole card with 7 copies of the same favorite that
+    week, crowding out every OTHER favorite the card exists to surface --
+    the same "one favorite dominates the list" problem the fix above
+    addressed, just from volume instead of tier-sorting). A residency is
+    still represented -- by its next show -- just not by every date of it
+    at once. The cap is per venue, not per performer: a favorite playing
+    different bars on different nights (Stevie Monce, week of 2026-11-18:
+    Chiringo, Papa Surf, No Wake Zone Bar) gets a slot for each, in date
+    order, since each is a distinct show worth knowing about.
 
     Tier-2 (venue-only) matches are excluded whenever a performer favorite
     exists, but remain the fallback (via the normal single-best-match path
@@ -455,13 +459,14 @@ def _pick_featured_group(
         performer_matches = [t for t in scored if t[2]]
         if performer_matches:
             performer_matches.sort(key=lambda t: (t[1].get("date") or "", t[0][0], t[0][2], t[0][3], t[0][4]))
-            seen_performers: set[str] = set()
+            seen_slots: set[tuple[str, str]] = set()
             deduped: list[tuple[dict, bool, bool]] = []
             for key, e, pf, vf in performer_matches:
                 performer = (e.get("performer") or e.get("name") or "").strip().lower()
-                if performer in seen_performers:
+                venue = (e.get("venue") or "").strip().lower()
+                if (performer, venue) in seen_slots:
                     continue
-                seen_performers.add(performer)
+                seen_slots.add((performer, venue))
                 deduped.append((e, pf, vf))
             return deduped
         # No performer favorite in range at all -- fall through to the

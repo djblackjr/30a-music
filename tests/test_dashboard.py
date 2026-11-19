@@ -511,6 +511,30 @@ def test_hero_week_card_caps_a_residency_to_one_slot(monkeypatch):
     assert "Other Favorite" in week
 
 
+def test_hero_week_card_lists_a_favorite_once_per_venue(monkeypatch):
+    # Confirmed live 2026-11-18: Stevie Monce played three different bars on
+    # three different nights, but the per-performer cap showed only the
+    # first. The residency cap above is per venue, so each distinct venue
+    # gets its own slot (in date order) while repeats at one venue collapse.
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "touring act": True,
+    })
+    html, _ = _render_to_temp([
+        {"performer": "Touring Act", "venue": "Bar One", "date": _d(1),
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Touring Act", "venue": "Bar Two", "date": _d(2),
+         "time_start": "5PM", "source": "venue"},
+        {"performer": "Touring Act", "venue": "Bar Three", "date": _d(3),
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Touring Act", "venue": "Bar Two", "date": _d(5),
+         "time_start": "5PM", "source": "venue"},
+    ])
+    _, week = _hero_chunks(html)
+    assert week.count("Touring Act") == 3
+    assert week.index("Bar One") < week.index("Bar Two") < week.index("Bar Three")
+
+
 def test_hero_prefers_favorite_artist_over_favorite_venue_when_not_combined(monkeypatch):
     monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: {
         "venue-only venue",
