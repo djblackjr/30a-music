@@ -1,5 +1,5 @@
-Changelog: 20261119_204257
-Recorded: 2026-11-19T20:43:00
+Changelog: 20261120_202708
+Recorded: 2026-11-20T20:27:11
 +12 new  ~0 changed  -0 removed  65 unchanged
 
 New (12):
@@ -14,4 +14,4 @@ New (12):
   · Justin Fobes @ Shunk Gulley  2026-11-06 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-12 4:00 PM
   · Chris Johnson @ Shunk Gulley  2026-11-13 4:00 PM
-  · Thanksgiving @ The Bay  2026-11-26 11:00 AM
+  · Trevor Finlay @ Shunk Gulley  2026-11-18 4:00 PM
