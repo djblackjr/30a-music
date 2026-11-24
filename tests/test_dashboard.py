@@ -697,3 +697,27 @@ def test_stat_counters_stay_four_across_on_mobile():
     # layout -- this only guards .stats specifically.)
     assert ".stats{display:grid;grid-template-columns:repeat(4,1fr)" in html
     assert html.count(".stats{") == 1
+
+
+def test_hero_cards_precomputed_for_upcoming_days(monkeypatch):
+    # The daily build lands mid-afternoon, so a page baked only for its
+    # build date showed yesterday's "Tonight" all morning (reported
+    # 2026-11-24). The page now carries both cards for each upcoming day,
+    # rendered as they should read on that day, for the browser to swap in.
+    import json, re
+    monkeypatch.setattr(render, "_load_favorite_venues", lambda *a, **k: set())
+    monkeypatch.setattr(render, "_load_performer_meta", lambda *a, **k: {
+        "today act": True, "tomorrow act": True,
+    })
+    html, _ = _render_to_temp([
+        {"performer": "Today Act", "venue": "Bar One", "date": _d(0),
+         "time_start": "6PM", "source": "venue"},
+        {"performer": "Tomorrow Act", "venue": "Bar Two", "date": _d(1),
+         "time_start": "7PM", "source": "venue"},
+    ])
+    by_date = json.loads(re.search(r"var HERO_BY_DATE=(\{.*?\});\n", html).group(1))
+    assert len(by_date) == render.HERO_PRECOMPUTE_DAYS
+    assert "Today Act" in by_date[_d(0)]["tonight"]
+    assert "Tomorrow Act" in by_date[_d(1)]["tonight"]
+    assert "Tonight" in by_date[_d(1)]["tonight"]
+    assert "Today Act" not in by_date[_d(1)]["tonight"] + by_date[_d(1)]["week"]

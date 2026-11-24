@@ -481,17 +481,19 @@ def _pick_featured_group(
     return [(ev, performer_fav, venue_fav)]
 
 
-def _hero_meta_html(ev: dict) -> str:
+def _hero_meta_html(ev: dict, today: str | None = None) -> str:
     """'at <b>Venue</b> · Today · 7:00 pm' -- pre-escaped HTML, safe to
-    insert directly into the template."""
-    today = local_now().strftime("%Y-%m-%d")
+    insert directly into the template. `today` defaults to the build date;
+    pass another date to render the card as it should read on that day."""
+    today = today or local_now().strftime("%Y-%m-%d")
     when = "Tonight" if ev.get("date") == today else _fmt_date(ev.get("date"))
     venue = html.escape(_venue_display_name(ev.get("venue")))
     parts = [p for p in [when, ev.get("time_start")] if p]
     return f'at <b>{venue}</b> &middot; {html.escape(" • ".join(parts))}'
 
 
-def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also tonight") -> str:
+def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also tonight",
+                    today: str | None = None) -> str:
     """List of additional tied combo matches under the primary headline --
     e.g. two favorite-artist-at-favorite-venue shows the same night (or same
     week, for the week card) both get surfaced, not just whichever sorted
@@ -506,7 +508,7 @@ def _hero_more_html(extra: list[tuple[dict, bool, bool]], *, label: str = "Also 
         rows.append(
             '<div class="hero-more-item">'
             f'<div class="hero-more-name">{performer}</div>'
-            f'<div class="hero-more-meta">{_hero_meta_html(ev)}</div>'
+            f'<div class="hero-more-meta">{_hero_meta_html(ev, today)}</div>'
             "</div>"
         )
     return f'<div class="hero-more"><p class="hero-more-label">{html.escape(label)}</p>' + "".join(rows) + "</div>"
@@ -516,6 +518,7 @@ def _hero_card(
     group: list[tuple[dict, bool, bool]],
     *, kicker: str, empty_performer: str, empty_meta: str,
     show_extra: bool = False, more_label: str = "Also tonight",
+    today: str | None = None,
 ) -> dict:
     """(kicker, performer, meta, extra) strings for one hero card. `group`
     is whatever _pick_featured_group() returned -- empty means no favorite
@@ -529,9 +532,58 @@ def _hero_card(
     return {
         "kicker": kicker,
         "performer": html.escape(ev.get("performer") or ev.get("name") or "Live Music"),
-        "meta": _hero_meta_html(ev),
-        "extra": _hero_more_html(group[1:], label=more_label) if show_extra else "",
+        "meta": _hero_meta_html(ev, today),
+        "extra": _hero_more_html(group[1:], label=more_label, today=today) if show_extra else "",
     }
+
+
+# The daily build lands mid-afternoon Central, so a page baked only for its
+# build date reads a day behind every morning until the next build (and
+# longer if a scheduled run is missed). generate() precomputes both hero
+# cards for this many days starting from the build date; the template swaps
+# in the viewer's own date at load time.
+HERO_PRECOMPUTE_DAYS = 8
+
+
+def _hero_cards_for(events: list[dict], day: datetime) -> tuple[dict, dict, str]:
+    """(tonight card, week card, header date) as they should read on `day`."""
+    today = day.strftime("%Y-%m-%d")
+    tomorrow = (day + timedelta(days=1)).strftime("%Y-%m-%d")
+    week_end = (day + timedelta(days=7)).strftime("%Y-%m-%d")
+
+    tonight_group = _pick_featured_group(events, today, today, allow_ties_at_tier_0=True)
+    week_group = _pick_featured_group(events, tomorrow, week_end, include_all_performer_favorites=True)
+
+    hero_tonight = _hero_card(
+        tonight_group,
+        kicker="Tonight’s Featured Artist",
+        empty_performer="No favorites tonight",
+        empty_meta="Nothing starred for tonight — check the full lineup below.",
+        show_extra=True,
+        more_label="Also tonight",
+        today=today,
+    )
+    hero_week = _hero_card(
+        week_group,
+        kicker="Next Up Featured Artist",
+        empty_performer="No favorites this week",
+        empty_meta="Nothing starred coming up — check the full lineup below.",
+        show_extra=True,
+        more_label="Also Featured This Week",
+        today=today,
+    )
+    return hero_tonight, hero_week, _fmt_ordinal_date(day)
+
+
+def _hero_body_html(card: dict) -> str:
+    """Same markup the template wraps around a card's placeholders, for the
+    client-side swap in HERO_BY_DATE."""
+    return (
+        f'<p class="hero-kicker">{card["kicker"]}</p>'
+        f'<h2 class="hero-title">{card["performer"]}</h2>'
+        f'<p class="hero-meta-line">{card["meta"]}</p>'
+        f'{card["extra"]}'
+    )
 
 
 def _build_marker() -> str:
@@ -578,33 +630,21 @@ def generate(out_path: Path = DEFAULT_OUT, run_id: str | None = None,
 
     h = _health(events, path)
 
-    today = local_now().strftime("%Y-%m-%d")
-    tomorrow = (local_now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    week_end = (local_now() + timedelta(days=7)).strftime("%Y-%m-%d")
-
-    tonight_group = _pick_featured_group(events, today, today, allow_ties_at_tier_0=True)
-    week_group = _pick_featured_group(events, tomorrow, week_end, include_all_performer_favorites=True)
-
-    hero_tonight = _hero_card(
-        tonight_group,
-        kicker="Tonight’s Featured Artist",
-        empty_performer="No favorites tonight",
-        empty_meta="Nothing starred for tonight — check the full lineup below.",
-        show_extra=True,
-        more_label="Also tonight",
-    )
-    hero_week = _hero_card(
-        week_group,
-        kicker="Next Up Featured Artist",
-        empty_performer="No favorites this week",
-        empty_meta="Nothing starred coming up — check the full lineup below.",
-        show_extra=True,
-        more_label="Also Featured This Week",
-    )
+    build_day = local_now()
+    hero_by_date = {
+        (build_day + timedelta(days=offset)).strftime("%Y-%m-%d"):
+            _hero_cards_for(events, build_day + timedelta(days=offset))
+        for offset in range(HERO_PRECOMPUTE_DAYS)
+    }
+    hero_tonight, hero_week, header_date = hero_by_date[build_day.strftime("%Y-%m-%d")]
 
     out = (
         template
-        .replace("TODAY_DATE_PLACEHOLDER", _fmt_ordinal_date(local_now()))
+        .replace("TODAY_DATE_PLACEHOLDER", header_date)
+        .replace("HERO_BY_DATE_PLACEHOLDER", _json_for_script({
+            d: {"header": hdr, "tonight": _hero_body_html(t), "week": _hero_body_html(w)}
+            for d, (t, w, hdr) in hero_by_date.items()
+        }))
         .replace("TBODY_PLACEHOLDER", _rows_html(events, path))
         .replace("HERO_TONIGHT_KICKER_PLACEHOLDER", hero_tonight["kicker"])
         .replace("HERO_TONIGHT_PERFORMER_PLACEHOLDER", hero_tonight["performer"])
