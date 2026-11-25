@@ -1,0 +1,119 @@
+{
+  "run_id": "20261125_214557",
+  "recorded_at": "2026-11-25T21:45:59",
+  "summary": {
+    "new": 13,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 63,
+    "total_delta": 13
+  },
+  "new": [
+    {
+      "performer": "Santa",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-11-25",
+      "time_start": "4:00 PM",
+      "time_end": "7:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Thanksgiving Day Community  Day Feast",
+      "venue": "AJ's Grayton Beach",
+      "date": "2026-11-26",
+      "time_start": "12:00 PM",
+      "time_end": "4:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-28",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-29",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "David Dunavent",
+      "venue": "Shunk Gulley",
+      "date": "2026-10-30",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-04",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Ronnie Presley",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-05",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Justin Fobes",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-06",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-12",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Chris Johnson",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-13",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-18",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-19",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    },
+    {
+      "performer": "Trevor Finlay",
+      "venue": "Shunk Gulley",
+      "date": "2026-11-20",
+      "time_start": "4:00 PM",
+      "time_end": "8:00 PM",
+      "stage": null
+    }
+  ],
+  "changed": [],
+  "removed": []
+}
